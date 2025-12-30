@@ -1,2 +1,98 @@
-# VBB-Status-Web-App
-Die WebApp zeigt dir den aktuellen Status der ausgewählten Haltestelle im öffentlichen Verkehr. Du bekommst Echtzeit-Informationen zu Ankunftszeiten, Verspätungen und anderen wichtigen Details, damit du immer weißt, wann dein Bus oder Zug kommt.
+# VBB Netz Status
+*by Aaron K.*
+
+Progressive Web App für Echtzeit-Abfahrten im VBB (Berlin-Brandenburg).
+
+## Features
+
+- 📍 **GPS-Standortsuche** - Findet automatisch die nächste Station
+- 🔍 **Stationssuche** - Autocomplete für alle VBB-Stationen
+- ⏱️ **Echtzeit-Updates** - Smart Refresh alle 30s (nur Werte, kein Flackern)
+- 📱 **PWA** - Installierbar als native App (iOS/Android/Desktop)
+- 🔄 **Pull-to-Refresh** - Intuitive Aktualisierung
+- 📊 **Detaillierte Infos** - Alle Halte, Verspätungen, Störungen
+- 🎨 **VBB Design** - Authentische Farben & DotMatrix Font
+- ⚡ **Performance** - Minimalistisch, keine Animationen
+- 📵 **Offline** - Service Worker Support
+- 🔒 **Rate-Limiting** - Max 100 API-Anfragen/Min
+
+## Installation
+
+```bash
+# Repository klonen
+git clone https://github.com/yourusername/vbb-netz-status.git
+
+# Mit lokalem Server starten
+python3 -m http.server 8000
+# oder: npx serve
+
+# Browser öffnen
+open http://localhost:8000
+```
+
+**Benötigt:**
+- HTTPS (für GPS & Service Worker)
+- `DotMatrix.ttf` im Root ([Download](https://github.com/NikBLN/weilSieDichLieben))
+- `images/favicon.png`
+
+## Als App installieren
+
+- **iOS**: Safari → Teilen → "Zum Home-Bildschirm"
+- **Android**: Chrome → Menü → "App installieren"
+- **Desktop**: Adressleiste → Install-Symbol
+
+## Tech Stack
+
+- Vanilla JavaScript (kein Framework)
+- [VBB Transport REST API v6](https://v6.vbb.transport.rest)
+- Service Worker (Offline)
+- PWA (Web Manifest)
+- [DotMatrix Font](https://github.com/NikBLN/weilSieDichLieben) by NikBLN
+
+## Logo erstellen
+
+```bash
+# Vorschau aller Konzepte
+open logo-preview.html
+```
+
+3 SVG-Referenzen verfügbar:
+- `logo-reference-network.svg` (empfohlen)
+- `logo-reference-su.svg`
+- `logo-reference-metro.svg`
+
+Siehe `LOGO_PROMPT.md` für Details.
+
+## Browser-Support
+
+- ✅ iOS Safari 11.3+
+- ✅ Android Chrome 72+
+- ✅ Desktop (Chrome, Firefox, Safari, Edge)
+
+## Troubleshooting
+
+**GPS funktioniert nicht?**
+- HTTPS erforderlich
+- Standortdienste aktivieren
+- Browser-Berechtigung erteilen
+
+**API-Fehler?**
+- Rate-Limit (100/Min) erreicht
+- Keine Internetverbindung
+
+## Lizenz
+
+MIT License - siehe [LICENSE](LICENSE)
+
+## Credits & Danksagung
+
+- **[VBB Transport REST API](https://v6.vbb.transport.rest)** - Echtzeit-Verkehrsdaten
+- **[DotMatrix Font](https://github.com/NikBLN/weilSieDichLieben)** by [@NikBLN](https://github.com/NikBLN) - Authentisches VBB-Feeling
+
+## Autor
+
+Aaron K.
+
+---
+
+*Inoffizielles Projekt - Keine Verbindung zum VBB*

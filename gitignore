@@ -1,0 +1,26 @@
+# Font (muss separat heruntergeladen werden)
+# Quelle: https://github.com/NikBLN/weilSieDichLieben
+DotMatrix.ttf
+
+# Icons (eigene erstellen oder herunterladen)
+images/favicon.png
+images/icon-*.png
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary
+*.tmp
+*.bak
