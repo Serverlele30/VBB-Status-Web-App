@@ -32,7 +32,7 @@ open http://localhost:8000
 
 **Benötigt:**
 - HTTPS (für GPS & Service Worker)
-- `DotMatrix.ttf` im Root ([Download](https://raw.githubusercontent.com/NikBLN/weilSieDichLieben/refs/heads/main/public/fonts/DotMatrix.ttf)
+- `DotMatrix.ttf` im Root ([Download](https://raw.githubusercontent.com/NikBLN/weilSieDichLieben/refs/heads/main/public/fonts/DotMatrix.ttf))
 - `images/favicon.png`
 
 ## Als App installieren
