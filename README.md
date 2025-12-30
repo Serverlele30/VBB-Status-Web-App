@@ -20,7 +20,7 @@ Progressive Web App für Echtzeit-Abfahrten im VBB (Berlin-Brandenburg).
 
 ```bash
 # Repository klonen
-git clone https://github.com/Serverlele30/VBB-Status-Web-App/.git
+git clone https://github.com/Serverlele30/VBB-Status-Web-App.git
 
 # Mit lokalem Server starten
 python3 -m http.server 8000
@@ -32,7 +32,7 @@ open http://localhost:8000
 
 **Benötigt:**
 - HTTPS (für GPS & Service Worker)
-- `DotMatrix.ttf` im Root ([Download](https://github.com/NikBLN/weilSieDichLieben))
+- `DotMatrix.ttf` im Root ([Download](https://raw.githubusercontent.com/NikBLN/weilSieDichLieben/refs/heads/main/public/fonts/DotMatrix.ttf)
 - `images/favicon.png`
 
 ## Als App installieren
