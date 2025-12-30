@@ -20,7 +20,7 @@ Progressive Web App für Echtzeit-Abfahrten im VBB (Berlin-Brandenburg).
 
 ```bash
 # Repository klonen
-git clone https://github.com/yourusername/vbb-netz-status.git
+git clone https://github.com/Serverlele30/VBB-Status-Web-App/.git
 
 # Mit lokalem Server starten
 python3 -m http.server 8000
@@ -49,19 +49,6 @@ open http://localhost:8000
 - PWA (Web Manifest)
 - [DotMatrix Font](https://github.com/NikBLN/weilSieDichLieben) by NikBLN
 
-## Logo erstellen
-
-```bash
-# Vorschau aller Konzepte
-open logo-preview.html
-```
-
-3 SVG-Referenzen verfügbar:
-- `logo-reference-network.svg` (empfohlen)
-- `logo-reference-su.svg`
-- `logo-reference-metro.svg`
-
-Siehe `LOGO_PROMPT.md` für Details.
 
 ## Browser-Support
 
