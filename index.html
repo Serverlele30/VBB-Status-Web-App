@@ -1868,6 +1868,395 @@
                 min-width: 32px;
             }
         }
+
+        /* ==========================================
+           HOME VIEW STYLING - COMBINED HERO!
+           ========================================== */
+        
+        .home-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0;
+            padding-bottom: 70px;
+        }
+
+        /* Combined Hero + Navigation Box - ALLES IN EINER BOX! */
+        .home-hero-combined {
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            border: 3px solid #FFED00;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 20px 20px 20px;
+        }
+
+        /* Navigation Hint - OBEN in der Box */
+        .home-nav-hint {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
+
+        .home-hint-text {
+            flex: 1;
+            color: #fff;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .home-hint-text strong {
+            color: #FFED00;
+        }
+
+        /* Hero Title - UNTEN in der Box */
+        .home-hero-title {
+            text-align: center;
+        }
+
+        .home-hero-title h1 {
+            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-size: 32px;
+            color: #FFED00;
+            margin: 0 0 8px 0;
+            letter-spacing: 2px;
+        }
+
+        .home-hero-title p {
+            font-size: 15px;
+            color: #fff;
+            margin: 0 0 12px 0;
+        }
+
+        .home-version {
+            display: inline-block;
+            background: #FFED00;
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        /* Quick Info Cards */
+        .home-quick-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 0 20px 20px 20px;
+        }
+
+        .home-info-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px 12px;
+            text-align: center;
+        }
+
+        .home-info-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .home-info-text strong {
+            display: block;
+            color: #FFED00;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .home-info-text p {
+            margin: 0;
+            color: #999;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        /* Two Column Layout */
+        .home-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 0 20px 20px 20px;
+        }
+
+        .home-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 18px;
+        }
+
+        .home-box-title {
+            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-size: 18px;
+            color: #FFED00;
+            margin: 0 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #333;
+        }
+
+        /* Update/Changelog Items */
+        .home-update {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #000;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .home-update-latest {
+            border: 2px solid #FFED00;
+        }
+
+        .home-update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .home-update-version {
+            background: #FFED00;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .home-update-date {
+            color: #888;
+            font-size: 10px;
+        }
+
+        .home-update h3 {
+            font-size: 13px;
+            color: #FFED00;
+            margin: 0 0 6px 0;
+        }
+
+        .home-update ul {
+            margin: 0;
+            padding-left: 16px;
+            color: #ccc;
+        }
+
+        .home-update li {
+            margin-bottom: 3px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        /* Details/Summary (Collapsible) */
+        .home-details {
+            margin-top: 10px;
+        }
+
+        .home-summary {
+            cursor: pointer;
+            padding: 8px;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #FFED00;
+            font-weight: bold;
+            font-size: 12px;
+            user-select: none;
+            text-align: center;
+        }
+
+        .home-summary:hover {
+            background: #1a1a1a;
+        }
+
+        .home-details[open] .home-summary {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            margin-bottom: 10px;
+        }
+
+        /* Credit Items */
+        .home-credit {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #000;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .home-credit:last-child {
+            margin-bottom: 0;
+        }
+
+        .home-credit strong {
+            color: #FFED00;
+            display: block;
+            margin-bottom: 3px;
+            font-size: 12px;
+        }
+
+        .home-credit p {
+            margin: 0;
+            color: #ccc;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .home-credit a {
+            color: #FFED00;
+            text-decoration: none;
+        }
+
+        .home-credit a:hover {
+            text-decoration: underline;
+        }
+
+        /* Features Box */
+        .home-features-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 18px;
+            margin: 0 20px 20px 20px;
+        }
+
+        .home-features-box h3 {
+            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-size: 18px;
+            color: #FFED00;
+            margin: 0 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #333;
+        }
+
+        .home-features-box ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #ccc;
+        }
+
+        .home-features-box li {
+            margin-bottom: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .home-features-box li:last-child {
+            margin-bottom: 0;
+        }
+
+        .home-features-box strong {
+            color: #FFED00;
+        }
+
+        /* Footer */
+        .home-footer {
+            text-align: center;
+            padding: 20px;
+            margin: 0 20px;
+            color: #888;
+            border-top: 1px solid #333;
+        }
+
+        .home-footer p {
+            margin: 5px 0;
+            font-size: 13px;
+        }
+
+        .home-footer strong {
+            color: #FFED00;
+        }
+
+        .home-footer-small {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 767px) {
+            .home-container {
+                padding-bottom: 60px;
+            }
+
+            .home-hero-combined {
+                padding: 15px;
+                margin: 15px 15px 15px 15px;
+            }
+
+            .home-nav-hint {
+                text-align: center;
+                margin-bottom: 15px;
+                padding-bottom: 15px;
+            }
+
+            .home-hint-text {
+                font-size: 13px;
+            }
+
+            .home-hero-title h1 {
+                font-size: 26px;
+            }
+
+            .home-hero-title p {
+                font-size: 13px;
+            }
+
+            /* Quick Info Cards - Single Row on Mobile */
+            .home-quick-info {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin: 0 15px 15px 15px;
+            }
+
+            .home-info-card {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-align: left;
+                padding: 12px;
+            }
+
+            .home-info-icon {
+                font-size: 28px;
+                margin-bottom: 0;
+            }
+
+            .home-info-text strong {
+                font-size: 14px;
+            }
+
+            .home-info-text p {
+                font-size: 12px;
+            }
+
+            /* Single Column on Mobile */
+            .home-columns {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                margin: 0 15px 15px 15px;
+            }
+
+            .home-box {
+                padding: 15px;
+            }
+
+            .home-box-title {
+                font-size: 16px;
+            }
+
+            .home-features-box {
+                padding: 15px;
+                margin: 0 15px 15px 15px;
+            }
+
+            .home-features-box h3 {
+                font-size: 16px;
+            }
+
+            .home-footer {
+                margin: 0 15px;
+            }
+        }
     </style>
     
     <!-- Leaflet CSS für Live-Map -->
@@ -1893,8 +2282,8 @@
         <div class="header-content">
             <div class="header-title">
                 <h1>VBB NETZ STATUS</h1>
-                <div class="subtitle">ECHTZEIT-ABFAHRTSMONITOR</div>
-                <div class="author">by Aaron K.</div>
+                <div class="subtitle">Live-Nahverkehr für Berlin & Brandenburg</div>
+                <div class="author">by Aaron K. & Claude (Anthropic)</div>
             </div>
             <button class="menu-btn" id="menuBtn" aria-label="Menü öffnen">
                 ☰
@@ -1909,7 +2298,11 @@
             <button class="nav-close" id="navClose">×</button>
         </div>
         <div class="nav-items">
-            <button class="nav-item active" data-view="departures">
+            <button class="nav-item" data-view="home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Start</span>
+            </button>
+            <button class="nav-item" data-view="departures">
                 <span class="nav-icon">🚇</span>
                 <span class="nav-label">Abfahrten</span>
             </button>
@@ -1924,6 +2317,163 @@
         </div>
     </div>
     <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- View: Home -->
+    <div class="view-container active" id="view-home">
+        <div class="home-container">
+            
+            <!-- Combined Hero + Navigation Box -->
+            <div class="home-hero-combined">
+                <!-- Navigation Hint OHNE Pfeil -->
+                <div class="home-nav-hint">
+                    <div class="home-hint-text">
+                        Tippe <strong>oben rechts auf "≡"</strong> um das Menü zu öffnen.<br>
+                        Wähle dann <strong>Abfahrten</strong>, <strong>Routenplaner</strong> oder <strong>Live-Map</strong>.
+                    </div>
+                </div>
+
+                <!-- Hero Section -->
+                <div class="home-hero-title">
+                    <h1>VBB NETZ STATUS</h1>
+                    <p>Live-Nahverkehr für Berlin & Brandenburg</p>
+                    <div class="home-version">v27.0</div>
+                </div>
+            </div>
+
+            <!-- Quick Info Cards -->
+            <div class="home-quick-info">
+                <div class="home-info-card">
+                    <div class="home-info-icon">🚇</div>
+                    <div class="home-info-text">
+                        <strong>Live-Abfahrten</strong>
+                        <p>Echtzeit für alle VBB-Stationen</p>
+                    </div>
+                </div>
+                <div class="home-info-card">
+                    <div class="home-info-icon">🗺️</div>
+                    <div class="home-info-text">
+                        <strong>Routenplaner</strong>
+                        <p>Schnellste Verbindungen finden</p>
+                    </div>
+                </div>
+                <div class="home-info-card">
+                    <div class="home-info-icon">🌍</div>
+                    <div class="home-info-text">
+                        <strong>Live-Map</strong>
+                        <p>Fahrzeuge in Echtzeit verfolgen</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Column Layout: Changelog | Credits -->
+            <div class="home-columns">
+                <!-- Changelog Box -->
+                <div class="home-box">
+                    <h2 class="home-box-title">📝 Updates</h2>
+                    
+                    <!-- Latest Update -->
+                    <div class="home-update home-update-latest">
+                        <div class="home-update-header">
+                            <span class="home-update-version">v27.0</span>
+                            <span class="home-update-date">31.12.2025</span>
+                        </div>
+                        <h3>Credits & Header Update</h3>
+                        <ul>
+                            <li>Pfeil entfernt (klarer Text)</li>
+                            <li>Aaron K. in Credits erwähnt</li>
+                            <li>Header-Subtitle aktualisiert</li>
+                        </ul>
+                    </div>
+
+                    <!-- Older Updates (Collapsible) -->
+                    <details class="home-details">
+                        <summary class="home-summary">Ältere Updates</summary>
+                        
+                        <div class="home-update">
+                            <div class="home-update-header">
+                                <span class="home-update-version">v21.0</span>
+                            </div>
+                            <h3>API-Optimierung</h3>
+                            <ul>
+                                <li>Nur sichtbare Fahrzeuge laden</li>
+                                <li>Bis zu 69% weniger Daten</li>
+                            </ul>
+                        </div>
+
+                        <div class="home-update">
+                            <div class="home-update-header">
+                                <span class="home-update-version">v19.0</span>
+                            </div>
+                            <h3>Echte BVG-Farben</h3>
+                            <ul>
+                                <li>Authentische Linienfarben</li>
+                                <li>Touch-optimiert</li>
+                            </ul>
+                        </div>
+
+                        <div class="home-update">
+                            <div class="home-update-header">
+                                <span class="home-update-version">v16.0</span>
+                            </div>
+                            <h3>Live-Map Feature</h3>
+                            <ul>
+                                <li>Echtzeit-Fahrzeuge auf Karte</li>
+                                <li>Dark-Mode Design</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Credits Box -->
+                <div class="home-box">
+                    <h2 class="home-box-title">ℹ️ Info</h2>
+                    
+                    <div class="home-credit">
+                        <strong>Open Source</strong>
+                        <p>Kostenlos • Werbefrei • MIT Lizenz</p>
+                    </div>
+
+                    <div class="home-credit">
+                        <strong>Daten-Quelle</strong>
+                        <p><a href="https://v6.vbb.transport.rest" target="_blank">VBB Transport REST API v6</a></p>
+                    </div>
+
+                    <div class="home-credit">
+                        <strong>Kartendaten</strong>
+                        <p>OpenStreetMap & CartoDB</p>
+                    </div>
+
+                    <div class="home-credit">
+                        <strong>Entwicklung</strong>
+                        <p>by Aaron K. & Claude (Anthropic)</p>
+                    </div>
+
+                    <div class="home-credit">
+                        <strong>Schriftart</strong>
+                        <p>DotMatrix by <a href="https://github.com/NikBLN" target="_blank">@NikBLN</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features List -->
+            <div class="home-features-box">
+                <h3>✨ Funktionen im Detail</h3>
+                <ul>
+                    <li><strong>GPS-Standort:</strong> Automatische Station finden</li>
+                    <li><strong>Offline-Modus:</strong> Gespeicherte Daten anzeigen</li>
+                    <li><strong>PWA:</strong> Als App installierbar</li>
+                    <li><strong>Dark-Mode:</strong> Schont die Augen</li>
+                    <li><strong>Auto-Refresh:</strong> Immer aktuelle Daten</li>
+                </ul>
+            </div>
+
+            <!-- Footer -->
+            <div class="home-footer">
+                <p><strong>Inoffizielle App</strong> – Nicht von VBB/BVG betrieben</p>
+                <p class="home-footer-small">Made with ❤️ for Berlin & Brandenburg</p>
+            </div>
+        </div>
+    </div>
 
     <!-- View: Abfahrten -->
     <div class="view-container active" id="view-departures">
@@ -2092,6 +2642,7 @@
         const navClose = document.getElementById('navClose');
         const navOverlay = document.getElementById('navOverlay');
         const navItems = document.querySelectorAll('.nav-item');
+        const viewHome = document.getElementById('view-home');
         const viewDepartures = document.getElementById('view-departures');
         const viewJourney = document.getElementById('view-journey');
 
@@ -2141,7 +2692,7 @@
         navOverlay.addEventListener('click', closeMenu);
 
         // View Switching
-        let currentView = 'departures';
+        let currentView = 'home';
 
         function switchView(viewName) {
             // Update active nav item
@@ -2155,6 +2706,7 @@
 
             // Update Page Title dynamisch
             const titles = {
+                'home': 'VBB Netz Status',
                 'departures': 'VBB Netz Status - Abfahrten',
                 'journey': 'VBB Netz Status - Route',
                 'livemap': 'VBB Netz Status - Live-Map'
@@ -2164,29 +2716,26 @@
             // Switch views
             const viewLiveMap = document.getElementById('view-livemap');
             
-            if (viewName === 'departures') {
+            // Alle Views deaktivieren
+            viewHome.classList.remove('active');
+            viewDepartures.classList.remove('active');
+            viewJourney.classList.remove('active');
+            viewLiveMap.classList.remove('active');
+            
+            // Stop Live-Map Updates wenn wir View wechseln
+            if (viewName !== 'livemap' && liveMapUpdateInterval) {
+                clearInterval(liveMapUpdateInterval);
+                liveMapUpdateInterval = null;
+            }
+            
+            // Gewünschte View aktivieren
+            if (viewName === 'home') {
+                viewHome.classList.add('active');
+            } else if (viewName === 'departures') {
                 viewDepartures.classList.add('active');
-                viewJourney.classList.remove('active');
-                viewLiveMap.classList.remove('active');
-                
-                // Stop Live-Map Updates
-                if (liveMapUpdateInterval) {
-                    clearInterval(liveMapUpdateInterval);
-                    liveMapUpdateInterval = null;
-                }
             } else if (viewName === 'journey') {
-                viewDepartures.classList.remove('active');
                 viewJourney.classList.add('active');
-                viewLiveMap.classList.remove('active');
-                
-                // Stop Live-Map Updates
-                if (liveMapUpdateInterval) {
-                    clearInterval(liveMapUpdateInterval);
-                    liveMapUpdateInterval = null;
-                }
             } else if (viewName === 'livemap') {
-                viewDepartures.classList.remove('active');
-                viewJourney.classList.remove('active');
                 viewLiveMap.classList.add('active');
                 
                 // Initialize Live-Map wenn noch nicht geschehen
@@ -2214,8 +2763,8 @@
             });
         });
 
-        // Initialen Title setzen (für default View 'departures')
-        document.title = 'VBB Netz Status - Abfahrten';
+        // Initialen Title setzen (für default View 'home')
+        document.title = 'VBB Netz Status';
 
         // Pull-to-refresh
         let startY = 0;
