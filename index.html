@@ -10,6 +10,11 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link rel="apple-touch-icon" href="images/favicon.png">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         /* DotMatrix Font by NikBLN - https://github.com/NikBLN/weilSieDichLieben */
         @font-face {
@@ -1679,6 +1684,123 @@
                 font-size: 16px;
             }
         }
+
+        /* Live Map Styles */
+        .map-info {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #222;
+        }
+
+        .map-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .map-subtitle {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #FFED00;
+            background-color: #0a0a0a;
+            margin-bottom: 15px;
+        }
+
+        .map-stats {
+            background-color: #0a0a0a;
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid #222;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* Override Leaflet styles for dark theme */
+        .leaflet-container {
+            background-color: #0a0a0a;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background-color: #000;
+            color: #FFED00;
+            border: 2px solid #FFED00;
+            border-radius: 8px;
+            font-family: 'DotMatrix', 'Courier New', monospace;
+        }
+
+        .leaflet-popup-tip {
+            background-color: #000;
+            border: 2px solid #FFED00;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px;
+        }
+
+        .vehicle-popup {
+            min-width: 200px;
+        }
+
+        .vehicle-popup-line {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vehicle-popup-destination {
+            font-size: 14px;
+            margin-bottom: 6px;
+            opacity: 0.9;
+        }
+
+        .vehicle-popup-delay {
+            font-size: 12px;
+            color: #ff5555;
+            font-weight: bold;
+        }
+
+        .vehicle-popup-speed {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 6px;
+        }
+
+        /* Desktop styles for map */
+        @media (min-width: 768px) {
+            .map-container {
+                height: 600px;
+            }
+
+            .map-title {
+                font-size: 24px;
+            }
+
+            .map-subtitle {
+                font-size: 14px;
+            }
+
+            .map-stats {
+                font-size: 16px;
+                padding: 15px 20px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .map-container {
+                height: 700px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1717,6 +1839,10 @@
             <button class="nav-item" data-view="journey">
                 <span class="nav-icon">🗺️</span>
                 <span class="nav-label">Routenplaner</span>
+            </button>
+            <button class="nav-item" data-view="livemap">
+                <span class="nav-icon">🚍</span>
+                <span class="nav-label">Live Karte</span>
             </button>
         </div>
     </div>
@@ -1807,6 +1933,26 @@
             </div>
 
             <div id="journeyContainer" class="journey-container"></div>
+        </div>
+    </div>
+
+    <!-- View: Live Karte -->
+    <div class="view-container" id="view-livemap">
+        <div class="container">
+            <div class="controls">
+                <div class="map-info">
+                    <div class="map-title">🚍 Live Fahrzeuge</div>
+                    <div class="map-subtitle">Aktualisiert alle 10 Sekunden</div>
+                </div>
+                <div class="button-group">
+                    <button class="btn" id="mapRefreshBtn">🔄 Aktualisieren</button>
+                    <button class="btn" id="mapCenterBtn">📍 Zentrieren</button>
+                </div>
+            </div>
+            <div id="mapContainer" class="map-container"></div>
+            <div id="mapStats" class="map-stats">
+                <span id="vehicleCount">0 Fahrzeuge</span>
+            </div>
         </div>
     </div>
 
@@ -3412,6 +3558,205 @@
             
             return '🚉';
         }
+
+        // ============================================
+        // LIVE MAP FUNCTIONALITY
+        // ============================================
+
+        let map = null;
+        let vehicleMarkers = [];
+        let mapRefreshInterval = null;
+        const BERLIN_CENTER = [52.52, 13.405]; // Berlin center coordinates
+
+        // Map DOM Elements
+        const mapContainer = document.getElementById('mapContainer');
+        const mapRefreshBtn = document.getElementById('mapRefreshBtn');
+        const mapCenterBtn = document.getElementById('mapCenterBtn');
+        const vehicleCountEl = document.getElementById('vehicleCount');
+
+        // Initialize map when view is switched to livemap
+        function initializeMap() {
+            if (map) return; // Map already initialized
+
+            try {
+                map = L.map('mapContainer', {
+                    center: BERLIN_CENTER,
+                    zoom: 11,
+                    zoomControl: true,
+                    preferCanvas: true
+                });
+
+                // Use dark tile layer
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(map);
+
+                console.log('Map initialized successfully');
+
+                // Load initial vehicles
+                loadVehicles();
+
+                // Auto-refresh every 10 seconds
+                if (mapRefreshInterval) {
+                    clearInterval(mapRefreshInterval);
+                }
+                mapRefreshInterval = setInterval(loadVehicles, 10000);
+
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                mapContainer.innerHTML = '<div class="error">⚠️ Fehler beim Laden der Karte</div>';
+            }
+        }
+
+        // Get custom icon for vehicle type
+        function getVehicleIcon(product) {
+            let iconText = '🚍'; // Default bus
+
+            if (product === 'subway') iconText = '🚇';
+            else if (product === 'suburban') iconText = '🚊';
+            else if (product === 'tram') iconText = '🚋';
+            else if (product === 'bus') iconText = '🚌';
+            else if (product === 'regional' || product === 'regionalExp') iconText = '🚆';
+            else if (product === 'ferry') iconText = '⛴️';
+
+            return L.divIcon({
+                html: `<div style="font-size: 24px; text-shadow: 0 0 3px #000, 0 0 5px #000;">${iconText}</div>`,
+                className: 'vehicle-marker',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+        }
+
+        // Load vehicles from VBB Radar API
+        async function loadVehicles() {
+            if (!map) return;
+
+            try {
+                // VBB Berlin area bounds (approximately)
+                const north = 52.7;
+                const south = 52.3;
+                const west = 13.0;
+                const east = 13.8;
+
+                const radarUrl = `${API_BASE}/radar?north=${north}&west=${west}&south=${south}&east=${east}&results=500&duration=30`;
+
+                console.log('Fetching vehicles from radar API...');
+                const response = await fetch(radarUrl);
+
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Received vehicles:', data.length);
+
+                // Clear existing markers
+                vehicleMarkers.forEach(marker => map.removeLayer(marker));
+                vehicleMarkers = [];
+
+                // Add new markers
+                let validVehicles = 0;
+                data.forEach(vehicle => {
+                    if (vehicle.location && vehicle.location.latitude && vehicle.location.longitude) {
+                        const lat = vehicle.location.latitude;
+                        const lng = vehicle.location.longitude;
+
+                        // Create marker
+                        const icon = getVehicleIcon(vehicle.line?.product);
+                        const marker = L.marker([lat, lng], { icon: icon });
+
+                        // Create popup content
+                        let popupContent = '<div class="vehicle-popup">';
+
+                        if (vehicle.line) {
+                            popupContent += `<div class="vehicle-popup-line">`;
+                            popupContent += `${getTransportIcon(vehicle)} `;
+                            popupContent += `${vehicle.line.name || 'Unbekannt'}`;
+                            popupContent += `</div>`;
+                        }
+
+                        if (vehicle.direction) {
+                            popupContent += `<div class="vehicle-popup-destination">→ ${vehicle.direction}</div>`;
+                        }
+
+                        if (vehicle.delay) {
+                            const delayMin = Math.floor(vehicle.delay / 60);
+                            popupContent += `<div class="vehicle-popup-delay">+${delayMin} Min Verspätung</div>`;
+                        }
+
+                        if (vehicle.speed) {
+                            popupContent += `<div class="vehicle-popup-speed">🚀 ${Math.round(vehicle.speed)} km/h</div>`;
+                        }
+
+                        popupContent += '</div>';
+
+                        marker.bindPopup(popupContent);
+                        marker.addTo(map);
+                        vehicleMarkers.push(marker);
+                        validVehicles++;
+                    }
+                });
+
+                // Update stats
+                vehicleCountEl.textContent = `${validVehicles} Fahrzeuge`;
+
+                console.log(`Added ${validVehicles} vehicles to map`);
+
+            } catch (error) {
+                console.error('Error loading vehicles:', error);
+                vehicleCountEl.textContent = 'Fehler beim Laden';
+            }
+        }
+
+        // Center map on Berlin
+        function centerMap() {
+            if (map) {
+                map.setView(BERLIN_CENTER, 11);
+                hapticFeedback();
+            }
+        }
+
+        // Map button event listeners
+        if (mapRefreshBtn) {
+            mapRefreshBtn.addEventListener('click', () => {
+                loadVehicles();
+                hapticFeedback();
+            });
+        }
+
+        if (mapCenterBtn) {
+            mapCenterBtn.addEventListener('click', () => {
+                centerMap();
+            });
+        }
+
+        // Handle view switching to initialize map
+        const originalSwitchView = switchView;
+        switchView = function(viewName) {
+            originalSwitchView(viewName);
+
+            // Initialize map when switching to livemap view
+            if (viewName === 'livemap') {
+                setTimeout(() => {
+                    initializeMap();
+                    if (map) {
+                        map.invalidateSize(); // Refresh map size
+                    }
+                }, 100);
+            } else {
+                // Stop auto-refresh when leaving map view
+                if (mapRefreshInterval) {
+                    clearInterval(mapRefreshInterval);
+                    mapRefreshInterval = null;
+                }
+            }
+        };
+
+        // ============================================
+        // END LIVE MAP FUNCTIONALITY
+        // ============================================
 
         // Initial state
         if (!navigator.onLine) {
