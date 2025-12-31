@@ -1748,18 +1748,26 @@
 
         /* Leaflet Marker Styling */
         .vehicle-marker {
-            font-size: 24px;
             text-align: center;
             animation: pulse-marker 2s ease-in-out infinite;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .line-badge {
+            font-family: 'DotMatrix', 'Courier New', monospace !important;
+            pointer-events: none;
         }
 
         @keyframes pulse-marker {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.15); }
         }
 
         .vehicle-popup {
             font-family: 'DotMatrix', 'Courier New', monospace;
+            background-color: #000 !important;
+            color: #FFED00;
         }
 
         .vehicle-popup .popup-line {
@@ -1772,12 +1780,25 @@
         .vehicle-popup .popup-direction {
             font-size: 14px;
             margin-bottom: 6px;
+            color: #fff;
         }
 
         .vehicle-popup .popup-delay {
             font-size: 12px;
             color: #ff5555;
             font-weight: bold;
+        }
+
+        /* Leaflet Popup Dark Mode */
+        .leaflet-popup-content-wrapper {
+            background-color: #000 !important;
+            border: 2px solid #FFED00 !important;
+            border-radius: 8px !important;
+        }
+
+        .leaflet-popup-tip {
+            background-color: #000 !important;
+            border: 2px solid #FFED00 !important;
         }
 
         @media (max-width: 767px) {
@@ -1795,10 +1816,6 @@
             .filter-btn {
                 padding: 6px 10px;
                 font-size: 12px;
-            }
-
-            .vehicle-marker {
-                font-size: 20px;
             }
         }
     </style>
@@ -3611,21 +3628,46 @@
         let activeVehicleTypes = new Set(['all']);
 
         // Fahrzeug-Icons nach Typ
-        function getVehicleEmoji(product) {
+        function getVehicleEmoji(product, lineName) {
             const type = product?.mode || product?.name || '';
+            const line = lineName || '';
             
+            // U-Bahn - verschiedene Icons je nach Linie
             if (type.includes('subway') || type.includes('U-Bahn') || type.match(/^U\d/)) {
                 return '🚇';
-            } else if (type.includes('suburban') || type.includes('S-Bahn') || type.match(/^S\d/)) {
+            } 
+            // S-Bahn
+            else if (type.includes('suburban') || type.includes('S-Bahn') || type.match(/^S\d/)) {
                 return '🚆';
-            } else if (type.includes('tram') || type.includes('Tram') || type.includes('M1') || type.includes('M2')) {
+            } 
+            // Tram/Straßenbahn
+            else if (type.includes('tram') || type.includes('Tram') || line.match(/^M\d/) || line.match(/^\d{2}$/)) {
                 return '🚊';
-            } else if (type.includes('bus') || type.includes('Bus')) {
+            } 
+            // Bus
+            else if (type.includes('bus') || type.includes('Bus')) {
+                // Express-Bus
+                if (line.includes('X') || line.includes('TXL')) {
+                    return '🚌';
+                }
+                // Nacht-Bus
+                else if (line.startsWith('N')) {
+                    return '🌙';
+                }
+                // Normal-Bus
                 return '🚌';
-            } else if (type.includes('regional') || type.includes('RE') || type.includes('RB')) {
+            } 
+            // Regional-Bahn
+            else if (type.includes('regional') || line.includes('RE') || line.includes('RB')) {
                 return '🚉';
-            } else if (type.includes('express') || type.includes('ICE') || type.includes('IC')) {
+            } 
+            // Express-Züge
+            else if (type.includes('express') || line.includes('ICE') || line.includes('IC')) {
                 return '🚅';
+            }
+            // Fähre
+            else if (type.includes('ferry') || type.includes('Fähre')) {
+                return '⛴️';
             }
             
             return '🚍'; // Default
@@ -3655,10 +3697,11 @@
             // Map zentriert auf Berlin
             liveMap = L.map('liveMap').setView([52.52, 13.405], 12);
 
-            // Tile Layer (OpenStreetMap)
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 18
+            // Tile Layer (CartoDB Dark Matter - Dark Mode!)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap contributors, © CartoDB',
+                maxZoom: 19,
+                subdomains: 'abcd'
             }).addTo(liveMap);
 
             // Fahrzeuge laden
@@ -3723,21 +3766,50 @@
 
                 const lat = movement.location.latitude;
                 const lon = movement.location.longitude;
-                const emoji = getVehicleEmoji(movement.line?.product);
+                const lineName = movement.line?.name || 'Unbekannt';
+                const emoji = getVehicleEmoji(movement.line?.product, lineName);
                 
-                // Custom Icon mit Emoji
+                // Linienfarbe basierend auf Typ
+                const vehicleType = getVehicleType(movement.line?.product);
+                let bgColor = '#666';
+                
+                if (vehicleType === 'subway') bgColor = '#003399'; // Blau für U-Bahn
+                else if (vehicleType === 'suburban') bgColor = '#006600'; // Grün für S-Bahn
+                else if (vehicleType === 'tram') bgColor = '#cc0000'; // Rot für Tram
+                else if (vehicleType === 'bus') bgColor = '#993399'; // Lila für Bus
+                else if (vehicleType === 'other') bgColor = '#ff6600'; // Orange für Regional
+                
+                // Custom Icon mit Emoji + Liniennummer
                 const icon = L.divIcon({
-                    html: `<div class="vehicle-marker">${emoji}</div>`,
+                    html: `
+                        <div class="vehicle-marker" style="position: relative;">
+                            <div style="font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">${emoji}</div>
+                            <div class="line-badge" style="
+                                position: absolute;
+                                bottom: -8px;
+                                right: -8px;
+                                background: ${bgColor};
+                                color: #fff;
+                                font-size: 10px;
+                                font-weight: bold;
+                                padding: 2px 5px;
+                                border-radius: 10px;
+                                border: 2px solid #000;
+                                min-width: 20px;
+                                text-align: center;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                            ">${lineName}</div>
+                        </div>
+                    `,
                     className: 'custom-marker',
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
                 });
 
                 // Marker erstellen
                 const marker = L.marker([lat, lon], { icon: icon });
 
                 // Popup mit Fahrzeuginfos
-                const lineName = movement.line?.name || 'Unbekannt';
                 const direction = movement.direction || 'Keine Angabe';
                 const delay = movement.delay ? `+${Math.round(movement.delay / 60)} min Verspätung` : 'Pünktlich';
                 
