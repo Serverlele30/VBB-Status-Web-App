@@ -11,9 +11,10 @@
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link rel="apple-touch-icon" href="images/favicon.png">
     <style>
+        /* DotMatrix Font by NikBLN - https://github.com/NikBLN/weilSieDichLieben */
         @font-face {
             font-family: 'DotMatrix';
-            src: url('https://raw.githubusercontent.com/NikBLN/weilSieDichLieben/refs/heads/main/public/fonts/DotMatrix.ttf') format('truetype');
+            src: url('DotMatrix.ttf') format('truetype');
         }
 
         * {
@@ -36,6 +37,12 @@
             padding: 10px;
         }
 
+        @media (min-width: 768px) {
+            .container {
+                padding: 15px 20px;
+            }
+        }
+
         .header {
             text-align: center;
             padding: 20px 10px 15px;
@@ -44,6 +51,18 @@
             top: 0;
             z-index: 100;
             border-bottom: 2px solid #FFED00;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
         }
 
         .header h1 {
@@ -63,6 +82,126 @@
             font-size: 9px;
             opacity: 0.5;
             font-style: italic;
+        }
+
+        .menu-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: 2px solid #FFED00;
+            color: #FFED00;
+            font-size: 24px;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            line-height: 1;
+        }
+
+        .menu-btn:active {
+            background-color: #FFED00;
+            color: #000;
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background-color: #000;
+            border-left: 2px solid #FFED00;
+            z-index: 1000;
+            transition: right 0.3s ease;
+        }
+
+        .nav-menu.active {
+            right: 0;
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            display: none;
+        }
+
+        .nav-overlay.active {
+            display: block;
+        }
+
+        .nav-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-header h3 {
+            font-size: 18px;
+            color: #FFED00;
+        }
+
+        .nav-close {
+            background: none;
+            border: none;
+            color: #FFED00;
+            font-size: 32px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .nav-items {
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            width: 100%;
+            padding: 18px 20px;
+            background: none;
+            border: none;
+            color: #FFED00;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-size: 16px;
+            transition: background-color 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:active,
+        .nav-item.active {
+            background-color: #1a1a1a;
+            border-left-color: #FFED00;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-label {
+            flex: 1;
+        }
+
+        /* View Container */
+        .view-container {
+            display: none;
+        }
+
+        .view-container.active {
+            display: block;
         }
 
         .controls {
@@ -232,13 +371,13 @@
         }
 
         .station-name {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
             margin-bottom: 6px;
         }
 
         .last-update {
-            font-size: 11px;
+            font-size: 13px;
             opacity: 0.6;
         }
 
@@ -263,37 +402,230 @@
             flex: 1;
         }
 
+        .departure-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
         .line-badge {
             display: inline-block;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 4px;
             font-weight: bold;
-            font-size: 13px;
-            margin-bottom: 6px;
+            font-size: 16px;
         }
 
         .departure-destination {
-            font-size: 15px;
+            font-size: 18px;
             margin-bottom: 4px;
         }
 
         .departure-platform {
-            font-size: 11px;
-            opacity: 0.6;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background-color: #1a1a1a;
+            border-radius: 3px;
+            font-size: 13px;
+            border: 1px solid #333;
+        }
+
+        .platform-icon {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .platform-text {
+            font-weight: bold;
+            color: #FFED00;
         }
 
         .departure-time {
             text-align: right;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
-            min-width: 65px;
+            min-width: 70px;
         }
 
         .departure-delay {
-            font-size: 11px;
+            font-size: 13px;
             color: #ff5555;
             margin-top: 4px;
             font-weight: bold;
+        }
+
+        /* Journey Planner */
+        .journey-inputs {
+            margin-bottom: 15px;
+        }
+
+        .journey-input-group {
+            margin-bottom: 12px;
+        }
+
+        .journey-label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .swap-btn {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            background-color: #0a0a0a;
+            color: #FFED00;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .swap-btn:active {
+            background-color: #1a1a1a;
+        }
+
+        .journey-container {
+            margin-top: 15px;
+        }
+
+        .journey-result {
+            background-color: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .journey-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #222;
+        }
+
+        .journey-time {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .journey-duration {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .journey-legs {
+            margin-top: 12px;
+        }
+
+        .journey-leg {
+            margin-bottom: 12px;
+            padding: 16px;
+            background-color: #050505;
+            border-radius: 6px;
+            border-left: 4px solid #666;
+        }
+
+        .journey-leg-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .journey-leg-icon {
+            font-size: 28px;
+            min-width: 32px;
+        }
+
+        .journey-leg-line {
+            font-weight: bold;
+            font-size: 20px;
+            flex: 1;
+        }
+
+        .journey-leg-duration {
+            font-size: 16px;
+            opacity: 0.6;
+        }
+
+        .journey-leg-stop {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 30px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #111;
+        }
+
+        .journey-leg-stop:last-child {
+            border-bottom: none;
+        }
+
+        .journey-leg-station {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .journey-leg-platform {
+            font-size: 16px;
+            color: #FFED00;
+            font-weight: bold;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .journey-leg-time {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: right;
+            min-width: 70px;
+        }
+
+        .journey-transfer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            margin: 10px 0;
+            background-color: #1a1a00;
+            border-radius: 4px;
+            font-size: 14px;
+            border-left: 3px solid #FFED00;
+        }
+
+        .journey-transfer.tight {
+            background-color: #2a1a00;
+            border-left-color: #ff9900;
+        }
+
+        .journey-transfer.very-tight {
+            background-color: #2a0000;
+            border-left-color: #ff3333;
+        }
+
+        .journey-transfer-time {
+            font-weight: bold;
+            color: #FFED00;
+            font-size: 16px;
+            margin-left: auto;
+        }
+
+        .journey-transfer.tight .journey-transfer-time {
+            color: #ff9900;
+        }
+
+        .journey-transfer.very-tight .journey-transfer-time {
+            color: #ff3333;
         }
 
         .loading {
@@ -525,6 +857,75 @@
             opacity: 0.7;
         }
 
+        /* Journey Detail Modal */
+        .journey-detail-leg {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #050505;
+            border-radius: 6px;
+        }
+
+        .journey-detail-leg-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #222;
+        }
+
+        .journey-detail-stop {
+            padding: 10px 0;
+            margin-left: 30px;
+        }
+
+        .journey-detail-stop-time {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFED00;
+            margin-bottom: 4px;
+        }
+
+        .journey-detail-stop-name {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .journey-detail-platform {
+            font-size: 11px;
+            color: #FFED00;
+            opacity: 0.8;
+        }
+
+        .journey-detail-intermediate {
+            margin: 8px 0 8px 30px;
+            padding: 8px;
+            background-color: #0a0a0a;
+            border-radius: 4px;
+        }
+
+        .journey-detail-transfer {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            background-color: #1a1a00;
+            border-radius: 4px;
+            border-left: 3px solid #FFED00;
+            font-size: 12px;
+        }
+
+        .journey-detail-transfer.tight {
+            background-color: #2a1a00;
+            border-left-color: #ff9900;
+        }
+
+        .journey-detail-transfer.very-tight {
+            background-color: #2a0000;
+            border-left-color: #ff3333;
+        }
+
         /* Touch improvements */
         .departure-item {
             min-height: 70px;
@@ -666,6 +1067,596 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+
+        /* Tablet & Desktop */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px 30px;
+            }
+
+            .header h1 {
+                font-size: 32px;
+                letter-spacing: 3px;
+            }
+
+            .header .subtitle {
+                font-size: 13px;
+            }
+
+            .menu-btn {
+                font-size: 28px;
+                padding: 10px 16px;
+                right: 20px;
+            }
+
+            /* Hover-Effekte für Desktop */
+            .menu-btn:hover {
+                background-color: rgba(255, 237, 0, 0.1);
+            }
+
+            .nav-item:hover {
+                background-color: #1a1a1a;
+            }
+
+            .departure-item:hover {
+                background-color: #111;
+                transform: translateX(4px);
+                transition: transform 0.2s;
+            }
+
+            .journey-result:hover {
+                background-color: #111;
+                border-color: #333;
+            }
+
+            .btn:hover {
+                background-color: rgba(255, 237, 0, 0.1);
+            }
+
+            .swap-btn:hover {
+                background-color: #1a1a1a;
+            }
+
+            .suggestion-item:hover {
+                background-color: #2a2a2a;
+            }
+
+            .nav-menu {
+                width: 280px;
+            }
+
+            /* Header größer auf Desktop */
+            .header h1 {
+                font-size: 36px;
+                letter-spacing: 3px;
+            }
+
+            .header .subtitle {
+                font-size: 14px;
+            }
+
+            .header .author {
+                font-size: 11px;
+            }
+
+            /* Controls größer */
+            .controls {
+                padding: 20px;
+                background-color: rgba(10, 10, 10, 0.5);
+                border-radius: 8px;
+            }
+
+            .search-input {
+                height: 56px;
+                font-size: 18px;
+                padding: 14px 50px 14px 14px;
+            }
+
+            .location-btn-side {
+                width: 56px;
+                height: 56px;
+                min-width: 56px;
+                min-height: 56px;
+                font-size: 22px;
+            }
+
+            .btn {
+                padding: 16px;
+                font-size: 16px;
+                min-height: 56px;
+            }
+
+            /* Journey Input - 2 Column Layout */
+            .journey-inputs {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+
+            .journey-input-group {
+                margin-bottom: 0;
+            }
+
+            .swap-btn {
+                margin: 45px 0 0 0;
+                width: auto;
+                padding: 12px 20px;
+            }
+
+            .journey-label {
+                font-size: 18px;
+            }
+
+            /* Station Info größer */
+            .station-info {
+                padding: 25px;
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a00 100%);
+            }
+
+            .station-name {
+                font-size: 28px;
+            }
+
+            .last-update {
+                font-size: 15px;
+            }
+
+            /* Departure Items größer */
+            .departure-item {
+                padding: 24px;
+                margin-bottom: 18px;
+                cursor: pointer;
+            }
+
+            .line-badge {
+                padding: 8px 16px;
+                font-size: 20px;
+            }
+
+            .departure-destination {
+                font-size: 22px;
+            }
+
+            .departure-platform {
+                font-size: 16px;
+                padding: 5px 12px;
+            }
+
+            .platform-icon {
+                font-size: 14px;
+            }
+
+            .departure-time {
+                font-size: 32px;
+            }
+
+            .departure-delay {
+                font-size: 16px;
+            }
+
+            /* Journey Results */
+            .journey-result {
+                padding: 25px;
+                margin-bottom: 20px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .journey-time {
+                font-size: 32px;
+            }
+
+            .journey-duration {
+                font-size: 20px;
+            }
+
+            .journey-leg {
+                padding: 25px;
+            }
+
+            .journey-leg-header {
+                margin-bottom: 20px;
+            }
+
+            .journey-leg-icon {
+                font-size: 36px;
+            }
+
+            .journey-leg-line {
+                font-size: 28px;
+            }
+
+            .journey-leg-duration {
+                font-size: 20px;
+            }
+
+            .journey-leg-stop {
+                padding: 14px 0;
+                gap: 40px;
+            }
+
+            .journey-leg-station {
+                font-size: 22px;
+            }
+
+            .journey-leg-platform {
+                font-size: 20px;
+                min-width: 120px;
+            }
+
+            .journey-leg-time {
+                font-size: 24px;
+                min-width: 80px;
+            }
+
+            .journey-transfer {
+                padding: 18px 24px;
+                font-size: 20px;
+            }
+
+            .journey-transfer-time {
+                font-size: 22px;
+            }
+
+            /* Detail Modal */
+            .detail-header {
+                padding: 28px;
+            }
+
+            .detail-title {
+                font-size: 26px;
+            }
+
+            .detail-content {
+                padding: 32px 28px;
+            }
+
+            .detail-section {
+                padding: 24px;
+            }
+
+            .stop-item {
+                padding: 16px;
+            }
+
+            .stop-name {
+                font-size: 18px;
+            }
+
+            /* Journey Detail Modal */
+            .journey-detail-leg {
+                padding: 22px;
+            }
+
+            .journey-detail-stop-time {
+                font-size: 24px;
+            }
+
+            .journey-detail-stop-name {
+                font-size: 20px;
+            }
+
+            .journey-detail-platform {
+                font-size: 16px;
+            }
+
+            .journey-detail-transfer {
+                font-size: 18px;
+            }
+        }
+
+        /* Large Desktop - 2 Column Layout */
+        @media (min-width: 1200px) {
+            .container {
+                padding: 30px 40px;
+            }
+
+            /* Abfahrten in 2 Spalten */
+            #departuresContainer {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+
+            .station-info {
+                grid-column: 1 / -1;
+            }
+
+            /* Journey auch größer */
+            .journey-result {
+                padding: 30px;
+            }
+
+            .journey-leg {
+                padding: 16px;
+            }
+        }
+
+        /* Extra Large Desktop */
+        @media (min-width: 1600px) {
+            .container {
+                max-width: 1400px;
+            }
+
+            /* 3 Spalten für Abfahrten */
+            #departuresContainer {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .station-info {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* Mobile Optimierungen */
+        @media (max-width: 767px) {
+            /* Mobile Design mit größerer Schrift */
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 15px 10px 12px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+                letter-spacing: 2px;
+            }
+
+            .header .subtitle {
+                font-size: 12px;
+            }
+
+            .header .author {
+                font-size: 10px;
+            }
+
+            .menu-btn {
+                font-size: 26px;
+                padding: 8px 12px;
+                right: 10px;
+            }
+
+            .controls {
+                padding: 12px;
+            }
+
+            .search-input {
+                font-size: 18px;
+                padding: 12px 44px 12px 12px;
+                height: 48px;
+            }
+
+            .location-btn-side {
+                width: 48px;
+                height: 48px;
+                min-width: 48px;
+                min-height: 48px;
+                font-size: 20px;
+            }
+
+            .btn {
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            .station-info {
+                padding: 14px;
+            }
+
+            .station-name {
+                font-size: 20px;
+            }
+
+            .last-update {
+                font-size: 12px;
+            }
+
+            .departure-item {
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .line-badge {
+                padding: 6px 12px;
+                font-size: 16px;
+            }
+
+            .departure-destination {
+                font-size: 18px;
+            }
+
+            .departure-platform {
+                font-size: 14px;
+                padding: 4px 10px;
+            }
+
+            .platform-icon {
+                font-size: 13px;
+            }
+
+            .departure-time {
+                font-size: 26px;
+            }
+
+            .departure-delay {
+                font-size: 14px;
+            }
+
+            .journey-result {
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .journey-header {
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+            }
+
+            .journey-time {
+                font-size: 20px;
+            }
+
+            .journey-duration {
+                font-size: 16px;
+            }
+
+            .journey-leg {
+                padding: 14px;
+            }
+
+            .journey-leg-header {
+                margin-bottom: 10px;
+                gap: 10px;
+            }
+
+            .journey-leg-icon {
+                font-size: 22px;
+            }
+
+            .journey-leg-line {
+                font-size: 17px;
+            }
+
+            .journey-leg-duration {
+                font-size: 13px;
+            }
+
+            .journey-leg-stop {
+                padding: 6px 0;
+                gap: 12px;
+            }
+
+            .journey-leg-station {
+                font-size: 15px;
+            }
+
+            .journey-leg-platform {
+                font-size: 13px;
+                min-width: 70px;
+            }
+
+            .journey-leg-time {
+                font-size: 16px;
+                min-width: 55px;
+            }
+
+            .journey-transfer {
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+
+            .journey-transfer-time {
+                font-size: 17px;
+            }
+
+            .journey-label {
+                font-size: 16px;
+            }
+
+            .swap-btn {
+                margin: 12px 0;
+                font-size: 20px;
+            }
+
+            body {
+                overflow-x: hidden;
+            }
+
+            /* Text truncation für lange Namen */
+            .departure-destination {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+        }
+
+            .journey-leg {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .journey-leg-icon {
+                font-size: 18px;
+            }
+
+            .journey-leg-line {
+                font-size: 13px;
+            }
+
+            .journey-leg-stations {
+                font-size: 11px;
+            }
+
+            .journey-leg-time {
+                font-size: 10px;
+                min-width: 50px;
+            }
+
+            .journey-transfer {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .journey-transfer-time {
+                font-size: 15px;
+            }
+
+            .journey-label {
+                font-size: 14px;
+            }
+
+            .swap-btn {
+                margin: 10px 0;
+                font-size: 18px;
+            }
+
+            body {
+                overflow-x: hidden;
+            }
+
+            /* Text truncation für lange Namen */
+            .departure-destination {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+        }
+
+        /* Extra Small Mobile (SE, kleine Geräte) */
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .departure-item {
+                padding: 10px;
+            }
+
+            .line-badge {
+                font-size: 11px;
+            }
+
+            .departure-destination {
+                font-size: 13px;
+            }
+
+            .departure-time {
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -678,35 +1669,123 @@
     </div>
 
     <div class="header">
-        <h1>VBB NETZ STATUS</h1>
-        <div class="subtitle">ECHTZEIT-ABFAHRTSMONITOR</div>
-        <div class="author">by Aaron K.</div>
+        <div class="header-content">
+            <div class="header-title">
+                <h1>VBB NETZ STATUS</h1>
+                <div class="subtitle">ECHTZEIT-ABFAHRTSMONITOR</div>
+                <div class="author">by Aaron K.</div>
+            </div>
+            <button class="menu-btn" id="menuBtn" aria-label="Menü öffnen">
+                ☰
+            </button>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="controls">
-            <div class="search-row">
-                <div class="search-container">
-                    <input 
-                        type="text" 
-                        id="stationSearch" 
-                        class="search-input" 
-                        placeholder="Station suchen..."
-                        autocomplete="off"
-                    >
-                    <button class="clear-btn" id="clearBtn">×</button>
-                    <div class="suggestions" id="suggestions"></div>
-                </div>
-                <button class="location-btn-side" id="locationBtn" title="Nächste Station per GPS finden">
-                    📍
-                </button>
-            </div>
-            <div class="button-group">
-                <button class="btn" id="refreshBtn" disabled>🔄 Aktualisieren</button>
-            </div>
+    <!-- Navigation Menu -->
+    <div class="nav-menu" id="navMenu">
+        <div class="nav-header">
+            <h3>Funktionen</h3>
+            <button class="nav-close" id="navClose">×</button>
         </div>
+        <div class="nav-items">
+            <button class="nav-item active" data-view="departures">
+                <span class="nav-icon">🚇</span>
+                <span class="nav-label">Abfahrten</span>
+            </button>
+            <button class="nav-item" data-view="journey">
+                <span class="nav-icon">🗺️</span>
+                <span class="nav-label">Routenplaner</span>
+            </button>
+        </div>
+    </div>
+    <div class="nav-overlay" id="navOverlay"></div>
 
-        <div id="departuresContainer" class="departures-container"></div>
+    <!-- View: Abfahrten -->
+    <div class="view-container active" id="view-departures">
+        <div class="container">
+            <div class="controls">
+                <div class="search-row">
+                    <div class="search-container">
+                        <input 
+                            type="text" 
+                            id="stationSearch" 
+                            class="search-input" 
+                            placeholder="Station suchen..."
+                            autocomplete="off"
+                        >
+                        <button class="clear-btn" id="clearBtn">×</button>
+                        <div class="suggestions" id="suggestions"></div>
+                    </div>
+                    <button class="location-btn-side" id="locationBtn" title="Nächste Station per GPS finden">
+                        📍
+                    </button>
+                </div>
+                <div class="button-group">
+                    <button class="btn" id="refreshBtn" disabled>🔄 Aktualisieren</button>
+                </div>
+            </div>
+
+            <div id="departuresContainer" class="departures-container"></div>
+        </div>
+    </div>
+
+    <!-- View: Routenplaner -->
+    <div class="view-container" id="view-journey">
+        <div class="container">
+            <div class="controls">
+                <div class="journey-inputs">
+                    <div class="journey-input-group">
+                        <label class="journey-label">🔵 Von</label>
+                        <div class="search-row">
+                            <div class="search-container">
+                                <input 
+                                    type="text" 
+                                    id="journeyFrom" 
+                                    class="search-input" 
+                                    placeholder="Startstation..."
+                                    autocomplete="off"
+                                >
+                                <button class="clear-btn" id="clearFromBtn">×</button>
+                                <div class="suggestions" id="suggestionsFrom"></div>
+                            </div>
+                            <button class="location-btn-side" id="locationFromBtn" title="Aktuellen Standort nutzen">
+                                📍
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="swap-btn" id="swapBtn" title="Start und Ziel tauschen">
+                        ⇅
+                    </button>
+
+                    <div class="journey-input-group">
+                        <label class="journey-label">🔴 Nach</label>
+                        <div class="search-row">
+                            <div class="search-container">
+                                <input 
+                                    type="text" 
+                                    id="journeyTo" 
+                                    class="search-input" 
+                                    placeholder="Zielstation..."
+                                    autocomplete="off"
+                                >
+                                <button class="clear-btn" id="clearToBtn">×</button>
+                                <div class="suggestions" id="suggestionsTo"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn" id="searchJourneyBtn" disabled>🔍 Route suchen</button>
+                    <div style="font-size: 11px; opacity: 0.6; text-align: center; margin-top: 8px;">
+                        Garantiert mind. 5 Min Umstiegszeit
+                    </div>
+                </div>
+            </div>
+
+            <div id="journeyContainer" class="journey-container"></div>
+        </div>
     </div>
 
     <!-- Detail Modal -->
@@ -721,6 +1800,18 @@
         </div>
     </div>
 
+    <!-- Journey Detail Modal -->
+    <div class="detail-modal" id="journeyDetailModal">
+        <div class="detail-header">
+            <button class="detail-back-btn" id="journeyDetailBackBtn">←</button>
+            <div class="detail-title" id="journeyDetailTitle">Routen-Details</div>
+            <div style="width: 34px;"></div>
+        </div>
+        <div class="detail-content" id="journeyDetailContent">
+            <div class="loading-detail">⏳ Lade Details...</div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = 'https://v6.vbb.transport.rest';
         let currentStationId = null;
@@ -731,7 +1822,7 @@
         let autoRefreshInterval = null;
         let apiCallTimestamps = []; // Track API calls for rate limiting
 
-        // DOM Elements
+        // DOM Elements - Departures View
         const stationSearch = document.getElementById('stationSearch');
         const clearBtn = document.getElementById('clearBtn');
         const locationBtn = document.getElementById('locationBtn');
@@ -744,6 +1835,33 @@
         const detailBackBtn = document.getElementById('detailBackBtn');
         const detailTitle = document.getElementById('detailTitle');
         const detailContent = document.getElementById('detailContent');
+
+        // DOM Elements - Journey Detail Modal
+        const journeyDetailModal = document.getElementById('journeyDetailModal');
+        const journeyDetailBackBtn = document.getElementById('journeyDetailBackBtn');
+        const journeyDetailTitle = document.getElementById('journeyDetailTitle');
+        const journeyDetailContent = document.getElementById('journeyDetailContent');
+
+        // DOM Elements - Navigation
+        const menuBtn = document.getElementById('menuBtn');
+        const navMenu = document.getElementById('navMenu');
+        const navClose = document.getElementById('navClose');
+        const navOverlay = document.getElementById('navOverlay');
+        const navItems = document.querySelectorAll('.nav-item');
+        const viewDepartures = document.getElementById('view-departures');
+        const viewJourney = document.getElementById('view-journey');
+
+        // DOM Elements - Journey View
+        const journeyFrom = document.getElementById('journeyFrom');
+        const journeyTo = document.getElementById('journeyTo');
+        const clearFromBtn = document.getElementById('clearFromBtn');
+        const clearToBtn = document.getElementById('clearToBtn');
+        const locationFromBtn = document.getElementById('locationFromBtn');
+        const suggestionsFrom = document.getElementById('suggestionsFrom');
+        const suggestionsTo = document.getElementById('suggestionsTo');
+        const swapBtn = document.getElementById('swapBtn');
+        const searchJourneyBtn = document.getElementById('searchJourneyBtn');
+        const journeyContainer = document.getElementById('journeyContainer');
 
         // Service Worker registrieren
         if ('serviceWorker' in navigator) {
@@ -759,6 +1877,61 @@
 
         window.addEventListener('offline', () => {
             offlineIndicator.classList.add('show');
+        });
+
+        // Menu Navigation
+        function openMenu() {
+            navMenu.classList.add('active');
+            navOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            navOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        menuBtn.addEventListener('click', openMenu);
+        navClose.addEventListener('click', closeMenu);
+        navOverlay.addEventListener('click', closeMenu);
+
+        // View Switching
+        let currentView = 'departures';
+
+        function switchView(viewName) {
+            // Update active nav item
+            navItems.forEach(item => {
+                if (item.dataset.view === viewName) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Switch views
+            if (viewName === 'departures') {
+                viewDepartures.classList.add('active');
+                viewJourney.classList.remove('active');
+            } else if (viewName === 'journey') {
+                viewDepartures.classList.remove('active');
+                viewJourney.classList.add('active');
+            }
+
+            currentView = viewName;
+            closeMenu();
+
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const view = item.dataset.view;
+                switchView(view);
+            });
         });
 
         // Pull-to-refresh
@@ -833,6 +2006,41 @@
                 closeDetailModal();
             } else {
                 detailModal.style.transform = '';
+            }
+        });
+
+        // Swipe-to-close für Journey Detail Modal
+        let journeyModalStartY = 0;
+        let journeyModalPulling = false;
+
+        journeyDetailModal.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.detail-content') && journeyDetailModal.scrollTop === 0) {
+                journeyModalStartY = e.touches[0].pageY;
+                journeyModalPulling = true;
+            }
+        });
+
+        journeyDetailModal.addEventListener('touchmove', (e) => {
+            if (!journeyModalPulling) return;
+            const currentY = e.touches[0].pageY;
+            const pullDistance = currentY - journeyModalStartY;
+            
+            if (pullDistance > 0 && pullDistance < 200) {
+                journeyDetailModal.style.transform = `translateY(${pullDistance}px)`;
+            }
+        });
+
+        journeyDetailModal.addEventListener('touchend', (e) => {
+            if (!journeyModalPulling) return;
+            journeyModalPulling = false;
+            
+            const currentY = e.changedTouches[0].pageY;
+            const pullDistance = currentY - journeyModalStartY;
+            
+            if (pullDistance > 100) {
+                closeJourneyDetailModal();
+            } else {
+                journeyDetailModal.style.transform = '';
             }
         });
 
@@ -1238,18 +2446,24 @@
                     `<div class="departure-delay">+${delay} min Verspätung</div>` : '';
 
                 const lineColor = getLineColor(dep.line);
-                const platform = dep.platform ? `Gleis ${dep.platform}` : '';
+                const platformHTML = dep.platform ? 
+                    `<div class="departure-platform">
+                        <span class="platform-icon">🚉</span>
+                        <span class="platform-text">Gleis ${dep.platform}</span>
+                    </div>` : '';
 
                 const cancelled = dep.cancelled ? '<span class="status-badge status-cancelled">FÄLLT AUS</span>' : '';
 
                 return `
                     <div class="departure-item" style="border-left-color: ${lineColor}" data-trip-id="${dep.tripId}" data-index="${index}">
                         <div class="departure-info">
-                            <div class="line-badge" style="background-color: ${lineColor}; color: #000;">
-                                ${dep.line.name}${cancelled}
+                            <div class="departure-header">
+                                <div class="line-badge" style="background-color: ${lineColor}; color: #000;">
+                                    ${dep.line.name}${cancelled}
+                                </div>
+                                ${platformHTML}
                             </div>
                             <div class="departure-destination">→ ${dep.direction}</div>
-                            ${platform ? `<div class="departure-platform">${platform}</div>` : ''}
                         </div>
                         <div class="departure-time">
                             ${timeDisplay}
@@ -1503,7 +2717,18 @@
             if (e.key === 'Escape' && detailModal.classList.contains('active')) {
                 closeDetailModal();
             }
+            if (e.key === 'Escape' && journeyDetailModal.classList.contains('active')) {
+                closeJourneyDetailModal();
+            }
         });
+
+        // Journey Detail Modal schließen
+        journeyDetailBackBtn.addEventListener('click', closeJourneyDetailModal);
+
+        function closeJourneyDetailModal() {
+            journeyDetailModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
 
         function getLineColor(line) {
             if (!line || !line.product) return '#666';
@@ -1546,6 +2771,625 @@
 
         // Refresh button
         refreshBtn.addEventListener('click', loadDepartures);
+
+        // Journey Planner State
+        let journeyFromStation = null;
+        let journeyToStation = null;
+
+        // Journey Autocomplete
+        let journeyFromTimeout = null;
+        let journeyToTimeout = null;
+
+        function setupJourneyAutocomplete(inputField, suggestionsContainer, onSelect) {
+            let timeout = null;
+
+            inputField.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                
+                clearTimeout(timeout);
+                
+                if (query.length < 2) {
+                    suggestionsContainer.classList.remove('active');
+                    suggestionsContainer.innerHTML = '';
+                    return;
+                }
+
+                timeout = setTimeout(async () => {
+                    if (!canMakeApiCall()) {
+                        console.warn('Rate limit reached, skipping search');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch(`${API_BASE}/locations?query=${encodeURIComponent(query)}&results=10`);
+                        const locations = await response.json();
+                        
+                        const stops = locations.filter(loc => 
+                            loc.type === 'stop' || loc.type === 'station'
+                        );
+                        
+                        if (stops.length > 0) {
+                            suggestionsContainer.innerHTML = stops.map(stop => `
+                                <div class="suggestion-item" data-id="${stop.id}" data-name="${stop.name}">
+                                    ${stop.name}
+                                </div>
+                            `).join('');
+                            
+                            suggestionsContainer.classList.add('active');
+                            
+                            suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                                item.addEventListener('click', () => {
+                                    const id = item.dataset.id;
+                                    const name = item.dataset.name;
+                                    onSelect(id, name);
+                                    inputField.value = name;
+                                    suggestionsContainer.classList.remove('active');
+                                    
+                                    if (navigator.vibrate) navigator.vibrate(10);
+                                });
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Autocomplete error:', error);
+                    }
+                }, 300);
+            });
+        }
+
+        // Setup Journey From
+        setupJourneyAutocomplete(journeyFrom, suggestionsFrom, (id, name) => {
+            journeyFromStation = { id, name };
+            checkJourneySearchReady();
+        });
+
+        // Setup Journey To
+        setupJourneyAutocomplete(journeyTo, suggestionsTo, (id, name) => {
+            journeyToStation = { id, name };
+            checkJourneySearchReady();
+        });
+
+        // Clear buttons
+        clearFromBtn.addEventListener('click', () => {
+            journeyFrom.value = '';
+            journeyFromStation = null;
+            suggestionsFrom.classList.remove('active');
+            checkJourneySearchReady();
+        });
+
+        clearToBtn.addEventListener('click', () => {
+            journeyTo.value = '';
+            journeyToStation = null;
+            suggestionsTo.classList.remove('active');
+            checkJourneySearchReady();
+        });
+
+        // Swap button
+        swapBtn.addEventListener('click', () => {
+            const tempStation = journeyFromStation;
+            const tempValue = journeyFrom.value;
+            
+            journeyFromStation = journeyToStation;
+            journeyFrom.value = journeyTo.value;
+            
+            journeyToStation = tempStation;
+            journeyTo.value = tempValue;
+            
+            checkJourneySearchReady();
+            
+            if (navigator.vibrate) navigator.vibrate(15);
+        });
+
+        // Location From Button
+        locationFromBtn.addEventListener('click', async () => {
+            if (!navigator.geolocation) {
+                alert('⚠️ Standortdienste nicht verfügbar');
+                return;
+            }
+
+            if (!canMakeApiCall()) {
+                alert('⚠️ Rate-Limit erreicht');
+                return;
+            }
+
+            locationFromBtn.disabled = true;
+            locationFromBtn.textContent = '⌛';
+
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 30000
+                    });
+                });
+
+                const { latitude, longitude } = position.coords;
+                
+                const response = await fetch(
+                    `${API_BASE}/locations/nearby?latitude=${latitude}&longitude=${longitude}&results=10`
+                );
+
+                if (!response.ok) throw new Error('API_ERROR');
+
+                const locations = await response.json();
+                const stations = locations.filter(loc => 
+                    loc.type === 'stop' || loc.type === 'station'
+                );
+
+                if (stations.length === 0) throw new Error('NO_STATIONS');
+
+                const nearest = stations[0];
+                journeyFromStation = { id: nearest.id, name: nearest.name };
+                journeyFrom.value = nearest.name;
+                checkJourneySearchReady();
+
+                if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+
+            } catch (error) {
+                console.error('Location error:', error);
+                alert('⚠️ Standort konnte nicht ermittelt werden');
+            } finally {
+                locationFromBtn.disabled = false;
+                locationFromBtn.textContent = '📍';
+            }
+        });
+
+        // Check if search is ready
+        function checkJourneySearchReady() {
+            if (journeyFromStation && journeyToStation) {
+                searchJourneyBtn.disabled = false;
+            } else {
+                searchJourneyBtn.disabled = true;
+            }
+        }
+
+        // Search Journey
+        searchJourneyBtn.addEventListener('click', async () => {
+            if (!journeyFromStation || !journeyToStation) return;
+
+            if (!canMakeApiCall()) {
+                alert('⚠️ Rate-Limit erreicht. Bitte warte kurz.');
+                return;
+            }
+
+            journeyContainer.innerHTML = '<div class="loading">⏳ Suche Verbindungen...</div>';
+
+            try {
+                const url = `${API_BASE}/journeys?from=${journeyFromStation.id}&to=${journeyToStation.id}&results=5&transfers=3&transferTime=5`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('API-Fehler');
+
+                const data = await response.json();
+                displayJourneys(data.journeys || []);
+
+                if (navigator.vibrate) navigator.vibrate(10);
+
+            } catch (error) {
+                console.error('Journey search error:', error);
+                journeyContainer.innerHTML = `
+                    <div class="error">
+                        ⚠️ Fehler bei der Routensuche<br>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        });
+
+        // Display Journeys
+        let currentJourneys = []; // Speichert aktuelle Journeys für Detail-Ansicht
+
+        function displayJourneys(journeys) {
+            currentJourneys = journeys; // Speichern für später
+            
+            if (!journeys || journeys.length === 0) {
+                journeyContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🚫</div>
+                        Keine Verbindungen gefunden
+                    </div>
+                `;
+                return;
+            }
+
+            const html = journeys.map((journey, journeyIndex) => {
+                const departure = new Date(journey.legs[0].plannedDeparture || journey.legs[0].departure);
+                const arrival = new Date(journey.legs[journey.legs.length - 1].plannedArrival || journey.legs[journey.legs.length - 1].arrival);
+                
+                const durationMs = arrival - departure;
+                const durationMin = Math.round(durationMs / 60000);
+                const hours = Math.floor(durationMin / 60);
+                const minutes = durationMin % 60;
+                const durationText = hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+
+                // Normalisierungs-Funktion definieren (wird mehrfach gebraucht)
+                function normalizeStationName(name) {
+                    if (!name) return '';
+                    return name
+                        .replace(/^(S\+U|U|S)\s+/i, '')
+                        .replace(/\s*\(.*?\)\s*/g, '')
+                        .replace(/^Berlin\s+/i, '')
+                        .toLowerCase()
+                        .trim();
+                }
+                
+                // SCHRITT 1: Filtere Same-Place-Walks VORHER aus dem Array
+                const filteredLegs = journey.legs.filter((leg) => {
+                    // Behalte alle Fahrzeuge
+                    if (leg.line) return true;
+                    
+                    // Prüfe Fußwege: Nur behalten wenn verschiedene Orte
+                    const originNorm = normalizeStationName(leg.origin?.name);
+                    const destNorm = normalizeStationName(leg.destination?.name);
+                    
+                    const samePlace = originNorm && destNorm && (
+                        originNorm === destNorm || 
+                        originNorm.includes(destNorm) || 
+                        destNorm.includes(originNorm)
+                    );
+                    
+                    return !samePlace; // NUR Fußwege zwischen verschiedenen Orten behalten
+                });
+                
+                // SCHRITT 2: Zeige gefilterte Legs an
+                const legsHtml = filteredLegs.map((leg, index) => {
+                    const icon = getTransportIcon(leg);
+                    const lineColor = leg.line ? getLineColor(leg.line) : '#666';
+                    
+                    const depTime = new Date(leg.plannedDeparture || leg.departure).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                    const arrTime = new Date(leg.plannedArrival || leg.arrival).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                    
+                    // Fahrtdauer dieses Legs
+                    const legDuration = Math.round((new Date(leg.plannedArrival || leg.arrival) - new Date(leg.plannedDeparture || leg.departure)) / 60000);
+                    
+                    // Gleisangaben
+                    const depPlatform = leg.departurePlatform ? `Gleis ${leg.departurePlatform}` : '';
+                    const arrPlatform = leg.arrivalPlatform ? `Gleis ${leg.arrivalPlatform}` : '';
+                    
+                    let transferHtml = '';
+                    // Transfer-Zeit zum NÄCHSTEN gefilterten Leg
+                    if (index < filteredLegs.length - 1) {
+                        const nextLeg = filteredLegs[index + 1];
+                        
+                        const arrivalTime = new Date(leg.plannedArrival || leg.arrival);
+                        const nextDepartureTime = new Date(nextLeg.plannedDeparture || nextLeg.departure);
+                        const transferTime = Math.round((nextDepartureTime - arrivalTime) / 60000);
+                        
+                        // Bestimme Art des Übergangs
+                        let transferType = '';
+                        let transferIcon = '';
+                        
+                        // Prüfe ob gleicher Bahnhof
+                        const destName = normalizeStationName(leg.destination?.name);
+                        const originName = normalizeStationName(nextLeg.origin?.name);
+                        
+                        const sameStation = destName && originName && (
+                            destName === originName || 
+                            destName.includes(originName) || 
+                            originName.includes(destName)
+                        );
+                        
+                        if (leg.line && nextLeg.line) {
+                            // Beide sind Fahrzeuge
+                            if (sameStation) {
+                                transferType = 'Umstieg';
+                                transferIcon = '🔄';
+                            } else {
+                                transferType = 'Fußweg';
+                                transferIcon = '🚶';
+                            }
+                        } else if (!leg.line || !nextLeg.line) {
+                            // Mindestens eines ist Fußweg
+                            transferType = 'Fußweg';
+                            transferIcon = '🚶';
+                        }
+                        
+                        const platformInfo = arrPlatform && nextLeg.departurePlatform ? 
+                            ` • ${arrPlatform} → Gleis ${nextLeg.departurePlatform}` : '';
+                        
+                        // Berechne Anzeige-Zeit
+                        let displayTime = transferTime >= 0 ? transferTime : 0;
+                        
+                        // Mindestens 2 Min bei Umstieg am gleichen Bahnhof
+                        if (transferType === 'Umstieg' && sameStation && displayTime < 2) {
+                            displayTime = Math.max(2, displayTime);
+                        }
+                        
+                        // Warnung bei kurzen Umstiegszeiten
+                        let warningClass = '';
+                        if (transferType === 'Umstieg' && displayTime < 3) {
+                            warningClass = ' very-tight';
+                        } else if (transferType === 'Umstieg' && displayTime < 5) {
+                            warningClass = ' tight';
+                        }
+                        
+                        transferHtml = `
+                            <div class="journey-transfer${warningClass}">
+                                <span>${transferIcon} ${transferType}${platformInfo}</span>
+                                <span class="journey-transfer-time">${displayTime} min</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Zeige Dauer bei Fußwegen in der Leg-Zeile
+                    const durationBadge = !leg.line ? ` <span style="opacity:0.7;font-size:0.9em">(${legDuration} min)</span>` : '';
+                    
+                    return `
+                        <div class="journey-leg" style="border-left-color: ${lineColor}" data-leg-index="${index}">
+                            <div class="journey-leg-header">
+                                <div class="journey-leg-icon">${icon}</div>
+                                <div class="journey-leg-line">${leg.line ? leg.line.name : 'Fußweg'}${durationBadge}</div>
+                                <div class="journey-leg-duration">${legDuration} min</div>
+                            </div>
+                            
+                            <div class="journey-leg-stop">
+                                <div class="journey-leg-station">${leg.origin.name}</div>
+                                <div class="journey-leg-platform">${depPlatform || ''}</div>
+                                <div class="journey-leg-time">${depTime}</div>
+                            </div>
+                            
+                            <div class="journey-leg-stop">
+                                <div class="journey-leg-station">${leg.destination.name}</div>
+                                <div class="journey-leg-platform">${arrPlatform || ''}</div>
+                                <div class="journey-leg-time">${arrTime}</div>
+                            </div>
+                        </div>
+                        ${transferHtml}
+                    `;
+                }).join('');
+
+                return `
+                    <div class="journey-result" data-journey-index="${journeyIndex}" style="cursor: pointer;">
+                        <div class="journey-header">
+                            <div class="journey-time">
+                                ${departure.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} 
+                                → 
+                                ${arrival.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <div class="journey-duration">${durationText}</div>
+                        </div>
+                        <div class="journey-legs">
+                            ${legsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            journeyContainer.innerHTML = html;
+
+            // Click-Handler für Journey Results
+            journeyContainer.querySelectorAll('.journey-result').forEach(item => {
+                item.addEventListener('click', () => {
+                    const journeyIndex = parseInt(item.dataset.journeyIndex);
+                    showJourneyDetails(currentJourneys[journeyIndex], journeyIndex);
+                    
+                    if (navigator.vibrate) {
+                        navigator.vibrate(10);
+                    }
+                });
+            });
+        }
+
+        // Show Journey Details
+        function showJourneyDetails(journey, journeyIndex) {
+            journeyDetailModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            const departure = new Date(journey.legs[0].plannedDeparture || journey.legs[0].departure);
+            const arrival = new Date(journey.legs[journey.legs.length - 1].plannedArrival || journey.legs[journey.legs.length - 1].arrival);
+            
+            const durationMs = arrival - departure;
+            const durationMin = Math.round(durationMs / 60000);
+            const hours = Math.floor(durationMin / 60);
+            const minutes = durationMin % 60;
+            const durationText = hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+
+            journeyDetailTitle.textContent = `Verbindung ${journeyIndex + 1}`;
+
+            let contentHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">📍 Übersicht</div>
+                    <div class="detail-row">
+                        <span class="detail-label">Von:</span>
+                        <span class="detail-value">${journey.legs[0].origin.name}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Nach:</span>
+                        <span class="detail-value">${journey.legs[journey.legs.length - 1].destination.name}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Abfahrt:</span>
+                        <span class="detail-value">${departure.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Ankunft:</span>
+                        <span class="detail-value">${arrival.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Dauer:</span>
+                        <span class="detail-value">${durationText}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Umstiege:</span>
+                        <span class="detail-value">${journey.legs.filter(leg => leg.line).length - 1} Umstiege</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">🚉 Fahrtabschnitte</div>
+            `;
+
+            // Normalisierungs-Funktion
+            function normalizeStationName(name) {
+                if (!name) return '';
+                return name
+                    .replace(/^(S\+U|U|S)\s+/i, '')
+                    .replace(/\s*\(.*?\)\s*/g, '')
+                    .replace(/^Berlin\s+/i, '')
+                    .toLowerCase()
+                    .trim();
+            }
+
+            // Filtere Same-Place-Walks VORHER
+            const filteredLegs = journey.legs.filter((leg) => {
+                if (leg.line) return true;
+                
+                const originNorm = normalizeStationName(leg.origin?.name);
+                const destNorm = normalizeStationName(leg.destination?.name);
+                
+                const samePlace = originNorm && destNorm && (
+                    originNorm === destNorm || 
+                    originNorm.includes(destNorm) || 
+                    destNorm.includes(originNorm)
+                );
+                
+                return !samePlace;
+            });
+
+            filteredLegs.forEach((leg, index) => {
+                const icon = getTransportIcon(leg);
+                const lineColor = leg.line ? getLineColor(leg.line) : '#666';
+                const depTime = new Date(leg.plannedDeparture || leg.departure).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                const arrTime = new Date(leg.plannedArrival || leg.arrival).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                
+                const depPlatform = leg.departurePlatform ? `Gleis ${leg.departurePlatform}` : '';
+                const arrPlatform = leg.arrivalPlatform ? `Gleis ${leg.arrivalPlatform}` : '';
+
+                const legDuration = Math.round((new Date(leg.plannedArrival || leg.arrival) - new Date(leg.plannedDeparture || leg.departure)) / 60000);
+
+                contentHTML += `
+                    <div class="journey-detail-leg" style="border-left: 4px solid ${lineColor}">
+                        <div class="journey-detail-leg-header">
+                            <span style="font-size: 20px;">${icon}</span>
+                            <span style="font-weight: bold; font-size: 16px;">${leg.line ? leg.line.name : 'Fußweg'}</span>
+                            <span style="opacity: 0.7; font-size: 13px;">${legDuration} min</span>
+                        </div>
+                        
+                        <div class="journey-detail-stop">
+                            <div class="journey-detail-stop-time">${depTime}</div>
+                            <div class="journey-detail-stop-name">${leg.origin.name}</div>
+                            ${depPlatform ? `<div class="journey-detail-platform">${depPlatform}</div>` : ''}
+                        </div>
+
+                        ${leg.stopovers && leg.stopovers.length > 0 ? `
+                            <div class="journey-detail-intermediate">
+                                <span style="opacity: 0.6; font-size: 12px;">🔄 ${leg.stopovers.length} Halte</span>
+                            </div>
+                        ` : ''}
+
+                        <div class="journey-detail-stop">
+                            <div class="journey-detail-stop-time">${arrTime}</div>
+                            <div class="journey-detail-stop-name">${leg.destination.name}</div>
+                            ${arrPlatform ? `<div class="journey-detail-platform">${arrPlatform}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Transfer-Zeit zum NÄCHSTEN gefilterten Leg
+                if (index < filteredLegs.length - 1) {
+                    const nextLeg = filteredLegs[index + 1];
+                    
+                    const arrivalTime = new Date(leg.plannedArrival || leg.arrival);
+                    const nextDepartureTime = new Date(nextLeg.plannedDeparture || nextLeg.departure);
+                    const transferTime = Math.round((nextDepartureTime - arrivalTime) / 60000);
+                    
+                    // Bestimme Art des Übergangs
+                    let transferType = '';
+                    let transferIcon = '';
+                    
+                    const destName = normalizeStationName(leg.destination?.name);
+                    const originName = normalizeStationName(nextLeg.origin?.name);
+                    
+                    const sameStation = destName && originName && (
+                        destName === originName || 
+                        destName.includes(originName) || 
+                        originName.includes(destName)
+                    );
+                    
+                    if (leg.line && nextLeg.line) {
+                        // Beide sind Fahrzeuge
+                        if (sameStation) {
+                            transferType = 'Umstieg';
+                            transferIcon = '🔄';
+                        } else {
+                            transferType = 'Fußweg';
+                            transferIcon = '🚶';
+                        }
+                    } else if (leg.walking || nextLeg.walking || !leg.line || !nextLeg.line) {
+                        transferType = 'Fußweg';
+                        transferIcon = '🚶';
+                    }
+                    
+                    const platformInfo = arrPlatform && nextLeg.departurePlatform ? 
+                        `<span style="font-size: 11px; opacity: 0.7;">${arrPlatform} → Gleis ${nextLeg.departurePlatform}</span>` 
+                        : '';
+                    
+                    let displayTime = transferTime >= 0 ? transferTime : 0;
+                    
+                    if (transferType === 'Umstieg' && sameStation && displayTime < 2) {
+                        displayTime = Math.max(2, displayTime);
+                    }
+                    
+                    let warningClass = '';
+                    if (transferType === 'Umstieg' && displayTime < 3) {
+                        warningClass = ' very-tight';
+                    } else if (transferType === 'Umstieg' && displayTime < 5) {
+                        warningClass = ' tight';
+                    }
+                    
+                    contentHTML += `
+                        <div class="journey-detail-transfer${warningClass}">
+                            <span>${transferIcon} ${transferType} • ${displayTime} min</span>
+                            ${platformInfo}
+                        </div>
+                    `;
+                }
+            });
+
+            contentHTML += `</div>`;
+
+            // Hinweise wenn vorhanden
+            if (journey.remarks && journey.remarks.length > 0) {
+                contentHTML += `
+                    <div class="detail-section">
+                        <div class="detail-section-title">ℹ️ Hinweise</div>
+                `;
+                
+                journey.remarks.forEach(remark => {
+                    if (remark.text) {
+                        contentHTML += `
+                            <div class="remark-item">
+                                <div class="remark-text">${remark.text}</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                contentHTML += `</div>`;
+            }
+
+            journeyDetailContent.innerHTML = contentHTML;
+
+            if (navigator.vibrate) {
+                navigator.vibrate(15);
+            }
+        }
+
+        // Get Transport Icon
+        function getTransportIcon(leg) {
+            if (leg.walking) return '🚶';
+            if (!leg.line) return '🚶';
+            
+            const product = leg.line.product;
+            if (product === 'subway') return '🚇';
+            if (product === 'suburban') return '🚊';
+            if (product === 'tram') return '🚋';
+            if (product === 'bus') return '🚌';
+            if (product === 'regional' || product === 'regionalExp') return '🚆';
+            if (product === 'ferry') return '⛴️';
+            
+            return '🚉';
+        }
 
         // Initial state
         if (!navigator.onLine) {
