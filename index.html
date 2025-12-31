@@ -49,7 +49,7 @@
             background-color: #000;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 10000;
             border-bottom: 2px solid #FFED00;
         }
 
@@ -100,6 +100,7 @@
             border-radius: 6px;
             transition: background-color 0.2s;
             line-height: 1;
+            z-index: 10001;
         }
 
         .menu-btn:active {
@@ -116,7 +117,7 @@
             height: 100%;
             background-color: #000;
             border-left: 2px solid #FFED00;
-            z-index: 1000;
+            z-index: 10003;
             transition: right 0.3s ease;
         }
 
@@ -131,7 +132,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
-            z-index: 999;
+            z-index: 10002;
             display: none;
         }
 
@@ -1679,7 +1680,138 @@
                 font-size: 16px;
             }
         }
+
+        /* Live-Map Styles */
+        .livemap-container {
+            width: 100%;
+            height: calc(100vh - 140px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #liveMap {
+            width: 100%;
+            height: 100%;
+        }
+
+        .livemap-controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .livemap-info {
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 2px solid #FFED00;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            color: #FFED00;
+        }
+
+        .livemap-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #666;
+            color: #FFED00;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .filter-btn.active {
+            background-color: #FFED00;
+            color: #000;
+            border-color: #FFED00;
+        }
+
+        .filter-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Leaflet Marker Styling */
+        .vehicle-marker {
+            font-size: 24px;
+            text-align: center;
+            animation: pulse-marker 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-marker {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .vehicle-popup {
+            font-family: 'DotMatrix', 'Courier New', monospace;
+        }
+
+        .vehicle-popup .popup-line {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFED00;
+            margin-bottom: 8px;
+        }
+
+        .vehicle-popup .popup-direction {
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .vehicle-popup .popup-delay {
+            font-size: 12px;
+            color: #ff5555;
+            font-weight: bold;
+        }
+
+        @media (max-width: 767px) {
+            .livemap-controls {
+                top: 5px;
+                left: 5px;
+                right: 5px;
+            }
+
+            .livemap-info {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .filter-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .vehicle-marker {
+                font-size: 20px;
+            }
+        }
     </style>
+    
+    <!-- Leaflet CSS für Live-Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    
+    <!-- Leaflet JS für Live-Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
 </head>
 <body>
     <div class="offline-indicator" id="offlineIndicator">
@@ -1717,6 +1849,10 @@
             <button class="nav-item" data-view="journey">
                 <span class="nav-icon">🗺️</span>
                 <span class="nav-label">Routenplaner</span>
+            </button>
+            <button class="nav-item" data-view="livemap">
+                <span class="nav-icon">🌍</span>
+                <span class="nav-label">Live-Map</span>
             </button>
         </div>
     </div>
@@ -1807,6 +1943,25 @@
             </div>
 
             <div id="journeyContainer" class="journey-container"></div>
+        </div>
+    </div>
+
+    <!-- View: Live-Map -->
+    <div class="view-container" id="view-livemap">
+        <div class="livemap-container">
+            <div class="livemap-controls">
+                <div class="livemap-info">
+                    <span id="vehicleCount">🚇 Lade Fahrzeuge...</span>
+                </div>
+                <div class="livemap-filters">
+                    <button class="filter-btn active" data-type="all">🌐 Alle</button>
+                    <button class="filter-btn" data-type="subway">🚇 U-Bahn</button>
+                    <button class="filter-btn" data-type="suburban">🚆 S-Bahn</button>
+                    <button class="filter-btn" data-type="tram">🚊 Tram</button>
+                    <button class="filter-btn" data-type="bus">🚌 Bus</button>
+                </div>
+            </div>
+            <div id="liveMap"></div>
         </div>
     </div>
 
@@ -1932,12 +2087,40 @@
             });
 
             // Switch views
+            const viewLiveMap = document.getElementById('view-livemap');
+            
             if (viewName === 'departures') {
                 viewDepartures.classList.add('active');
                 viewJourney.classList.remove('active');
+                viewLiveMap.classList.remove('active');
+                
+                // Stop Live-Map Updates
+                if (liveMapUpdateInterval) {
+                    clearInterval(liveMapUpdateInterval);
+                    liveMapUpdateInterval = null;
+                }
             } else if (viewName === 'journey') {
                 viewDepartures.classList.remove('active');
                 viewJourney.classList.add('active');
+                viewLiveMap.classList.remove('active');
+                
+                // Stop Live-Map Updates
+                if (liveMapUpdateInterval) {
+                    clearInterval(liveMapUpdateInterval);
+                    liveMapUpdateInterval = null;
+                }
+            } else if (viewName === 'livemap') {
+                viewDepartures.classList.remove('active');
+                viewJourney.classList.remove('active');
+                viewLiveMap.classList.add('active');
+                
+                // Initialize Live-Map wenn noch nicht geschehen
+                setTimeout(() => {
+                    initLiveMap();
+                    if (liveMap) {
+                        liveMap.invalidateSize();
+                    }
+                }, 100);
             }
 
             currentView = viewName;
@@ -3417,6 +3600,200 @@
         if (!navigator.onLine) {
             offlineIndicator.classList.add('show');
         }
+
+        // ==========================================
+        // LIVE-MAP FUNCTIONALITY
+        // ==========================================
+        
+        let liveMap = null;
+        let vehicleMarkers = [];
+        let liveMapUpdateInterval = null;
+        let activeVehicleTypes = new Set(['all']);
+
+        // Fahrzeug-Icons nach Typ
+        function getVehicleEmoji(product) {
+            const type = product?.mode || product?.name || '';
+            
+            if (type.includes('subway') || type.includes('U-Bahn') || type.match(/^U\d/)) {
+                return '🚇';
+            } else if (type.includes('suburban') || type.includes('S-Bahn') || type.match(/^S\d/)) {
+                return '🚆';
+            } else if (type.includes('tram') || type.includes('Tram') || type.includes('M1') || type.includes('M2')) {
+                return '🚊';
+            } else if (type.includes('bus') || type.includes('Bus')) {
+                return '🚌';
+            } else if (type.includes('regional') || type.includes('RE') || type.includes('RB')) {
+                return '🚉';
+            } else if (type.includes('express') || type.includes('ICE') || type.includes('IC')) {
+                return '🚅';
+            }
+            
+            return '🚍'; // Default
+        }
+
+        // Fahrzeugtyp bestimmen
+        function getVehicleType(product) {
+            const type = product?.mode || product?.name || '';
+            
+            if (type.includes('subway') || type.includes('U-Bahn') || type.match(/^U\d/)) {
+                return 'subway';
+            } else if (type.includes('suburban') || type.includes('S-Bahn') || type.match(/^S\d/)) {
+                return 'suburban';
+            } else if (type.includes('tram') || type.includes('Tram')) {
+                return 'tram';
+            } else if (type.includes('bus') || type.includes('Bus')) {
+                return 'bus';
+            }
+            
+            return 'other';
+        }
+
+        // Live-Map initialisieren
+        function initLiveMap() {
+            if (liveMap) return; // Bereits initialisiert
+
+            // Map zentriert auf Berlin
+            liveMap = L.map('liveMap').setView([52.52, 13.405], 12);
+
+            // Tile Layer (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(liveMap);
+
+            // Fahrzeuge laden
+            loadVehicles();
+            
+            // Auto-Update alle 10 Sekunden
+            liveMapUpdateInterval = setInterval(loadVehicles, 10000);
+        }
+
+        // Fahrzeuge von API laden
+        async function loadVehicles() {
+            try {
+                // Berlin Bounding Box
+                const bounds = {
+                    north: 52.70,
+                    south: 52.35,
+                    west: 13.08,
+                    east: 13.76
+                };
+
+                const url = `${API_BASE}/radar?` +
+                    `north=${bounds.north}&south=${bounds.south}&` +
+                    `west=${bounds.west}&east=${bounds.east}&` +
+                    `results=200&duration=60&` +
+                    `subway=true&bus=true&tram=true&suburban=true&regional=true`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Radar API Error');
+
+                const data = await response.json();
+                displayVehicles(data.movements || []);
+
+            } catch (error) {
+                console.error('Load vehicles error:', error);
+                document.getElementById('vehicleCount').textContent = 
+                    '⚠️ Fehler beim Laden der Fahrzeuge';
+            }
+        }
+
+        // Fahrzeuge auf Map anzeigen
+        function displayVehicles(movements) {
+            // Alte Marker entfernen
+            vehicleMarkers.forEach(marker => marker.remove());
+            vehicleMarkers = [];
+
+            // Filtern nach aktiven Typen
+            const filteredMovements = movements.filter(m => {
+                if (activeVehicleTypes.has('all')) return true;
+                const vehicleType = getVehicleType(m.line?.product);
+                return activeVehicleTypes.has(vehicleType);
+            });
+
+            // Update Counter
+            document.getElementById('vehicleCount').innerHTML = 
+                `🚇 <span style="color: #fff;">${filteredMovements.length}</span> Fahrzeuge aktiv`;
+
+            // Marker erstellen
+            filteredMovements.forEach(movement => {
+                if (!movement.location || !movement.location.latitude || !movement.location.longitude) {
+                    return;
+                }
+
+                const lat = movement.location.latitude;
+                const lon = movement.location.longitude;
+                const emoji = getVehicleEmoji(movement.line?.product);
+                
+                // Custom Icon mit Emoji
+                const icon = L.divIcon({
+                    html: `<div class="vehicle-marker">${emoji}</div>`,
+                    className: 'custom-marker',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                // Marker erstellen
+                const marker = L.marker([lat, lon], { icon: icon });
+
+                // Popup mit Fahrzeuginfos
+                const lineName = movement.line?.name || 'Unbekannt';
+                const direction = movement.direction || 'Keine Angabe';
+                const delay = movement.delay ? `+${Math.round(movement.delay / 60)} min Verspätung` : 'Pünktlich';
+                
+                const popupContent = `
+                    <div class="vehicle-popup">
+                        <div class="popup-line">${emoji} ${lineName}</div>
+                        <div class="popup-direction">→ ${direction}</div>
+                        <div class="popup-delay">${delay}</div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+                marker.addTo(liveMap);
+                vehicleMarkers.push(marker);
+            });
+        }
+
+        // Filter Buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const type = this.dataset.type;
+                
+                if (type === 'all') {
+                    // Alle Filter deaktivieren, nur "Alle" aktiv
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    activeVehicleTypes.clear();
+                    activeVehicleTypes.add('all');
+                } else {
+                    // "Alle" deaktivieren
+                    document.querySelector('.filter-btn[data-type="all"]').classList.remove('active');
+                    activeVehicleTypes.delete('all');
+                    
+                    // Toggle Filter
+                    if (activeVehicleTypes.has(type)) {
+                        activeVehicleTypes.delete(type);
+                        this.classList.remove('active');
+                    } else {
+                        activeVehicleTypes.add(type);
+                        this.classList.add('active');
+                    }
+                    
+                    // Falls keine Filter aktiv, "Alle" wieder aktivieren
+                    if (activeVehicleTypes.size === 0) {
+                        activeVehicleTypes.add('all');
+                        document.querySelector('.filter-btn[data-type="all"]').classList.add('active');
+                    }
+                }
+                
+                // Fahrzeuge neu laden mit Filter
+                loadVehicles();
+                
+                if (navigator.vibrate) navigator.vibrate(5);
+            });
+        });
+
     </script>
 </body>
 </html>
