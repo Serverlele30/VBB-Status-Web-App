@@ -1,0 +1,41 @@
+{
+  "name": "vbb-netz-status",
+  "version": "29.0.0",
+  "description": "Live-Nahverkehr für Berlin & Brandenburg - Progressive Web App (PWA) für Echtzeit-Abfahrten, Routenplanung und Live-Fahrzeugverfolgung im VBB-Gebiet",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "vbb",
+    "bvg",
+    "berlin",
+    "brandenburg",
+    "transit",
+    "public-transport",
+    "pwa",
+    "real-time",
+    "departures",
+    "route-planner",
+    "live-map"
+  ],
+  "author": "Aaron K. & Claude (Anthropic)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Serverlele30/VBB-Status-Web-App.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Serverlele30/VBB-Status-Web-App/issues"
+  },
+  "homepage": "https://github.com/Serverlele30/VBB-Status-Web-App#readme",
+  "dependencies": {
+    "mime-types": "^2.1.35"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
