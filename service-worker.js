@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vbb-status-v20';
+const CACHE_NAME = 'vbb-status-v22';
 const urlsToCache = [
   '/',
   '/index.html',

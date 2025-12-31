@@ -2153,6 +2153,14 @@
                 }
             });
 
+            // Update Page Title dynamisch
+            const titles = {
+                'departures': 'VBB Netz Status - Abfahrten',
+                'journey': 'VBB Netz Status - Route',
+                'livemap': 'VBB Netz Status - Live-Map'
+            };
+            document.title = titles[viewName] || 'VBB Netz Status';
+
             // Switch views
             const viewLiveMap = document.getElementById('view-livemap');
             
@@ -2205,6 +2213,9 @@
                 switchView(view);
             });
         });
+
+        // Initialen Title setzen (für default View 'departures')
+        document.title = 'VBB Netz Status - Abfahrten';
 
         // Pull-to-refresh
         let startY = 0;
@@ -3676,6 +3687,7 @@
         let vehicleMarkers = [];
         let liveMapUpdateInterval = null;
         let activeVehicleTypes = new Set(['all']);
+        let debounceTimer = null;
 
         // Fahrzeug-Icons nach Typ
         function getVehicleEmoji(product, lineName) {
@@ -3835,11 +3847,23 @@
                 subdomains: 'abcd'
             }).addTo(liveMap);
 
-            // Fahrzeuge laden
+            // Fahrzeuge initial laden
             loadVehicles();
             
-            // Auto-Update alle 10 Sekunden
-            liveMapUpdateInterval = setInterval(loadVehicles, 10000);
+            // Auto-Update alle 15 Sekunden (erhöht von 10s)
+            liveMapUpdateInterval = setInterval(loadVehicles, 15000);
+            
+            // Event-Listener: Neu laden wenn Karte bewegt/gezoomt wird
+            // Mit Debouncing (1 Sekunde Verzögerung) um API zu schonen
+            liveMap.on('moveend', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    console.log('Map moved/zoomed, reloading vehicles...');
+                    loadVehicles();
+                }, 1000);  // 1 Sekunde warten nach Bewegung
+            });
+            
+            console.log('Live-Map initialisiert mit dynamischen Bounds');
         }
 
         // Fahrzeuge von API laden
@@ -3851,13 +3875,29 @@
             }
             
             try {
-                // Berlin Bounding Box
+                // Loading-State anzeigen
+                const counterEl = document.getElementById('vehicleCount');
+                if (counterEl) {
+                    counterEl.innerHTML = '⏳ <span style="color: #fff;">Lade...</span>';
+                }
+                
+                // Dynamische Bounding Box vom aktuellen Kartenausschnitt
+                const mapBounds = liveMap.getBounds();
+                
+                // Puffer hinzufügen (15% größer) damit Fahrzeuge nicht sofort verschwinden
+                const latDiff = mapBounds.getNorth() - mapBounds.getSouth();
+                const lngDiff = mapBounds.getEast() - mapBounds.getWest();
+                const latPadding = latDiff * 0.15;
+                const lngPadding = lngDiff * 0.15;
+                
                 const bounds = {
-                    north: 52.70,
-                    south: 52.35,
-                    west: 13.08,
-                    east: 13.76
+                    north: Math.min(52.70, mapBounds.getNorth() + latPadding),  // Max: Berlin Nord
+                    south: Math.max(52.35, mapBounds.getSouth() - latPadding),  // Min: Berlin Süd
+                    west: Math.max(13.08, mapBounds.getWest() - lngPadding),    // Min: Berlin West
+                    east: Math.min(13.76, mapBounds.getEast() + lngPadding)     // Max: Berlin Ost
                 };
+
+                console.log('Loading vehicles for bounds:', bounds);
 
                 const url = `${API_BASE}/radar?` +
                     `north=${bounds.north}&south=${bounds.south}&` +
@@ -3869,6 +3909,7 @@
                 if (!response.ok) throw new Error('Radar API Error');
 
                 const data = await response.json();
+                console.log('API returned', data.movements?.length || 0, 'vehicles');
                 displayVehicles(data.movements || []);
 
             } catch (error) {
