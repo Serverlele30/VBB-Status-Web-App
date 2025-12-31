@@ -4,7 +4,7 @@
 > Eine Progressive Web App (PWA) für Echtzeit-Abfahrten, Routenplanung und Live-Fahrzeugverfolgung im VBB-Gebiet
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/Version-27.0-blue.svg)](https://github.com/Serverlele30/VBB-Status-Web-App)
+[![Version](https://img.shields.io/badge/Version-29.0-blue.svg)](https://github.com/Serverlele30/VBB-Status-Web-App)
 
 **Live-Demo:** [VBB-Status-Web-App](https://github.com/Serverlele30/VBB-Status-Web-App)
 

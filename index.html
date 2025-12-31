@@ -2172,6 +2172,55 @@
             color: #666;
         }
 
+        .home-footer-github {
+            margin-top: 15px !important;
+        }
+
+        .home-footer-github a {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #1a1a1a;
+            color: #FFED00;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid #333;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .home-footer-github a:hover {
+            background: #FFED00;
+            color: #000;
+            border-color: #FFED00;
+        }
+
+        /* GitHub Link Button */
+        .home-github-link {
+            text-align: center;
+            margin: 20px 0;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
+
+        .home-github-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #1a1a1a;
+            color: #FFED00;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 2px solid #FFED00;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .home-github-btn:hover {
+            background: #FFED00;
+            color: #000;
+            transform: translateY(-2px);
+        }
+
         /* Mobile Responsive */
         @media (max-width: 767px) {
             .home-container {
@@ -2256,6 +2305,16 @@
             .home-footer {
                 margin: 0 15px;
             }
+
+            .home-github-btn {
+                font-size: 13px;
+                padding: 10px 18px;
+            }
+
+            .home-footer-github a {
+                font-size: 12px;
+                padding: 7px 14px;
+            }
         }
     </style>
     
@@ -2336,7 +2395,7 @@
                 <div class="home-hero-title">
                     <h1>VBB NETZ STATUS</h1>
                     <p>Live-Nahverkehr für Berlin & Brandenburg</p>
-                    <div class="home-version">v27.0</div>
+                    <div class="home-version">v29.0</div>
                 </div>
             </div>
 
@@ -2374,15 +2433,22 @@
                     <!-- Latest Update -->
                     <div class="home-update home-update-latest">
                         <div class="home-update-header">
-                            <span class="home-update-version">v27.0</span>
+                            <span class="home-update-version">v29.0</span>
                             <span class="home-update-date">31.12.2025</span>
                         </div>
-                        <h3>Credits & Header Update</h3>
+                        <h3>GitHub-Integration</h3>
                         <ul>
-                            <li>Pfeil entfernt (klarer Text)</li>
-                            <li>Aaron K. in Credits erwähnt</li>
-                            <li>Header-Subtitle aktualisiert</li>
+                            <li>GitHub-Link im Changelog-Bereich</li>
+                            <li>"Star on GitHub" im Footer</li>
+                            <li>Direkter Zugriff auf Code & Updates</li>
                         </ul>
+                    </div>
+
+                    <!-- GitHub Link -->
+                    <div class="home-github-link">
+                        <a href="https://github.com/Serverlele30/VBB-Status-Web-App" target="_blank" class="home-github-btn">
+                            📖 Alle Updates & Code auf GitHub
+                        </a>
                     </div>
 
                     <!-- Older Updates (Collapsible) -->
@@ -2391,7 +2457,16 @@
                         
                         <div class="home-update">
                             <div class="home-update-header">
-                                <span class="home-update-version">v21.0</span>
+                                <span class="home-update-version">v28.0</span>
+                                <span class="home-update-date">31.12.2025</span>
+                            </div>
+                            <h3>Bug-Fix + GitHub Docs</h3>
+                            <ul>
+                                <li>Bug: Abfahrten beim Start nicht mehr sichtbar</li>
+                                <li>Vollständige README.md für GitHub</li>
+                                <li>GitHub CHANGELOG.md hinzugefügt</li>
+                            </ul>
+                        </div>
                             </div>
                             <h3>API-Optimierung</h3>
                             <ul>
@@ -2471,12 +2546,17 @@
             <div class="home-footer">
                 <p><strong>Inoffizielle App</strong> – Nicht von VBB/BVG betrieben</p>
                 <p class="home-footer-small">Made with ❤️ for Berlin & Brandenburg</p>
+                <p class="home-footer-github">
+                    <a href="https://github.com/Serverlele30/VBB-Status-Web-App" target="_blank">
+                        ⭐ Star on GitHub
+                    </a>
+                </p>
             </div>
         </div>
     </div>
 
     <!-- View: Abfahrten -->
-    <div class="view-container active" id="view-departures">
+    <div class="view-container" id="view-departures">
         <div class="container">
             <div class="controls">
                 <div class="search-row">
