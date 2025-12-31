@@ -14,7 +14,7 @@
         /* DotMatrix Font by NikBLN - https://github.com/NikBLN/weilSieDichLieben */
         @font-face {
             font-family: 'DotMatrix';
-            src: url('https://raw.githubusercontent.com/NikBLN/weilSieDichLieben/refs/heads/main/public/fonts/DotMatrix.ttf') format('truetype');
+            src: url('DotMatrix.ttf') format('truetype');
         }
 
         * {
@@ -62,7 +62,9 @@
 
         .header-title {
             flex: 1;
-            text-align: center;
+            text-align: left;
+            padding-left: 15px;
+            max-width: calc(100% - 100px);
         }
 
         .header h1 {
@@ -330,7 +332,8 @@
 
         .button-group {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 0;
             margin-top: 0;
         }
 
@@ -346,6 +349,10 @@
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.15s;
+        }
+
+        .btn-full-width {
+            width: 100%;
         }
 
         .btn:active {
@@ -1167,9 +1174,14 @@
             }
 
             .btn {
-                padding: 16px;
-                font-size: 16px;
-                min-height: 56px;
+                padding: 18px;
+                font-size: 18px;
+                min-height: 60px;
+            }
+
+            .btn-full-width {
+                width: 100%;
+                font-size: 18px;
             }
 
             /* Journey Input - 2 Column Layout */
@@ -1406,9 +1418,14 @@
                 padding: 15px 10px 12px;
             }
 
+            .header-title {
+                max-width: calc(100% - 80px);
+                padding-left: 10px;
+            }
+
             .header h1 {
-                font-size: 26px;
-                letter-spacing: 2px;
+                font-size: 24px;
+                letter-spacing: 1.5px;
             }
 
             .header .subtitle {
@@ -1444,8 +1461,13 @@
             }
 
             .btn {
-                padding: 12px;
-                font-size: 16px;
+                padding: 14px;
+                font-size: 18px;
+            }
+
+            .btn-full-width {
+                width: 100%;
+                font-size: 18px;
             }
 
             .station-info {
@@ -1777,10 +1799,10 @@
                 </div>
 
                 <div class="button-group">
-                    <button class="btn" id="searchJourneyBtn" disabled>🔍 Route suchen</button>
-                    <div style="font-size: 11px; opacity: 0.6; text-align: center; margin-top: 8px;">
+                    <div style="font-size: 12px; opacity: 0.7; text-align: center; margin-bottom: 10px; color: #FFED00;">
                         Garantiert mind. 5 Min Umstiegszeit
                     </div>
+                    <button class="btn btn-full-width" id="searchJourneyBtn" disabled>🔍 Route suchen</button>
                 </div>
             </div>
 
