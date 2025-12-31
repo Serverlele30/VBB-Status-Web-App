@@ -1747,46 +1747,65 @@
         }
 
         /* Leaflet Marker Styling */
-        .vehicle-marker {
-            text-align: center;
+        .vehicle-marker-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             animation: pulse-marker 2s ease-in-out infinite;
             cursor: pointer;
-            position: relative;
         }
 
-        .line-badge {
-            font-family: 'DotMatrix', 'Courier New', monospace !important;
-            pointer-events: none;
+        .vehicle-emoji {
+            font-size: 28px;
+            line-height: 1;
+            margin-bottom: 3px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            filter: drop-shadow(0 0 3px rgba(255,237,0,0.3));
+        }
+
+        .vehicle-line {
+            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 2px solid #000;
+            min-width: 28px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+            white-space: nowrap;
+            line-height: 1;
         }
 
         @keyframes pulse-marker {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
+            50% { transform: scale(1.1); }
         }
 
         .vehicle-popup {
             font-family: 'DotMatrix', 'Courier New', monospace;
             background-color: #000 !important;
-            color: #FFED00;
+            color: #fff;
         }
 
         .vehicle-popup .popup-line {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            color: #FFED00;
-            margin-bottom: 8px;
+            text-align: center;
         }
 
         .vehicle-popup .popup-direction {
             font-size: 14px;
             margin-bottom: 6px;
             color: #fff;
+            text-align: center;
         }
 
         .vehicle-popup .popup-delay {
             font-size: 12px;
             color: #ff5555;
             font-weight: bold;
+            text-align: center;
         }
 
         /* Leaflet Popup Dark Mode */
@@ -1794,14 +1813,23 @@
             background-color: #000 !important;
             border: 2px solid #FFED00 !important;
             border-radius: 8px !important;
+            padding: 12px !important;
         }
 
         .leaflet-popup-tip {
             background-color: #000 !important;
-            border: 2px solid #FFED00 !important;
         }
 
+        .leaflet-popup-content {
+            margin: 0 !important;
+        }
+
+        /* Leaflet Zoom Controls nur Desktop */
         @media (max-width: 767px) {
+            .leaflet-control-zoom {
+                display: none !important;
+            }
+
             .livemap-controls {
                 top: 5px;
                 left: 5px;
@@ -1816,6 +1844,28 @@
             .filter-btn {
                 padding: 6px 10px;
                 font-size: 12px;
+            }
+
+            .vehicle-emoji {
+                font-size: 24px;
+            }
+
+            .vehicle-line {
+                font-size: 10px;
+                padding: 2px 5px;
+                min-width: 24px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .vehicle-emoji {
+                font-size: 32px;
+            }
+
+            .vehicle-line {
+                font-size: 12px;
+                padding: 4px 8px;
+                min-width: 32px;
             }
         }
     </style>
@@ -3673,6 +3723,66 @@
             return '🚍'; // Default
         }
 
+
+        // BVG-Linienfarben (authentische Farben!)
+        function getBVGLineColor(lineName) {
+            const line = lineName?.toUpperCase() || '';
+            
+            // U-Bahn Farben (offiziell)
+            const ubahnColors = {
+                'U1': '#55A823',  // Grün
+                'U2': '#DA421E',  // Rot
+                'U3': '#16683D',  // Türkis
+                'U4': '#F0D722',  // Gelb
+                'U5': '#7E5330',  // Braun
+                'U6': '#8C6DAB',  // Lila
+                'U7': '#528DBA',  // Hellblau
+                'U8': '#224F86',  // Dunkelblau
+                'U9': '#F3791D'   // Orange
+            };
+            
+            // S-Bahn Farben (offiziell)
+            const sbahnColors = {
+                'S1': '#DE4DA4',   // Pink/Magenta
+                'S2': '#076D3D',   // Dunkelgrün
+                'S25': '#55A823',  // Grün
+                'S26': '#7E5330',  // Braun
+                'S3': '#1E5BA8',   // Blau
+                'S41': '#A65A28',  // Braun/Orange (Ring)
+                'S42': '#A65A28',  // Braun/Orange (Ring)
+                'S45': '#F0D722',  // Gelb
+                'S46': '#DA421E',  // Rot
+                'S47': '#8C6DAB',  // Lila
+                'S5': '#F3791D',   // Orange
+                'S7': '#BA7AB5',   // Lila/Magenta
+                'S75': '#6F7072',  // Grau
+                'S8': '#55A823',   // Grün
+                'S85': '#FFFFFF',  // Weiß
+                'S9': '#DA421E'    // Rot
+            };
+            
+            // Tram Farben (Metro = Rot, andere = Gelb)
+            const tramColors = {
+                'M1': '#DA421E', 'M2': '#DA421E', 'M4': '#DA421E',
+                'M5': '#DA421E', 'M6': '#DA421E', 'M8': '#DA421E',
+                'M10': '#DA421E', 'M13': '#DA421E', 'M17': '#DA421E'
+            };
+            
+            // Bus Farben (Metro = Gelb, Express = Blau, Normal = Lila)
+            if (line.startsWith('M') && !line.match(/M\d{1,2}$/)) {
+                return '#F0D722'; // Metro-Bus: Gelb
+            }
+            if (line.startsWith('X') || line.includes('TXL')) {
+                return '#1E5BA8'; // Express-Bus: Blau
+            }
+            if (line.startsWith('N')) {
+                return '#000000'; // Nacht-Bus: Schwarz mit weißer Schrift
+            }
+            
+            // Farbe zurückgeben
+            return ubahnColors[line] || sbahnColors[line] || tramColors[line] || '#993399'; // Default: Lila
+        }
+
         // Fahrzeugtyp bestimmen
         function getVehicleType(product) {
             const type = product?.mode || product?.name || '';
@@ -3694,13 +3804,21 @@
         function initLiveMap() {
             if (liveMap) return; // Bereits initialisiert
 
+            // Zoom-Control nur auf Desktop
+            const isMobile = window.innerWidth < 768;
+            
             // Map zentriert auf Berlin
-            liveMap = L.map('liveMap').setView([52.52, 13.405], 12);
+            liveMap = L.map('liveMap', {
+                center: [52.52, 13.405],
+                zoom: 12,
+                zoomControl: !isMobile  // Nur auf Desktop!
+            });
 
             // Tile Layer (CartoDB Dark Matter - Dark Mode!)
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '© OpenStreetMap contributors, © CartoDB',
                 maxZoom: 19,
+                minZoom: 10,
                 subdomains: 'abcd'
             }).addTo(liveMap);
 
@@ -3769,41 +3887,27 @@
                 const lineName = movement.line?.name || 'Unbekannt';
                 const emoji = getVehicleEmoji(movement.line?.product, lineName);
                 
-                // Linienfarbe basierend auf Typ
-                const vehicleType = getVehicleType(movement.line?.product);
-                let bgColor = '#666';
+                // Echte BVG-Linienfarbe!
+                const lineColor = getBVGLineColor(lineName);
                 
-                if (vehicleType === 'subway') bgColor = '#003399'; // Blau für U-Bahn
-                else if (vehicleType === 'suburban') bgColor = '#006600'; // Grün für S-Bahn
-                else if (vehicleType === 'tram') bgColor = '#cc0000'; // Rot für Tram
-                else if (vehicleType === 'bus') bgColor = '#993399'; // Lila für Bus
-                else if (vehicleType === 'other') bgColor = '#ff6600'; // Orange für Regional
+                // Textfarbe anpassen (weiß oder schwarz je nach Hintergrund)
+                const isLightBg = lineColor === '#F0D722' || lineColor === '#FFFFFF' || lineColor === '#55A823';
+                const textColor = isLightBg ? '#000' : '#FFF';
                 
-                // Custom Icon mit Emoji + Liniennummer
+                // Custom Icon: Emoji OBEN, Linie UNTEN
                 const icon = L.divIcon({
                     html: `
-                        <div class="vehicle-marker" style="position: relative;">
-                            <div style="font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">${emoji}</div>
-                            <div class="line-badge" style="
-                                position: absolute;
-                                bottom: -8px;
-                                right: -8px;
-                                background: ${bgColor};
-                                color: #fff;
-                                font-size: 10px;
-                                font-weight: bold;
-                                padding: 2px 5px;
-                                border-radius: 10px;
-                                border: 2px solid #000;
-                                min-width: 20px;
-                                text-align: center;
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                        <div class="vehicle-marker-container">
+                            <div class="vehicle-emoji">${emoji}</div>
+                            <div class="vehicle-line" style="
+                                background: ${lineColor};
+                                color: ${textColor};
                             ">${lineName}</div>
                         </div>
                     `,
                     className: 'custom-marker',
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20]
+                    iconSize: [50, 60],
+                    iconAnchor: [25, 30]
                 });
 
                 // Marker erstellen
@@ -3815,7 +3919,9 @@
                 
                 const popupContent = `
                     <div class="vehicle-popup">
-                        <div class="popup-line">${emoji} ${lineName}</div>
+                        <div class="popup-line" style="background: ${lineColor}; color: ${textColor}; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px;">
+                            ${emoji} ${lineName}
+                        </div>
                         <div class="popup-direction">→ ${direction}</div>
                         <div class="popup-delay">${delay}</div>
                     </div>
