@@ -3784,12 +3784,25 @@
         }
 
         // Fahrzeugtyp bestimmen
-        function getVehicleType(product) {
+        function getVehicleType(product, lineName) {
             const type = product?.mode || product?.name || '';
+            const line = lineName?.toUpperCase() || '';
             
-            if (type.includes('subway') || type.includes('U-Bahn') || type.match(/^U\d/)) {
+            // Prüfung nach Liniennamen (zuverlässiger!)
+            if (line.match(/^U\d/)) {
                 return 'subway';
-            } else if (type.includes('suburban') || type.includes('S-Bahn') || type.match(/^S\d/)) {
+            } else if (line.match(/^S\d/) || line.match(/^S\d{2}/)) {
+                return 'suburban';
+            } else if (line.match(/^M\d/) || line.match(/^\d{2}$/)) {
+                return 'tram';
+            } else if (line.startsWith('N') || line.startsWith('X') || line.match(/^\d{3}$/)) {
+                return 'bus';
+            }
+            
+            // Fallback: Prüfung nach product.mode
+            if (type.includes('subway') || type.includes('U-Bahn')) {
+                return 'subway';
+            } else if (type.includes('suburban') || type.includes('S-Bahn')) {
                 return 'suburban';
             } else if (type.includes('tram') || type.includes('Tram')) {
                 return 'tram';
@@ -3831,6 +3844,12 @@
 
         // Fahrzeuge von API laden
         async function loadVehicles() {
+            // Sicherheitsabfrage: Map muss existieren
+            if (!liveMap) {
+                console.log('Live-Map noch nicht initialisiert');
+                return;
+            }
+            
             try {
                 // Berlin Bounding Box
                 const bounds = {
@@ -3854,8 +3873,10 @@
 
             } catch (error) {
                 console.error('Load vehicles error:', error);
-                document.getElementById('vehicleCount').textContent = 
-                    '⚠️ Fehler beim Laden der Fahrzeuge';
+                const counterEl = document.getElementById('vehicleCount');
+                if (counterEl) {
+                    counterEl.textContent = '⚠️ Fehler beim Laden der Fahrzeuge';
+                }
             }
         }
 
@@ -3865,12 +3886,17 @@
             vehicleMarkers.forEach(marker => marker.remove());
             vehicleMarkers = [];
 
+            console.log('displayVehicles called with', movements.length, 'movements');
+            console.log('Active vehicle types:', Array.from(activeVehicleTypes));
+
             // Filtern nach aktiven Typen
             const filteredMovements = movements.filter(m => {
                 if (activeVehicleTypes.has('all')) return true;
-                const vehicleType = getVehicleType(m.line?.product);
+                const vehicleType = getVehicleType(m.line?.product, m.line?.name);
                 return activeVehicleTypes.has(vehicleType);
             });
+
+            console.log('Filtered to', filteredMovements.length, 'vehicles');
 
             // Update Counter
             document.getElementById('vehicleCount').innerHTML = 
@@ -3933,43 +3959,54 @@
             });
         }
 
-        // Filter Buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const type = this.dataset.type;
+        // Filter Buttons mit Event Delegation
+        document.addEventListener('click', function(e) {
+            // Prüfen ob es ein Filter-Button ist
+            if (e.target.closest('.filter-btn')) {
+                const btn = e.target.closest('.filter-btn');
+                const type = btn.dataset.type;
+                
+                console.log('Filter button clicked:', type);
                 
                 if (type === 'all') {
                     // Alle Filter deaktivieren, nur "Alle" aktiv
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
+                    btn.classList.add('active');
                     activeVehicleTypes.clear();
                     activeVehicleTypes.add('all');
                 } else {
                     // "Alle" deaktivieren
-                    document.querySelector('.filter-btn[data-type="all"]').classList.remove('active');
+                    const allBtn = document.querySelector('.filter-btn[data-type="all"]');
+                    if (allBtn) allBtn.classList.remove('active');
                     activeVehicleTypes.delete('all');
                     
                     // Toggle Filter
                     if (activeVehicleTypes.has(type)) {
                         activeVehicleTypes.delete(type);
-                        this.classList.remove('active');
+                        btn.classList.remove('active');
+                        console.log('Removed filter:', type);
                     } else {
                         activeVehicleTypes.add(type);
-                        this.classList.add('active');
+                        btn.classList.add('active');
+                        console.log('Added filter:', type);
                     }
                     
                     // Falls keine Filter aktiv, "Alle" wieder aktivieren
                     if (activeVehicleTypes.size === 0) {
                         activeVehicleTypes.add('all');
-                        document.querySelector('.filter-btn[data-type="all"]').classList.add('active');
+                        const allBtn = document.querySelector('.filter-btn[data-type="all"]');
+                        if (allBtn) allBtn.classList.add('active');
+                        console.log('No filters active, reset to all');
                     }
                 }
+                
+                console.log('Active filters after click:', Array.from(activeVehicleTypes));
                 
                 // Fahrzeuge neu laden mit Filter
                 loadVehicles();
                 
                 if (navigator.vibrate) navigator.vibrate(5);
-            });
+            }
         });
 
     </script>
