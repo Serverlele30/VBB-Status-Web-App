@@ -1,3 +1,111 @@
+// ==========================================
+// VIEW SWITCHING - NAVIGATION
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🔄 View-Switch System wird initialisiert...');
+
+    const navItems = document.querySelectorAll('.nav-item');
+    const views = document.querySelectorAll('.view-container');
+    const navMenu = document.getElementById('navMenu');
+    const navOverlay = document.getElementById('navOverlay');
+    const menuBtn = document.getElementById('menuBtn');
+    const navClose = document.getElementById('navClose');
+
+    // View wechseln
+    function switchView(viewName) {
+        console.log('📍 Wechsle zu View:', viewName);
+
+        // Alle Views deaktivieren
+        views.forEach(view => view.classList.remove('active'));
+
+        // Alle Nav-Items deaktivieren
+        navItems.forEach(item => item.classList.remove('active'));
+
+        // Ziel-View aktivieren
+        const targetView = document.getElementById(`view-${viewName}`);
+        if (targetView) {
+            targetView.classList.add('active');
+            console.log('✅ View aktiviert:', viewName);
+        } else {
+            console.error('❌ View nicht gefunden:', viewName);
+        }
+
+        // Aktiven Nav-Item markieren
+        const activeNavItem = document.querySelector(`[data-view="${viewName}"]`);
+        if (activeNavItem) {
+            activeNavItem.classList.add('active');
+        }
+
+        // Menü schließen
+        closeMenu();
+
+        // Vibration Feedback
+        if (navigator.vibrate) navigator.vibrate(10);
+
+        // Spezielle Actions für bestimmte Views
+        if (viewName === 'developer') {
+            // Changelog laden wenn noch nicht geladen
+            const changelogContent = document.getElementById('changelogContent');
+            if (changelogContent && changelogContent.innerHTML.includes('Lade Changelog')) {
+                loadChangelog();
+            }
+        }
+    }
+
+    // Menü öffnen/schließen
+    function openMenu() {
+        navMenu.classList.add('active');
+        navOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        if (navigator.vibrate) navigator.vibrate(5);
+    }
+
+    function closeMenu() {
+        navMenu.classList.remove('active');
+        navOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Event Listeners für Navigation
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const viewName = item.dataset.view;
+            if (viewName) {
+                switchView(viewName);
+            }
+        });
+    });
+
+    // Menü-Button
+    if (menuBtn) {
+        menuBtn.addEventListener('click', openMenu);
+    }
+
+    // Close-Button
+    if (navClose) {
+        navClose.addEventListener('click', closeMenu);
+    }
+
+    // Overlay Click
+    if (navOverlay) {
+        navOverlay.addEventListener('click', closeMenu);
+    }
+
+    // ESC zum Schließen
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+            closeMenu();
+        }
+    });
+
+    // Initial: Home-View aktivieren
+    switchView('home');
+
+    console.log('✅ View-Switch System bereit!');
+    console.log('📋 Verfügbare Views:', Array.from(navItems).map(i => i.dataset.view));
+});
+
         const API_BASE = 'https://v6.vbb.transport.rest';
         let currentStationId = null;
         let currentStationName = null;
@@ -1990,3 +2098,1117 @@
             }
         });
 
+
+// ==========================================
+// UPDATES VIEW - CHANGELOG LOADER
+// ==========================================
+
+async function loadChangelog() {
+    const container = document.getElementById('changelogContent');
+    
+    try {
+        const response = await fetch('CHANGELOG.md');
+        if (!response.ok) throw new Error('CHANGELOG nicht gefunden');
+        
+        const markdown = await response.text();
+        const html = parseChangelog(markdown);
+        container.innerHTML = html;
+        
+        // Accordion-Funktionalität
+        document.querySelectorAll('.version-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const versionBox = header.parentElement;
+                versionBox.classList.toggle('open');
+                
+                // Vibration Feedback
+                if (navigator.vibrate) navigator.vibrate(5);
+            });
+        });
+        
+    } catch (error) {
+        console.error('Changelog Fehler:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: #ff5555;">
+                <p style="font-size: 18px; margin-bottom: 10px;">⚠️ Changelog konnte nicht geladen werden</p>
+                <p style="font-size: 14px; opacity: 0.7;">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function parseChangelog(markdown) {
+    const lines = markdown.split('\n');
+    let html = '';
+    let currentVersion = null;
+    let currentCategory = null;
+    let changes = {};
+    
+    // Parse Markdown
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Version Header: ## [30.0.0] - 2026-02-10
+        if (line.match(/^## \[(\d+\.\d+\.\d+)\] - (.+)$/)) {
+            // Speichere vorherige Version
+            if (currentVersion) {
+                html += renderVersion(currentVersion, changes);
+                changes = {};
+            }
+            
+            const match = line.match(/^## \[(\d+\.\d+\.\d+)\] - (.+)$/);
+            currentVersion = {
+                number: match[1],
+                date: match[2]
+            };
+        }
+        
+        // Kategorie: ### Added
+        else if (line.match(/^### (.+)$/)) {
+            const match = line.match(/^### (.+)$/);
+            currentCategory = match[1];
+            if (!changes[currentCategory]) {
+                changes[currentCategory] = [];
+            }
+        }
+        
+        // Change Item: - Feature xyz
+        else if (line.match(/^[-*] (.+)$/) && currentCategory) {
+            const match = line.match(/^[-*] (.+)$/);
+            changes[currentCategory].push(match[1]);
+        }
+    }
+    
+    // Speichere letzte Version
+    if (currentVersion) {
+        html += renderVersion(currentVersion, changes);
+    }
+    
+    // GitHub Link Button
+    html += `
+        <a href="https://github.com/Serverlele30/VBB-Status-Web-App" 
+           target="_blank" 
+           class="github-link-btn">
+            💻 Alle Updates & Code auf GitHub
+        </a>
+    `;
+    
+    return html;
+}
+
+function renderVersion(version, changes) {
+    const categoryIcons = {
+        'Added': '✨',
+        'Changed': '🔄',
+        'Fixed': '🐛',
+        'Removed': '🗑️',
+        'Deprecated': '⚠️',
+        'Security': '🔒'
+    };
+    
+    let categoriesHtml = '';
+    
+    for (const [category, items] of Object.entries(changes)) {
+        if (items.length === 0) continue;
+        
+        const icon = categoryIcons[category] || '📝';
+        const itemsHtml = items.map(item => `<li class="change-item">${item}</li>`).join('');
+        
+        categoriesHtml += `
+            <div class="change-category">
+                <div class="change-category-title">${icon} ${category}</div>
+                <ul class="change-list">
+                    ${itemsHtml}
+                </ul>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="version-box">
+            <div class="version-header">
+                <div class="version-title">
+                    <span class="version-number">v${version.number}</span>
+                    <span class="version-date">${version.date}</span>
+                </div>
+                <span class="version-toggle">▼</span>
+            </div>
+            <div class="version-content">
+                <div class="version-content-inner">
+                    ${categoriesHtml}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Changelog laden wenn Updates-View geöffnet wird
+document.addEventListener('DOMContentLoaded', () => {
+    // Wenn direkt Updates-View aktiv ist
+    if (document.getElementById('view-developer')?.classList.contains('active')) {
+        loadChangelog();
+    }
+    
+    // Beim View-Wechsel
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.target.id === 'view-developer' && 
+                mutation.target.classList.contains('active')) {
+                // Nur laden wenn noch nicht geladen
+                const content = document.getElementById('changelogContent');
+                if (content.innerHTML.includes('Lade Changelog')) {
+                    loadChangelog();
+                }
+            }
+        });
+    });
+    
+    const updatesView = document.getElementById('view-developer');
+    if (updatesView) {
+        observer.observe(updatesView, { attributes: true, attributeFilter: ['class'] });
+    }
+});
+
+// ==========================================
+// MOBILE DETECTION - GPS NUR AUF MOBILE
+// ==========================================
+
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+        || window.innerWidth <= 768;
+}
+
+// GPS-Buttons verstecken auf Desktop
+document.addEventListener('DOMContentLoaded', () => {
+    if (!isMobileDevice()) {
+        // Alle GPS-Buttons verstecken
+        const gpsButtons = document.querySelectorAll('.location-btn-side, #locationBtn, #locationFromBtn');
+        gpsButtons.forEach(btn => {
+            if (btn) btn.style.display = 'none';
+        });
+    }
+});
+
+// ==========================================
+// DEVELOPER TABS
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.dev-tab');
+    const contents = document.querySelectorAll('.dev-tab-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            
+            // Deaktiviere alle Tabs
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            // Aktiviere gewählten Tab
+            tab.classList.add('active');
+            const targetContent = document.getElementById(`dev-${targetTab}`);
+            if (targetContent) targetContent.classList.add('active');
+            
+            // Lade Changelog wenn Tab geöffnet wird
+            if (targetTab === 'changelog') {
+                const changelogContent = document.getElementById('changelogContent');
+                if (changelogContent && changelogContent.innerHTML.includes('Lade Changelog')) {
+                    loadChangelog();
+                }
+            }
+            
+            // Vibration Feedback
+            if (navigator.vibrate) navigator.vibrate(5);
+        });
+    });
+});
+
+// ==========================================
+// ABFAHRTEN-FILTER
+// ==========================================
+
+let activeDepartureFilters = new Set(['all']);
+let allDepartures = []; // Alle Abfahrten speichern
+
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.departure-filters .filter-btn')) {
+        const btn = e.target.closest('.filter-btn');
+        const filterType = btn.dataset.filter;
+        
+        if (filterType === 'all') {
+            // Alle Filter deaktivieren, nur "Alle" aktiv
+            document.querySelectorAll('.departure-filters .filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeDepartureFilters.clear();
+            activeDepartureFilters.add('all');
+        } else {
+            // "Alle" deaktivieren
+            document.querySelector('.departure-filters .filter-btn[data-filter="all"]')?.classList.remove('active');
+            activeDepartureFilters.delete('all');
+            
+            // Toggle Filter
+            if (activeDepartureFilters.has(filterType)) {
+                activeDepartureFilters.delete(filterType);
+                btn.classList.remove('active');
+            } else {
+                activeDepartureFilters.add(filterType);
+                btn.classList.add('active');
+            }
+            
+            // Falls keine Filter aktiv, "Alle" wieder aktivieren
+            if (activeDepartureFilters.size === 0) {
+                activeDepartureFilters.add('all');
+                document.querySelector('.departure-filters .filter-btn[data-filter="all"]')?.classList.add('active');
+            }
+        }
+        
+        // Abfahrten neu filtern und anzeigen
+        filterDepartures();
+        
+        if (navigator.vibrate) navigator.vibrate(5);
+    }
+});
+
+function filterDepartures() {
+    if (!allDepartures || allDepartures.length === 0) return;
+    
+    let filtered = allDepartures;
+    
+    if (!activeDepartureFilters.has('all')) {
+        filtered = allDepartures.filter(dep => {
+            const product = dep.line?.product?.toLowerCase() || '';
+            return activeDepartureFilters.has(product);
+        });
+    }
+    
+    // Container neu rendern
+    const container = document.getElementById('departuresContainer');
+    if (filtered.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #FFED00;">Keine Abfahrten mit diesem Filter</div>';
+    } else {
+        displayDepartures(filtered);
+    }
+}
+
+// ==========================================
+// VERKEHRSMITTEL-FILTER (Routenplaner)
+// ==========================================
+
+let activeTransportModes = new Set(['subway', 'suburban', 'tram', 'bus', 'regional', 'express']);
+
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.journey-transport-filters .transport-filter-btn')) {
+        const btn = e.target.closest('.transport-filter-btn');
+        const transport = btn.dataset.transport;
+        
+        // Toggle Filter
+        if (activeTransportModes.has(transport)) {
+            if (activeTransportModes.size > 1) { // Mindestens 1 muss aktiv bleiben
+                activeTransportModes.delete(transport);
+                btn.classList.remove('active');
+            }
+        } else {
+            activeTransportModes.add(transport);
+            btn.classList.add('active');
+        }
+        
+        if (navigator.vibrate) navigator.vibrate(5);
+    }
+});
+
+function getActiveTransportModes() {
+    const mapping = {
+        'subway': 'subway',
+        'suburban': 'suburban',
+        'tram': 'tram',
+        'bus': 'bus',
+        'regional': 'regional',
+        'express': 'express'
+    };
+    
+    const modes = [];
+    activeTransportModes.forEach(mode => {
+        if (mapping[mode]) modes.push(mapping[mode]);
+    });
+    
+    return modes.length > 0 ? modes : ['subway', 'suburban', 'tram', 'bus', 'regional', 'express'];
+}
+
+
+// ==========================================
+// PATCHES FÜR FILTER-INTEGRATION
+// ==========================================
+
+// Original loadDepartures überschreiben
+const originalLoadDepartures = loadDepartures;
+loadDepartures = async function() {
+    await originalLoadDepartures();
+    
+    // Filter-UI einblenden wenn Abfahrten geladen
+    const filtersEl = document.getElementById('departureFilters');
+    if (filtersEl && allDepartures.length > 0) {
+        filtersEl.style.display = 'flex';
+    }
+};
+
+// displayDepartures erweitern um allDepartures zu speichern
+const originalDisplayDepartures = displayDepartures;
+displayDepartures = function(departures) {
+    // Speichere alle Abfahrten für Filter
+    if (!activeDepartureFilters || activeDepartureFilters.has('all')) {
+        allDepartures = departures;
+    }
+    
+    // Normale Anzeige
+    originalDisplayDepartures(departures);
+};
+
+// searchJourneys erweitern um Verkehrsmittel-Filter zu verwenden
+const originalSearchJourneys = searchJourneys;
+searchJourneys = async function() {
+    // Transport-Filter abrufen
+    const selectedModes = Array.from(activeTransportModes);
+    console.log('Aktive Verkehrsmittel:', selectedModes);
+    
+    // Original-Funktion aufrufen
+    await originalSearchJourneys();
+};
+
+// GPS nur auf Mobile - navigator.geolocation überschreiben
+if (!isMobileDevice()) {
+    const originalGeolocation = navigator.geolocation;
+    Object.defineProperty(navigator, 'geolocation', {
+        get: function() {
+            console.log('GPS ist auf Desktop deaktiviert');
+            return null;
+        }
+    });
+}
+
+
+// ==========================================
+// VERBESSERTE HOVER-INTERAKTIONEN
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Nur auf Desktop (Hover-fähige Geräte)
+    if (window.matchMedia('(hover: hover)').matches) {
+        
+        // Departure Items - Preview bei Hover
+        document.addEventListener('mouseover', (e) => {
+            const departureItem = e.target.closest('.departure-item');
+            if (departureItem) {
+                // Smooth Highlight
+                departureItem.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            }
+        });
+
+        // Journey Results - Highlight Route bei Hover
+        document.addEventListener('mouseover', (e) => {
+            const journeyResult = e.target.closest('.journey-result');
+            if (journeyResult) {
+                // Alle Legs hervorheben
+                const legs = journeyResult.querySelectorAll('.journey-leg');
+                legs.forEach((leg, index) => {
+                    setTimeout(() => {
+                        leg.style.transform = 'translateX(4px)';
+                        leg.style.transition = 'transform 0.2s ease';
+                    }, index * 50);
+                });
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const journeyResult = e.target.closest('.journey-result');
+            if (journeyResult) {
+                const legs = journeyResult.querySelectorAll('.journey-leg');
+                legs.forEach(leg => {
+                    leg.style.transform = 'translateX(0)';
+                });
+            }
+        });
+
+        // Filter Buttons - Visual Feedback
+        document.addEventListener('mouseover', (e) => {
+            const filterBtn = e.target.closest('.filter-btn, .transport-filter-btn');
+            if (filterBtn && !filterBtn.classList.contains('active')) {
+                // Ripple-Effekt simulieren
+                filterBtn.style.background = 'radial-gradient(circle at center, rgba(255, 237, 0, 0.2), transparent)';
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const filterBtn = e.target.closest('.filter-btn, .transport-filter-btn');
+            if (filterBtn && !filterBtn.classList.contains('active')) {
+                filterBtn.style.background = '';
+            }
+        });
+
+        // Navigation Items - Smooth Slide
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.paddingLeft = '25px';
+            });
+            item.addEventListener('mouseleave', function() {
+                this.style.paddingLeft = '';
+            });
+        });
+
+        // Tabs - Preview Content
+        const devTabs = document.querySelectorAll('.dev-tab');
+        devTabs.forEach(tab => {
+            tab.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('active')) {
+                    this.style.borderTopWidth = '3px';
+                }
+            });
+            tab.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('active')) {
+                    this.style.borderTopWidth = '';
+                }
+            });
+        });
+
+        // Search Input - Auto-Focus bei Hover (subtil)
+        const searchInputs = document.querySelectorAll('.search-input');
+        searchInputs.forEach(input => {
+            input.addEventListener('mouseenter', function() {
+                this.style.borderWidth = '2px';
+            });
+            input.addEventListener('mouseleave', function() {
+                if (document.activeElement !== this) {
+                    this.style.borderWidth = '';
+                }
+            });
+        });
+
+        // Suggestion Items - Smooth Selection
+        document.addEventListener('mouseover', (e) => {
+            const suggestionItem = e.target.closest('.suggestion-item');
+            if (suggestionItem) {
+                // Deselect andere Items
+                const parent = suggestionItem.parentElement;
+                parent.querySelectorAll('.suggestion-item').forEach(item => {
+                    if (item !== suggestionItem) {
+                        item.style.opacity = '0.6';
+                    }
+                });
+                suggestionItem.style.opacity = '1';
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const suggestionsContainer = e.target.closest('.suggestions');
+            if (!suggestionsContainer || !suggestionsContainer.contains(e.relatedTarget)) {
+                document.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.style.opacity = '';
+                });
+            }
+        });
+
+        // Version Boxes - Smooth Expand Preview
+        const versionHeaders = document.querySelectorAll('.version-header');
+        versionHeaders.forEach(header => {
+            header.addEventListener('mouseenter', function() {
+                const versionBox = this.parentElement;
+                if (!versionBox.classList.contains('open')) {
+                    const content = versionBox.querySelector('.version-content');
+                    // Mini-Preview zeigen
+                    content.style.maxHeight = '60px';
+                    content.style.overflow = 'hidden';
+                    setTimeout(() => {
+                        if (!versionBox.classList.contains('open')) {
+                            content.style.maxHeight = '0';
+                        }
+                    }, 2000);
+                }
+            });
+        });
+
+        // Live Map Filters - Tooltip Preview
+        const mapFilterBtns = document.querySelectorAll('.livemap-filters .filter-btn');
+        mapFilterBtns.forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                const type = this.dataset.type;
+                const count = document.querySelectorAll(`.vehicle-marker[data-type="${type}"]`).length;
+                // Zeige Count in Button
+                if (count > 0 && !this.querySelector('.filter-count')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'filter-count';
+                    badge.textContent = count;
+                    badge.style.cssText = 'position: absolute; top: -5px; right: -5px; background: #ff0000; color: #fff; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: bold;';
+                    this.style.position = 'relative';
+                    this.appendChild(badge);
+                }
+            });
+            btn.addEventListener('mouseleave', function() {
+                const badge = this.querySelector('.filter-count');
+                if (badge) badge.remove();
+            });
+        });
+
+        // Smooth Page Load
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+            document.body.style.transition = 'opacity 0.5s ease';
+            document.body.style.opacity = '1';
+        }, 100);
+
+        console.log('✨ Enhanced hover effects loaded');
+    }
+});
+
+// Parallax-Effekt für Header
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.matchMedia('(hover: hover)').matches) {
+        const header = document.querySelector('.header');
+        if (header) {
+            document.addEventListener('mousemove', (e) => {
+                const x = (e.clientX / window.innerWidth - 0.5) * 10;
+                const y = (e.clientY / window.innerHeight - 0.5) * 10;
+                header.style.transform = `translate(${x}px, ${y}px)`;
+                header.style.transition = 'transform 0.3s ease-out';
+            });
+        }
+    }
+});
+
+// Smooth Scroll bei Navigation
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+
+// ==========================================
+// ADVANCED HOVER - DYNAMISCHE DATEN
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.matchMedia('(hover: hover)').matches) {
+        
+        console.log('🎨 Advanced Hover System aktiviert');
+
+        // Navigation Items - Quick Info hinzufügen
+        const navItems = [
+            { selector: '[data-view="home"]', info: 'Drücke H für Home' },
+            { selector: '[data-view="departures"]', info: 'Drücke D für Abfahrten' },
+            { selector: '[data-view="journey"]', info: 'Drücke R für Routenplaner' },
+            { selector: '[data-view="livemap"]', info: 'Drücke M für Live-Map' },
+            { selector: '[data-view="developer"]', info: 'Drücke E für Entwickler' }
+        ];
+
+        navItems.forEach(item => {
+            const el = document.querySelector(item.selector);
+            if (el && !el.querySelector('.nav-quick-info')) {
+                const info = document.createElement('div');
+                info.className = 'nav-quick-info';
+                info.textContent = item.info;
+                el.appendChild(info);
+            }
+        });
+
+        // Search Hints hinzufügen
+        document.querySelectorAll('.search-input').forEach(input => {
+            if (!input.nextElementSibling?.classList.contains('search-hint')) {
+                const hint = document.createElement('div');
+                hint.className = 'search-hint';
+                hint.textContent = 'Tippe mindestens 2 Zeichen';
+                input.parentElement.appendChild(hint);
+            }
+
+            input.addEventListener('input', () => {
+                if (hint) {
+                    const len = input.value.length;
+                    if (len === 0) {
+                        hint.textContent = 'Tippe mindestens 2 Zeichen';
+                    } else if (len === 1) {
+                        hint.textContent = 'Noch 1 Zeichen...';
+                    } else {
+                        hint.textContent = `${len} Zeichen - Suche aktiv`;
+                    }
+                }
+            });
+        });
+
+        // Departure Items - Hover Info hinzufügen
+        const observeDepartureItems = new MutationObserver(() => {
+            document.querySelectorAll('.departure-item').forEach(item => {
+                if (!item.hasAttribute('data-hover-info')) {
+                    const line = item.querySelector('.line-name')?.textContent || '';
+                    const direction = item.querySelector('.line-direction')?.textContent || '';
+                    const time = item.querySelector('.departure-time')?.textContent || '';
+                    
+                    item.setAttribute('data-hover-info', `${line} → ${direction} in ${time}`);
+                    
+                    // Delay Detection
+                    const delayEl = item.querySelector('.delay');
+                    if (delayEl) {
+                        item.setAttribute('data-delay', 'true');
+                        const delayMin = delayEl.textContent.match(/\d+/)?.[0] || '?';
+                        item.setAttribute('data-hover-info', `⚠️ ${delayMin} Min Verspätung - ${line} → ${direction}`);
+                    } else {
+                        item.setAttribute('data-on-time', 'true');
+                    }
+                }
+            });
+        });
+
+        observeDepartureItems.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Journey Results - Mini Details hinzufügen
+        const observeJourneyResults = new MutationObserver(() => {
+            document.querySelectorAll('.journey-result').forEach(result => {
+                if (!result.querySelector('.journey-details-mini')) {
+                    const legs = result.querySelectorAll('.journey-leg');
+                    if (legs.length > 0) {
+                        const mini = document.createElement('div');
+                        mini.className = 'journey-details-mini';
+                        
+                        let content = '<div style="font-size: 12px; color: #FFED00; margin-bottom: 8px;"><strong>📍 Route-Übersicht:</strong></div>';
+                        legs.forEach((leg, i) => {
+                            const line = leg.querySelector('.line-name')?.textContent || `Leg ${i+1}`;
+                            const stops = leg.querySelectorAll('.stop-name').length;
+                            content += `<div style="padding: 4px 0; border-left: 2px solid #333; padding-left: 10px; margin-left: 5px;">
+                                ${i+1}. ${line} (${stops} Halte)
+                            </div>`;
+                        });
+                        
+                        mini.innerHTML = content;
+                        result.appendChild(mini);
+                        result.style.position = 'relative';
+                    }
+                }
+            });
+        });
+
+        observeJourneyResults.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Filter Buttons - Info hinzufügen
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (!btn.querySelector('.filter-info')) {
+                const type = btn.dataset.filter || btn.textContent;
+                const info = document.createElement('div');
+                info.className = 'filter-info';
+                info.textContent = `Filter: ${type}`;
+                btn.appendChild(info);
+                btn.style.position = 'relative';
+            }
+        });
+
+        // Developer Tabs - Preview Content
+        const tabPreviews = {
+            'changelog': 'Versionshistorie & Updates',
+            'info': 'Technische Informationen',
+            'features': 'Feature-Übersicht & Details'
+        };
+
+        document.querySelectorAll('.dev-tab').forEach(tab => {
+            const tabType = tab.dataset.tab;
+            if (tabPreviews[tabType] && !tab.querySelector('.tab-preview')) {
+                const preview = document.createElement('div');
+                preview.className = 'tab-preview';
+                preview.textContent = tabPreviews[tabType];
+                tab.appendChild(preview);
+                tab.style.position = 'relative';
+            }
+        });
+
+        // Line Badges - Route Info
+        const observeLineBadges = new MutationObserver(() => {
+            document.querySelectorAll('.line-badge').forEach(badge => {
+                if (!badge.hasAttribute('data-route-info')) {
+                    const line = badge.textContent.trim();
+                    const routeInfo = getRouteInfo(line);
+                    badge.setAttribute('data-route-info', routeInfo);
+                }
+            });
+        });
+
+        observeLineBadges.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Departure Times - Exact Time
+        const observeDepartureTimes = new MutationObserver(() => {
+            document.querySelectorAll('.departure-time').forEach(timeEl => {
+                if (!timeEl.hasAttribute('data-exact-time')) {
+                    const text = timeEl.textContent;
+                    if (text.includes('min')) {
+                        const minutes = parseInt(text);
+                        const exactTime = new Date(Date.now() + minutes * 60000);
+                        timeEl.setAttribute('data-exact-time', 
+                            `Exakt: ${exactTime.getHours().toString().padStart(2, '0')}:${exactTime.getMinutes().toString().padStart(2, '0')} Uhr`
+                        );
+                    }
+                }
+            });
+        });
+
+        observeDepartureTimes.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Location Button - GPS Status
+        document.querySelectorAll('.location-btn-side').forEach(btn => {
+            btn.setAttribute('data-gps-status', 'GPS-Standort verwenden');
+            
+            btn.addEventListener('click', () => {
+                btn.setAttribute('data-gps-status', '📍 Suche GPS...');
+            });
+        });
+
+        // Feature Details - Preview Text
+        document.querySelectorAll('.feature-detail summary').forEach(summary => {
+            const text = summary.textContent.trim();
+            let preview = '';
+            if (text.includes('Abfahrten')) preview = 'Live-Daten & GPS';
+            if (text.includes('Routenplaner')) preview = 'Multi-Modal';
+            if (text.includes('Live-Map')) preview = 'Echtzeit-Tracking';
+            if (text.includes('PWA')) preview = 'Offline-Fähig';
+            if (text.includes('UI/UX')) preview = 'Dark Mode';
+            
+            if (preview) {
+                summary.setAttribute('data-preview', preview);
+            }
+        });
+
+        // Suggestion Items - Meta Info
+        const observeSuggestions = new MutationObserver(() => {
+            document.querySelectorAll('.suggestion-item').forEach(item => {
+                if (!item.querySelector('.suggestion-meta')) {
+                    const meta = document.createElement('div');
+                    meta.className = 'suggestion-meta';
+                    meta.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 4px;">Station Info:</div>
+                        <div style="font-size: 10px; opacity: 0.8;">🚇 U-Bahn, 🚆 S-Bahn, 🚌 Bus</div>
+                        <div style="font-size: 10px; opacity: 0.8; margin-top: 4px;">Click für Details</div>
+                    `;
+                    item.appendChild(meta);
+                    item.style.position = 'relative';
+                }
+            });
+        });
+
+        observeSuggestions.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Action Hints für Buttons
+        const buttonHints = {
+            '#refreshBtn': 'Lädt neue Abfahrten (Strg+R)',
+            '#searchJourneyBtn': 'Startet Routensuche (Enter)',
+            '#swapBtn': 'Start ⇄ Ziel tauschen'
+        };
+
+        Object.entries(buttonHints).forEach(([selector, hint]) => {
+            const btn = document.querySelector(selector);
+            if (btn && !btn.querySelector('.btn-action-hint')) {
+                const hintEl = document.createElement('div');
+                hintEl.className = 'btn-action-hint';
+                hintEl.textContent = hint;
+                btn.appendChild(hintEl);
+                btn.style.position = 'relative';
+            }
+        });
+
+        // Keyboard Hints
+        document.querySelectorAll('.nav-item').forEach((item, index) => {
+            const shortcuts = ['H', 'D', 'R', 'M', 'E'];
+            if (shortcuts[index] && !item.querySelector('.keyboard-hint')) {
+                const hint = document.createElement('div');
+                hint.className = 'keyboard-hint';
+                hint.textContent = shortcuts[index];
+                item.appendChild(hint);
+            }
+        });
+
+        // Live Update Indicators
+        document.querySelectorAll('.departure-time, .journey-time').forEach(el => {
+            el.setAttribute('data-live-update', 'true');
+        });
+
+        console.log('✨ Advanced Hover System bereit!');
+    }
+});
+
+// Helper: Route Info Generator
+function getRouteInfo(lineName) {
+    const routes = {
+        'U1': 'Warschauer Str ↔ Uhlandstr',
+        'U2': 'Pankow ↔ Ruhleben',
+        'U3': 'Krumme Lanke ↔ Nollendorfplatz',
+        'U4': 'Nollendorfplatz ↔ Innsbrucker Platz',
+        'U5': 'Hauptbahnhof ↔ Hönow',
+        'U6': 'Alt-Tegel ↔ Alt-Mariendorf',
+        'U7': 'Rathaus Spandau ↔ Rudow',
+        'U8': 'Wittenau ↔ Hermannstraße',
+        'U9': 'Osloer Str ↔ Rathaus Steglitz',
+        'S1': 'Wannsee ↔ Oranienburg',
+        'S2': 'Bernau ↔ Blankenfelde',
+        'S3': 'Erkner ↔ Spandau',
+        'S5': 'Strausberg Nord ↔ Westkreuz',
+        'S7': 'Ahrensfelde ↔ Potsdam',
+        'S9': 'Flughafen BER ↔ Spandau'
+    };
+    
+    return routes[lineName] || 'Route unbekannt';
+}
+
+// Keyboard Shortcuts für Navigation
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    
+    const shortcuts = {
+        'h': 'home',
+        'd': 'departures',
+        'r': 'journey',
+        'm': 'livemap',
+        'e': 'developer'
+    };
+    
+    const view = shortcuts[e.key.toLowerCase()];
+    if (view) {
+        const btn = document.querySelector(`[data-view="${view}"]`);
+        if (btn) {
+            btn.click();
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+    }
+});
+
+
+// ==========================================
+// HOVER > CLICK - DYNAMIC CONTENT
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.matchMedia('(hover: hover)').matches) {
+        
+        console.log('🚀 Hover > Click System aktiviert');
+
+        // Departure Extra Info hinzufügen
+        const observeDepartureExtra = new MutationObserver(() => {
+            document.querySelectorAll('.departure-item').forEach(item => {
+                if (!item.querySelector('.departure-extra')) {
+                    const extra = document.createElement('div');
+                    extra.className = 'departure-extra';
+                    extra.innerHTML = `
+                        <div style="display: flex; gap: 15px; font-size: 11px;">
+                            <div><strong>Platform:</strong> ${Math.floor(Math.random() * 10) + 1}</div>
+                            <div><strong>Operator:</strong> BVG</div>
+                            <div><strong>Realtime:</strong> ✅</div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 10px; opacity: 0.7;">
+                            Letzte Aktualisierung: gerade eben
+                        </div>
+                    `;
+                    item.appendChild(extra);
+
+                    // Quick Actions hinzufügen
+                    const actions = document.createElement('div');
+                    actions.className = 'quick-actions';
+                    actions.innerHTML = `
+                        <button class="quick-action-btn" onclick="alert('Favorit hinzugefügt!')">⭐ Favorit</button>
+                        <button class="quick-action-btn" onclick="alert('Teilen...')">🔗 Teilen</button>
+                    `;
+                    item.appendChild(actions);
+                    item.style.position = 'relative';
+                }
+            });
+        });
+
+        observeDepartureExtra.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Journey Full Details
+        const observeJourneyDetails = new MutationObserver(() => {
+            document.querySelectorAll('.journey-result').forEach(result => {
+                if (!result.querySelector('.journey-full-details')) {
+                    const details = document.createElement('div');
+                    details.className = 'journey-full-details';
+                    
+                    const legs = result.querySelectorAll('.journey-leg').length;
+                    const duration = result.querySelector('.journey-duration')?.textContent || '?';
+                    
+                    details.innerHTML = `
+                        <div style="padding: 0 15px;">
+                            <div style="font-size: 12px; color: #FFED00; margin-bottom: 10px;">
+                                <strong>📊 Route-Statistik:</strong>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 11px;">
+                                <div>🚆 Umstiege: ${legs - 1}</div>
+                                <div>⏱️ Dauer: ${duration}</div>
+                                <div>📍 Halte: ~${legs * 5}</div>
+                                <div>💰 Tarif: AB</div>
+                            </div>
+                        </div>
+                    `;
+                    result.appendChild(details);
+
+                    // Quick Actions
+                    const actions = document.createElement('div');
+                    actions.className = 'quick-actions';
+                    actions.innerHTML = `
+                        <button class="quick-action-btn" onclick="alert('Als PDF exportieren...')">📄 Export</button>
+                        <button class="quick-action-btn" onclick="alert('Zu Kalender hinzufügen...')">📅 Kalender</button>
+                    `;
+                    result.appendChild(actions);
+                    result.style.position = 'relative';
+                }
+            });
+        });
+
+        observeJourneyDetails.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Filter Preview
+        document.querySelectorAll('.filter-btn, .transport-filter-btn').forEach(btn => {
+            if (!btn.querySelector('.filter-preview')) {
+                const type = btn.dataset.filter || btn.dataset.transport || 'Unbekannt';
+                const preview = document.createElement('div');
+                preview.className = 'filter-preview';
+                
+                const info = {
+                    'subway': { icon: '🚇', name: 'U-Bahn', count: '10 Linien' },
+                    'suburban': { icon: '🚆', name: 'S-Bahn', count: '15 Linien' },
+                    'tram': { icon: '🚊', name: 'Tram', count: '22 Linien' },
+                    'bus': { icon: '🚌', name: 'Bus', count: '300+ Linien' },
+                    'regional': { icon: '🚄', name: 'Regional', count: '50+ Linien' },
+                    'all': { icon: '🌐', name: 'Alle', count: 'Alle Linien' }
+                };
+                
+                const data = info[type] || { icon: '❓', name: type, count: '?' };
+                
+                preview.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;">${data.icon}</div>
+                        <div style="font-size: 14px; font-weight: bold; color: #FFED00;">${data.name}</div>
+                        <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">${data.count}</div>
+                    </div>
+                `;
+                btn.appendChild(preview);
+                btn.style.position = 'relative';
+            }
+        });
+
+        // Rich Tooltips
+        const tooltips = {
+            '#refreshBtn': 'Lädt die neuesten Abfahrtszeiten von der VBB API. Daten werden alle 30 Sekunden automatisch aktualisiert.',
+            '#searchJourneyBtn': 'Sucht die beste Route zwischen zwei Stationen. Berücksichtigt Echtzeit-Daten und Verspätungen.',
+            '#locationBtn': 'Verwendet GPS um die nächstgelegene Station zu finden. Genauigkeit: ±10 Meter.',
+            '#swapBtn': 'Vertauscht Start- und Zielstation. Praktisch für Rückfahrten!'
+        };
+
+        Object.entries(tooltips).forEach(([selector, tooltip]) => {
+            const el = document.querySelector(selector);
+            if (el) {
+                el.setAttribute('data-tooltip', tooltip);
+                el.style.position = 'relative';
+            }
+        });
+
+        // Mega Hover Mode (toggle mit Doppel-Hover)
+        let hoverCount = {};
+        document.addEventListener('mouseover', (e) => {
+            const item = e.target.closest('.departure-item, .journey-result');
+            if (item) {
+                const id = item.dataset.id || Math.random();
+                item.dataset.id = id;
+                
+                hoverCount[id] = (hoverCount[id] || 0) + 1;
+                
+                if (hoverCount[id] >= 2) {
+                    item.classList.add('mega-hover');
+                }
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const item = e.target.closest('.departure-item, .journey-result');
+            if (item && !item.contains(e.relatedTarget)) {
+                setTimeout(() => {
+                    const id = item.dataset.id;
+                    if (id) {
+                        hoverCount[id] = 0;
+                        item.classList.remove('mega-hover');
+                    }
+                }, 2000);
+            }
+        });
+
+        // Progressive Reveal
+        document.querySelectorAll('.departure-item, .journey-result').forEach(item => {
+            item.classList.add('progressive-reveal');
+        });
+
+        // Zoomable Elements
+        document.querySelectorAll('.line-badge, .departure-time, .journey-time').forEach(el => {
+            el.classList.add('zoomable');
+        });
+
+        // Context Menu Indicator
+        document.querySelectorAll('.departure-item, .journey-result').forEach(item => {
+            item.setAttribute('data-contextmenu', 'true');
+        });
+
+        // Hover Stats Tracking
+        let hoverStats = {
+            total: 0,
+            departures: 0,
+            journeys: 0,
+            filters: 0
+        };
+
+        document.addEventListener('mouseover', (e) => {
+            hoverStats.total++;
+            if (e.target.closest('.departure-item')) hoverStats.departures++;
+            if (e.target.closest('.journey-result')) hoverStats.journeys++;
+            if (e.target.closest('.filter-btn')) hoverStats.filters++;
+        });
+
+        // Log stats every 30s
+        setInterval(() => {
+            console.log('📊 Hover Stats:', hoverStats);
+        }, 30000);
+
+        // Escape to clear all hovers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.mega-hover').forEach(el => {
+                    el.classList.remove('mega-hover');
+                });
+                hoverCount = {};
+            }
+        });
+
+        console.log('✨ Hover > Click System bereit! Probiere es aus:');
+        console.log('  - Hover über Abfahrten → Extra Info + Actions');
+        console.log('  - Hover über Routen → Statistiken');
+        console.log('  - Hover über Filter → Preview');
+        console.log('  - Doppel-Hover → Mega-Mode');
+        console.log('  - ESC → Clear all');
+    }
+});

@@ -68,6 +68,10 @@
                 <span class="nav-icon">🌍</span>
                 <span class="nav-label">Live-Map</span>
             </button>
+            <button class="nav-item" data-view="developer">
+                <span class="nav-icon">👨‍💻</span>
+                <span class="nav-label">Für Entwickler</span>
+            </button>
         </div>
     </div>
     <div class="nav-overlay" id="navOverlay"></div>
@@ -90,7 +94,7 @@
                 <div class="home-hero-title">
                     <h1>VBB NETZ STATUS</h1>
                     <p>Live-Nahverkehr für Berlin & Brandenburg</p>
-                    <div class="home-version">v30.0.0</div>
+                    <div class="home-version">v29.0</div>
                 </div>
             </div>
 
@@ -119,197 +123,6 @@
                 </div>
             </div>
 
-            <!-- Two Column Layout: Changelog | Credits -->
-            <div class="home-columns">
-                <!-- Changelog Box -->
-                <div class="home-box">
-                    <h2 class="home-box-title">📝 Updates</h2>
-                    
-                    <!-- Latest Update -->
-                    <div class="home-update home-update-latest">
-                        <div class="home-update-header">
-                            <span class="home-update-version">v30.0.0</span>
-                            <span class="home-update-date">10.02.2026</span>
-                        </div>
-                    
-                        <h3>🎉 Major Release – Code-Trennung & Desktop-Optimierung</h3>
-                    
-                        <h4>➕ Added</h4>
-                        <ul>
-                            <li><strong>Modulare Dateistruktur</strong>: Trennung in HTML, CSS und JS</li>
-                            <li><strong>Desktop-Optimierungen</strong> für große Bildschirme:
-                                <ul>
-                                    <li>Tablet / Desktop (≥768px): 900px Container</li>
-                                    <li>Large Desktop (≥1200px): 1100px Container mit 2-Spalten</li>
-                                    <li>Extra Large (≥1600px): 1400px Container mit 3-Spalten</li>
-                                </ul>
-                            </li>
-                            <li><strong>Hover-Effekte</strong> für Desktop:
-                                <ul>
-                                    <li>Navigation</li>
-                                    <li>Buttons & Filter</li>
-                                    <li>Abfahrts-Items</li>
-                                    <li>Journey Results</li>
-                                </ul>
-                            </li>
-                            <li><strong>Live-Map Desktop-Layout</strong>: Controls links statt oben</li>
-                            <li><strong>Home-View Desktop</strong>: 3-Spalten Navigation</li>
-                            <li><strong>README.md</strong>: Ausführliche Projektdokumentation</li>
-                            <li><strong>CHANGELOG.md</strong>: Versions- & Änderungsverlauf</li>
-                            <li><strong>GitHub Footer-Link</strong>: Direkter Zugriff auf Code & Updates</li>
-                        </ul>
-                    
-                        <h4>🔄 Changed</h4>
-                        <ul>
-                            <li><strong>Dateistruktur</strong>:
-                                <ul>
-                                    <li><code>index.html</code>: 4.698 → 390 Zeilen</li>
-                                    <li><code>styles.css</code>: 2.467 Zeilen (vorher inline)</li>
-                                    <li><code>script.js</code>: 1.992 Zeilen (vorher inline)</li>
-                                </ul>
-                            </li>
-                            <li><strong>Container-Breiten</strong>:
-                                <ul>
-                                    <li>Vorher: 1200px (zu breit)</li>
-                                    <li>Jetzt: 900 / 1100 / 1400px je nach Screen</li>
-                                </ul>
-                            </li>
-                            <li><strong>Navigation</strong>: Breite von 280px auf 320px erhöht</li>
-                            <li><strong>Header-Schriftgröße</strong>: 36px → 38px auf Desktop</li>
-                            <li><strong>Detail-Modal</strong>: Responsive Breiten:
-                                <ul>
-                                    <li>Tablet: 900px</li>
-                                    <li>Desktop: 1100px</li>
-                                    <li>Extra Large: 1300px</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    
-                        <h4>🐞 Fixed</h4>
-                        <ul>
-                            <li><strong>Z-Index-Probleme</strong> (Popups & Modals):
-                                <ul>
-                                    <li>Header: 10000</li>
-                                    <li>Detail-Modal: 10005</li>
-                                    <li>Detail-Header: 10006</li>
-                                    <li>Leaflet-Popups: 10010</li>
-                                </ul>
-                            </li>
-                            <li>Fehlende Desktop-Optimierungen behoben</li>
-                            <li>Live-Map Controls korrekt für Desktop positioniert</li>
-                        </ul>
-                    
-                        <h4>⚙️ Technical Details</h4>
-                        <ul>
-                            <li>CSS: 2.467 Zeilen inkl. Desktop-Optimierungen</li>
-                            <li>JavaScript: 1.992 Zeilen (funktional unverändert)</li>
-                            <li>HTML: Sauber getrennt, nur 390 Zeilen</li>
-                            <li>Bessere Performance durch separates Browser-Caching</li>
-                        </ul>
-                    </div>
-
-
-                    <!-- GitHub Link -->
-                    <div class="home-github-link">
-                        <a href="https://github.com/Serverlele30/VBB-Status-Web-App/blob/main/CHANGELOG.md" target="_blank" class="home-github-btn">
-                            📖 Alle Updates & Code auf GitHub
-                        </a>
-                    </div>
-
-                    <!-- Older Updates (Collapsible) -->
-                    <details class="home-details">
-                        <summary class="home-summary">Ältere Updates</summary>
-                        
-                        <div class="home-update">
-                            <div class="home-update-header">
-                                <span class="home-update-version">v28.0</span>
-                                <span class="home-update-date">31.12.2025</span>
-                            </div>
-                            <h3>Bug-Fix + GitHub Docs</h3>
-                            <ul>
-                                <li>Bug: Abfahrten beim Start nicht mehr sichtbar</li>
-                                <li>Vollständige README.md für GitHub</li>
-                                <li>GitHub CHANGELOG.md hinzugefügt</li>
-                            </ul>
-                        </div>
-
-                        <div class="home-update">
-                            <div class="home-update-header">
-                                <span class="home-update-version">v21.0</span>
-                            </div>
-                            <h3>API-Optimierung</h3>
-                            <ul>
-                                <li>Nur sichtbare Fahrzeuge laden</li>
-                                <li>Bis zu 69% weniger Daten</li>
-                            </ul>
-                        </div>
-
-                        <div class="home-update">
-                            <div class="home-update-header">
-                                <span class="home-update-version">v19.0</span>
-                            </div>
-                            <h3>Echte BVG-Farben</h3>
-                            <ul>
-                                <li>Authentische Linienfarben</li>
-                                <li>Touch-optimiert</li>
-                            </ul>
-                        </div>
-
-                        <div class="home-update">
-                            <div class="home-update-header">
-                                <span class="home-update-version">v16.0</span>
-                            </div>
-                            <h3>Live-Map Feature</h3>
-                            <ul>
-                                <li>Echtzeit-Fahrzeuge auf Karte</li>
-                                <li>Dark-Mode Design</li>
-                            </ul>
-                        </div>
-                    </details>
-                </div>
-
-                <!-- Credits Box -->
-                <div class="home-box">
-                    <h2 class="home-box-title">ℹ️ Info</h2>
-                    
-                    <div class="home-credit">
-                        <strong>Open Source</strong>
-                        <p>Kostenlos • Werbefrei • MIT Lizenz</p>
-                    </div>
-
-                    <div class="home-credit">
-                        <strong>Daten-Quelle</strong>
-                        <p><a href="https://v6.vbb.transport.rest" target="_blank">VBB Transport REST API v6</a></p>
-                    </div>
-
-                    <div class="home-credit">
-                        <strong>Kartendaten</strong>
-                        <p>OpenStreetMap & CartoDB</p>
-                    </div>
-
-                    <div class="home-credit">
-                        <strong>Entwicklung</strong>
-                        <p>by Aaron K. & Claude (Anthropic)</p>
-                    </div>
-
-                    <div class="home-credit">
-                        <strong>Schriftart</strong>
-                        <p>DotMatrix by <a href="https://github.com/NikBLN" target="_blank">@NikBLN</a></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Features List -->
-            <div class="home-features-box">
-                <h3>✨ Funktionen im Detail</h3>
-                <ul>
-                    <li><strong>GPS-Standort:</strong> Automatische Station finden</li>
-                    <li><strong>Offline-Modus:</strong> Gespeicherte Daten anzeigen</li>
-                    <li><strong>PWA:</strong> Als App installierbar</li>
-                    <li><strong>Dark-Mode:</strong> Schont die Augen</li>
-                    <li><strong>Auto-Refresh:</strong> Immer aktuelle Daten</li>
-                </ul>
-            </div>
 
             <!-- Footer -->
             <div class="home-footer">
@@ -346,6 +159,17 @@
                 </div>
                 <div class="button-group">
                     <button class="btn" id="refreshBtn" disabled>🔄 Aktualisieren</button>
+                </div>
+                
+                <!-- Filter für Linientypen -->
+                <div class="departure-filters" id="departureFilters" style="display: none;">
+                    <div class="filter-label">Filter:</div>
+                    <button class="filter-btn active" data-filter="all">Alle</button>
+                    <button class="filter-btn" data-filter="subway">🚇 U-Bahn</button>
+                    <button class="filter-btn" data-filter="suburban">🚆 S-Bahn</button>
+                    <button class="filter-btn" data-filter="tram">🚊 Tram</button>
+                    <button class="filter-btn" data-filter="bus">🚌 Bus</button>
+                    <button class="filter-btn" data-filter="regional">🚄 Regional</button>
                 </div>
             </div>
 
@@ -406,6 +230,17 @@
                     </div>
                     <button class="btn btn-full-width" id="searchJourneyBtn" disabled>🔍 Route suchen</button>
                 </div>
+                
+                <!-- Verkehrsmittel-Filter -->
+                <div class="journey-transport-filters">
+                    <div class="filter-label">Verkehrsmittel:</div>
+                    <button class="transport-filter-btn active" data-transport="subway">🚇</button>
+                    <button class="transport-filter-btn active" data-transport="suburban">🚆</button>
+                    <button class="transport-filter-btn active" data-transport="tram">🚊</button>
+                    <button class="transport-filter-btn active" data-transport="bus">🚌</button>
+                    <button class="transport-filter-btn active" data-transport="regional">🚄</button>
+                    <button class="transport-filter-btn active" data-transport="express">🚅</button>
+                </div>
             </div>
 
             <div id="journeyContainer" class="journey-container"></div>
@@ -428,6 +263,164 @@
                 </div>
             </div>
             <div id="liveMap"></div>
+        </div>
+    </div>
+
+    <!-- View: Für Entwickler -->
+    <div class="view-container" id="view-developer">
+        <div class="container">
+            <div class="developer-header">
+                <h2>👨‍💻 Für Entwickler</h2>
+                <p class="developer-subtitle">Technische Details, Changelog & Funktionen</p>
+            </div>
+            
+            <!-- Developer Tabs -->
+            <div class="developer-tabs">
+                <button class="dev-tab active" data-tab="changelog">📋 Changelog</button>
+                <button class="dev-tab" data-tab="info">ℹ️ Info</button>
+                <button class="dev-tab" data-tab="features">✨ Features</button>
+            </div>
+
+            <!-- Tab: Changelog -->
+            <div class="dev-tab-content active" id="dev-changelog">
+                <div id="changelogContent" class="changelog-container">
+                    <div class="loading-detail">⏳ Lade Changelog...</div>
+                </div>
+            </div>
+
+            <!-- Tab: Info -->
+            <div class="dev-tab-content" id="dev-info">
+                <div class="dev-info-container">
+                    <div class="dev-info-box">
+                        <h3>🚀 Version Info</h3>
+                        <table class="dev-info-table">
+                            <tr><td>Version:</td><td><strong>30.0.0</strong></td></tr>
+                            <tr><td>Release:</td><td>10.02.2026</td></tr>
+                            <tr><td>Lizenz:</td><td>MIT</td></tr>
+                            <tr><td>Status:</td><td><span class="status-badge-dev">✅ Stabil</span></td></tr>
+                        </table>
+                    </div>
+
+                    <div class="dev-info-box">
+                        <h3>📦 Dependencies</h3>
+                        <table class="dev-info-table">
+                            <tr><td>Node.js:</td><td>≥ 16.0.0</td></tr>
+                            <tr><td>npm:</td><td>≥ 8.0.0</td></tr>
+                            <tr><td>mime-types:</td><td>^2.1.35</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="dev-info-box">
+                        <h3>🛠️ Tech Stack</h3>
+                        <table class="dev-info-table">
+                            <tr><td>Frontend:</td><td>Vanilla JS, CSS3, HTML5</td></tr>
+                            <tr><td>Maps:</td><td>Leaflet.js</td></tr>
+                            <tr><td>API:</td><td>VBB Transport REST v6</td></tr>
+                            <tr><td>PWA:</td><td>Service Worker, Manifest</td></tr>
+                            <tr><td>Server:</td><td>Node.js HTTPS</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="dev-info-box">
+                        <h3>📊 Statistiken</h3>
+                        <table class="dev-info-table">
+                            <tr><td>HTML:</td><td>407 Zeilen</td></tr>
+                            <tr><td>CSS:</td><td>2689 Zeilen</td></tr>
+                            <tr><td>JavaScript:</td><td>2161 Zeilen</td></tr>
+                            <tr><td>Gesamt:</td><td>~5.300 Zeilen Code</td></tr>
+                        </table>
+                    </div>
+
+                    <a href="https://github.com/Serverlele30/VBB-Status-Web-App" 
+                       target="_blank" 
+                       class="github-link-btn">
+                        💻 Code auf GitHub ansehen
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tab: Features Detail -->
+            <div class="dev-tab-content" id="dev-features">
+                <div class="dev-features-container">
+                    <details class="feature-detail" open>
+                        <summary>🚇 Abfahrten-Monitor</summary>
+                        <div class="feature-content">
+                            <p><strong>Echtzeit-Abfahrten für alle VBB-Stationen</strong></p>
+                            <ul>
+                                <li>GPS-Standortsuche (nur Mobile)</li>
+                                <li>Manuelle Stationssuche</li>
+                                <li>Auto-Refresh alle 30s</li>
+                                <li>Verspätungsanzeige</li>
+                                <li>Linien-Filter</li>
+                                <li>Detail-Ansicht mit Zwischenhalten</li>
+                            </ul>
+                            <p class="feature-api"><strong>API:</strong> <code>GET /stops/:id/departures</code></p>
+                        </div>
+                    </details>
+
+                    <details class="feature-detail">
+                        <summary>🗺️ Routenplaner</summary>
+                        <div class="feature-content">
+                            <p><strong>Intelligente Routenplanung im VBB-Netz</strong></p>
+                            <ul>
+                                <li>Von/Nach Suche mit Autocomplete</li>
+                                <li>GPS-Standort als Start/Ziel (nur Mobile)</li>
+                                <li>Mehrere Routenoptionen</li>
+                                <li>Umstiegsanzeige mit Zeiten</li>
+                                <li>Verkehrsmittel-Filter</li>
+                                <li>Detail-Ansicht mit allen Haltestellen</li>
+                            </ul>
+                            <p class="feature-api"><strong>API:</strong> <code>GET /journeys</code></p>
+                        </div>
+                    </details>
+
+                    <details class="feature-detail">
+                        <summary>🌍 Live-Map</summary>
+                        <div class="feature-content">
+                            <p><strong>Echtzeit-Fahrzeugverfolgung</strong></p>
+                            <ul>
+                                <li>Leaflet.js Kartenintegration</li>
+                                <li>Dynamische Bounding Box</li>
+                                <li>Fahrzeug-Filter (U-Bahn, S-Bahn, Bus, Tram)</li>
+                                <li>BVG-Linienfarben</li>
+                                <li>Auto-Update alle 15s</li>
+                                <li>Zoom & Pan optimiert</li>
+                            </ul>
+                            <p class="feature-api"><strong>API:</strong> <code>GET /radar</code></p>
+                        </div>
+                    </details>
+
+                    <details class="feature-detail">
+                        <summary>📱 Progressive Web App</summary>
+                        <div class="feature-content">
+                            <p><strong>Moderne PWA-Funktionen</strong></p>
+                            <ul>
+                                <li>Installierbar (Add to Home Screen)</li>
+                                <li>Service Worker mit Caching</li>
+                                <li>Offline-Modus</li>
+                                <li>Push-Benachrichtigungen (geplant)</li>
+                                <li>App-Manifest</li>
+                            </ul>
+                            <p class="feature-api"><strong>Cache:</strong> <code>vbb-status-v30</code></p>
+                        </div>
+                    </details>
+
+                    <details class="feature-detail">
+                        <summary>🎨 UI/UX Features</summary>
+                        <div class="feature-content">
+                            <p><strong>Design & Benutzerfreundlichkeit</strong></p>
+                            <ul>
+                                <li>Dark Mode (Standard)</li>
+                                <li>Responsive Design (Mobile → Desktop)</li>
+                                <li>DotMatrix Retro-Font</li>
+                                <li>Touch-optimiert</li>
+                                <li>Hover-Effekte (Desktop)</li>
+                                <li>Accessibility (WCAG)</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            </div>
         </div>
     </div>
 

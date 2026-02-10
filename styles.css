@@ -2312,3 +2312,98 @@
                 padding: 7px 14px;
             }
         }
+        /* ==========================================
+           FILTER STYLES - Abfahrten & Routenplaner
+           ========================================== */
+
+        .departure-filters, .journey-transport-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            padding: 12px;
+            background-color: #0a0a0a;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .filter-label {
+            color: #FFED00;
+            font-size: 13px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .filter-btn, .transport-filter-btn {
+            background-color: #1a1a1a;
+            border: 2px solid #333;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-family: var(--font-stack);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .transport-filter-btn {
+            font-size: 20px;
+            padding: 8px 12px;
+        }
+
+        .filter-btn.active, .transport-filter-btn.active {
+            background-color: #FFED00;
+            color: #000;
+            border-color: #FFED00;
+        }
+
+        .filter-btn:hover, .transport-filter-btn:hover {
+            border-color: #FFED00;
+        }
+
+        .filter-btn:active, .transport-filter-btn:active {
+            transform: scale(0.95);
+        }
+/* Developer Tabs */
+        .developer-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding: 0 10px;
+        }
+
+        .dev-tab {
+            background-color: #1a1a1a;
+            border: 2px solid #333;
+            color: #FFED00;
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
+            font-family: var(--font-stack);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .dev-tab.active {
+            background-color: #000;
+            border-color: #FFED00;
+            border-bottom-color: #000;
+        }
+
+        .dev-tab:hover {
+            background-color: #0a0a0a;
+        }
+
+        .dev-tab-content {
+            display: none;
+            padding: 10px;
+        }
+
+        .dev-tab-content.active {
+            display: block;
+        }
+
