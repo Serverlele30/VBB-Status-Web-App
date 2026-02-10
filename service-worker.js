@@ -1,11 +1,8 @@
-const CACHE_NAME = 'vbb-status-v30';
+const CACHE_NAME = 'vbb-status-v29';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/script.js',
   '/manifest.json',
-  '/CHANGELOG.md',
   '/DotMatrix.ttf',
   '/images/favicon.png'
 ];
