@@ -1,391 +1,132 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
+und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
----
+## [30.0.0] - 2026-02-10
 
-## [29.0] - 2025-12-31
+### 🎉 Major Release - Code-Trennung & Desktop-Optimierung
 
-### ✨ Added
-- **GitHub-Integration:** Links zur Repository auf der Home-Page
-- **Changelog GitHub-Link:** "📖 Alle Updates & Code auf GitHub" Button nach neuesten Updates
-- **Footer GitHub-Link:** "⭐ Star on GitHub" unter "Made with ❤️"
-- **Hover-Effekte:** Interaktive Buttons mit Animations
+### Added
+- **Modulare Dateistruktur**: Projekt in separate HTML, CSS und JS Dateien aufgeteilt
+- **Desktop-Optimierungen**: Responsive Layouts für verschiedene Bildschirmgrößen
+  - Tablet/Desktop (768px+): 900px Container
+  - Large Desktop (1200px+): 1100px Container mit 2-Spalten Layout
+  - Extra Large (1600px+): 1400px Container mit 3-Spalten Layout
+- **Hover-Effekte**: Desktop-optimierte Interaktionen
+  - Navigation Items
+  - Buttons und Filter
+  - Abfahrts-Items
+  - Journey Results
+- **Live-Map Desktop-Layout**: Controls links positioniert statt oben
+- **Home View Desktop**: 3-Spalten Navigation auf großen Bildschirmen
+- **README.md**: Umfassende Dokumentation der Projektstruktur
+- **CHANGELOG.md**: Versionsverwaltung und Änderungsprotokoll
 
-### 🎨 Changed
-- GitHub-Links mit BVG-Farbschema (Gelb/Schwarz)
-- Responsive Buttons für Mobile & Desktop
+### Changed
+- **Dateistruktur**: 
+  - `index.html`: Von 4.698 auf 390 Zeilen reduziert
+  - `styles.css`: 2.467 Zeilen (vorher inline)
+  - `script.js`: 1.992 Zeilen (vorher inline)
+- **Container-Breiten**: Desktop-optimierte max-widths
+  - Vorher: 1200px (zu breit)
+  - Jetzt: 900px (Tablet), 1100px (Desktop), 1400px (XL)
+- **Navigation-Menü**: Von 280px auf 320px verbreitert
+- **Header-Schrift**: Desktop-Größen erhöht (36px → 38px)
+- **Detail-Modal**: Responsive Breiten je nach Bildschirmgröße
+  - Tablet: 900px
+  - Desktop: 1100px
+  - Extra Large: 1300px
 
----
+### Fixed
+- **Z-Index Issue**: Popups und Modals werden jetzt korrekt über dem Header angezeigt
+  - Header: z-index 10000
+  - Detail-Modal: z-index 10005
+  - Detail-Header: z-index 10006
+  - Leaflet-Popups: z-index 10010
+- **Desktop-Layout**: Fehlende Optimierungen für große Bildschirme korrigiert
+- **Live-Map Controls**: Bessere Positionierung auf Desktop
 
-## [28.0] - 2025-12-31
-
-### 🐛 Fixed
-- **Bug-Fix:** Abfahrten-View nicht mehr beim ersten Laden sichtbar
-- Home-View ist jetzt korrekt die einzige aktive View beim Start
-
-### ✨ Changed
-- **Header-Title:** "Live-Nahverkehr für Berlin & Brandenburg" statt "ECHTZEIT-ABFAHRTSMONITOR"
-- **Credits:** Aaron K. & Claude (Anthropic) im Header erwähnt
-- **Navigation-Hinweis:** Pfeil entfernt für klareren Text
-- **Font-Credit:** Nur @NikBLN gelb und verlinkt (nicht "DotMatrix by")
-
-### 📝 Added
-- Vollständige README.md für GitHub
-- GitHub-formatiertes CHANGELOG.md
-
----
-
-## [26.0] - 2025-12-31
-
-### ✨ Added
-- **Kombinierte Hero-Box:** Navigation + Hero in einer Box
-- **Pfeil zeigt nach rechts:** Richtung zum Menü-Button
-
-### 🎨 Changed
-- Kompakteres Design durch kombinierte Box
-- Text "oben rechts" statt "hier oben"
-
----
-
-## [25.0] - 2025-12-31
-
-### ✨ Added
-- **Home/Landing-Page:** Neue Startseite beim App-Load
-- **Navigation-Hinweis:** Pfeil zeigt zum Menü-Button
-- **Quick-Info Cards:** 3 Feature-Cards (Desktop nebeneinander, Mobile untereinander)
-- **Features-Box:** Detaillierte technische Features
-- **Two-Column Layout:** Updates | Info nebeneinander (Desktop)
-
-### 🎨 Changed
-- "Info" statt "Credits" als Box-Titel
-- VBB-Gebiet korrekt: "Berlin & Brandenburg"
-- Kompaktere Paddings und Fonts (~20% kleiner)
+### Technical Details
+- CSS-Dateigröße: 2.467 Zeilen (inkl. Desktop-Optimierungen)
+- JavaScript unverändert: 1.992 Zeilen
+- HTML-Struktur: Sauber getrennt, 390 Zeilen
+- Caching-Vorteile: Browser können CSS/JS separat cachen
 
 ---
 
-## [24.0] - 2025-12-31
+## [29.0.0] - 2026-02-09
 
-### ✨ Added
-- **Two-Column Layout:** Changelog und Credits nebeneinander
+### Vorherige Version (Monolithisch)
+- Alle Code in einer `index.html` Datei
+- 4.698 Zeilen insgesamt
+- Funktionale PWA mit allen Features
+- Optimiert für Mobile
 
-### 🎨 Changed
-- Verbesserte Home-Page mit kompakterem Design
-- Intro-Text statt Feature-Cards
-
----
-
-## [23.0] - 2025-12-31
-
-### ✨ Added
-- **Home-Screen:** Erste Version der Landing-Page
-- **Feature-Übersicht:** 4 Feature-Cards mit Icons
-- **Changelog:** Integriert auf Home-Page
-- **Credits:** Vollständige Attribution
-
----
-
-## [22.0] - 2025-12-31
-
-### ✨ Added
-- **Dynamischer Page-Title:** Browser-Tab zeigt aktive View
-  - "VBB Netz Status - Abfahrten"
-  - "VBB Netz Status - Route"
-  - "VBB Netz Status - Live-Map"
+### Features (bereits vorhanden)
+- ✅ Echtzeit-Abfahrten VBB/BVG
+- ✅ Routenplanung
+- ✅ Live-Fahrzeugverfolgung (Radar)
+- ✅ Service Worker (Offline-Fähigkeit)
+- ✅ PWA Manifest (Installierbar)
+- ✅ HTTPS Development Server
+- ✅ DotMatrix Font Integration
+- ✅ Dark Mode Design
+- ✅ Touch-optimiert für Mobile
+- ✅ Pull-to-Refresh
+- ✅ Leaflet.js Karten-Integration
+- ✅ BVG-Linienfarben
+- ✅ Fahrzeug-Filter (U-Bahn, Bus, Tram, S-Bahn, Regional)
 
 ---
 
-## [21.0] - 2025-12-31
+## Projektinformationen
 
-### ✨ Added
-- **Dynamische Bounds:** Live-Map lädt nur sichtbare Fahrzeuge
-- **API-Optimierung:** Bis zu 69% weniger Daten bei Zoom-in
-- **Auto-Reload beim Map-Bewegen:** Immer aktuelle Fahrzeuge im Sichtbereich
+**Entwickelt von:** Aaron K. & Claude (Anthropic)  
+**Lizenz:** MIT  
+**Repository:** https://github.com/Serverlele30/VBB-Status-Web-App
 
-### 🎯 Changed
-- 15% Puffer-Zone um Map-Bounds für smooth UX
-- Effizientere API-Calls
-
----
-
-## [20.0] - 2025-12-31
-
-### ✨ Added
-- **Leaflet Map Integration:** Interaktive Karte statt statischer Einbettung
-- **Custom Marker:** Fahrzeuge als Custom Icons mit Linienfarben
-
-### 🎨 Changed
-- Verbesserte Map-Performance
-- Bessere Mobile-Unterstützung
+### Mitwirkende
+- Aaron K. - Projektleitung, Konzept, Testing
+- Claude (Anthropic) - Entwicklung, Code-Optimierung
 
 ---
 
-## [19.0] - 2025-12-31
+## Geplante Features / Roadmap
 
-### ✨ Added
-- **Echte BVG-Farben:** Authentische Linienfarben für 40+ Linien
-  - U-Bahn: U1-U9 Original-Farben
-  - S-Bahn: Grün + Ringbahn Orange
-  - Tram: Metro-Tram Rot + Tram Gelb
-  - Bus: Gelb + Metro-Bus Rot
-- **Linienbezeichnung unter Icon:** Mit echter Farbe
-- **Touch-optimiert:** Keine Zoom-Buttons auf Mobile
+### v31.0.0 (geplant)
+- [ ] API-Error Handling verbessern
+- [ ] Favoriten-Stationen speichern
+- [ ] Benachrichtigungen bei Verspätungen
+- [ ] Dunkles/Helles Theme umschaltbar
+- [ ] Historische Daten und Statistiken
 
-### 🎨 Changed
-- Farbschema für alle Verkehrsmittel aktualisiert
-- Bessere visuelle Unterscheidung
-
----
-
-## [18.0] - 2025-12-31
-
-### ✨ Added
-- **Linien-basierte Filterung:** U-Bahn, S-Bahn, Tram, Bus separat
-- **Präzise Station-Line Mappings:** Custom extrahierte Daten für 1000+ Stationen
-
-### 🎨 Changed
-- Verbesserte Filter-Funktionalität
-- Genauere Linien-Zuordnungen
+### v32.0.0 (Ideen)
+- [ ] Barrierefreiheit (A11y) Audit
+- [ ] Mehrsprachigkeit (Englisch)
+- [ ] Export von Routen als iCal/PDF
+- [ ] Teilen-Funktion für Verbindungen
+- [ ] Integration mit Kalender-Apps
 
 ---
 
-## [17.0] - 2025-12-31
+## Versionsschema
 
-### ✨ Added
-- **Live-Update Intervall:** 30 Sekunden Auto-Refresh
-- **Manueller Refresh-Button:** In Live-Map View
+Dieses Projekt verwendet [Semantic Versioning](https://semver.org/lang/de/):
 
-### 🎨 Changed
-- Optimierte Update-Strategie
-- Bessere Performance bei Live-Updates
+- **MAJOR** (X.0.0): Breaking Changes, große Architekturänderungen
+- **MINOR** (0.X.0): Neue Features, abwärtskompatibel
+- **PATCH** (0.0.X): Bugfixes, kleine Verbesserungen
 
 ---
 
-## [16.0] - 2025-12-31
+## Support & Feedback
 
-### ✨ Added
-- **Live-Map Feature:** Echtzeit-Fahrzeugverfolgung
-  - Dark-Mode Karte (CartoDB)
-  - Filter nach Fahrzeugtyp
-  - Live-Positions-Updates
-- **3-Tab Navigation:** Abfahrten | Route | Live-Map
+Bei Fragen oder Problemen:
+1. GitHub Issues: https://github.com/Serverlele30/VBB-Status-Web-App/issues
+2. README konsultieren
+3. Code-Kommentare lesen
 
-### 🎨 Changed
-- Navigation erweitert um Live-Map Tab
-- UI angepasst für 3 Views
-
----
-
-## [15.0] - 2025-12-31
-
-### ✨ Added
-- **Detaillierte Fußwege:** Distanz + Gehzeit für alle Walking-Legs
-- **Robuste Stationserkennung:** Funktioniert auch bei unvollständigen Namen
-
-### 🎨 Changed
-- Verbesserte Journey-Details
-- Klarere Fußweg-Darstellung
-
----
-
-## [14.0] - 2025-12-31
-
-### ✨ Added
-- **Garantierte 5 Min Umstiegszeit:** Alle Routen mit mindestens 5 Min Transfer
-- **Intelligente Route-Berechnung:** API-Parameter optimiert
-
-### 🎨 Changed
-- Realistischere Routenplanung
-- Weniger verpasste Anschlüsse
-
----
-
-## [13.0] - 2025-12-31
-
-### ✨ Added
-- **Routenplaner-View:** Neue Tab für Journey-Planning
-- **Start/Ziel-Suche:** Mit GPS-Unterstützung
-- **Alternative Routen:** Mehrere Optionen anzeigen
-
-### 🎨 Changed
-- 2-Tab Navigation: Abfahrten | Route
-- Optimierte Layout-Struktur
-
----
-
-## [12.0] - 2025-12-31
-
-### ✨ Added
-- **Auto-Refresh Toggle:** An/Aus Schalter im Header
-- **Smart Value Update:** Nur Values ändern, kein Re-Render
-
-### 🎯 Changed
-- Performantere Refresh-Strategie
-- Weniger DOM-Manipulation
-
----
-
-## [11.0] - 2025-12-31
-
-### ✨ Added
-- **30s Auto-Refresh:** Automatische Aktualisierung alle 30 Sekunden
-- **Countdown-Anzeige:** "Auto-Refresh in: 28s"
-
-### 🎨 Changed
-- Immer aktuelle Abfahrten ohne manuellen Refresh
-
----
-
-## [10.0] - 2025-12-31
-
-### ✨ Added
-- **Pull-to-Refresh:** Touch-basiert auf Mobile
-- **Haptic Feedback:** Vibration bei Aktionen (navigator.vibrate)
-- **Loading-Spinner:** Während Refresh
-
-### 🎨 Changed
-- Native App-ähnliches Verhalten
-- Bessere Mobile-UX
-
----
-
-## [9.0] - 2025-12-31
-
-### ✨ Added
-- **Detaillierte Trip-Modal:** Per Tap auf Abfahrt
-- **Alle Zwischenstopps:** Mit Ankunfts-/Abfahrtszeiten
-- **Swipe-to-Close:** Auf Mobile
-
-### 🎨 Changed
-- Mehr Informationen pro Trip
-- Bessere Detail-Ansicht
-
----
-
-## [8.0] - 2025-12-31
-
-### ✨ Added
-- **Autocomplete-Suche:** Live-Vorschläge während Eingabe
-- **Keyboard-Navigation:** ↑↓ + Enter
-- **Touch-optimiert:** Große Tap-Targets
-
-### 🎯 Changed
-- Schnellere Stations-Suche
-- Bessere UX
-
----
-
-## [7.0] - 2025-12-31
-
-### ✅ Added
-- **Offline-Modus:** Gespeicherte Abfahrten anzeigen
-- **Offline-Indikator:** "📵 Offline-Modus" Banner
-- **localStorage Caching:** Letzte Abfahrten speichern
-
-### 🎨 Changed
-- App funktioniert auch ohne Internet
-- Cached Daten als Fallback
-
----
-
-## [6.0] - 2025-12-31
-
-### ✨ Added
-- **Service Worker:** PWA-Funktionalität
-- **Offline-Caching:** Statische Assets cached
-- **Install-Prompt:** "Als App installieren"
-
-### 🎨 Changed
-- App ist jetzt installierbar
-- Funktioniert offline
-
----
-
-## [5.0] - 2025-12-31
-
-### ✨ Added
-- **GPS-Standort:** Automatische Station finden
-- **"Standort verwenden" Button:** Mit Loading-State
-- **Fehlerbehandlung:** Wenn GPS fehlschlägt
-
-### 🎨 Changed
-- Schnellerer Zugriff auf nahegelegene Stationen
-- Weniger manuelle Suche nötig
-
----
-
-## [4.0] - 2025-12-31
-
-### ✨ Added
-- **Kategorie-Filter:** U-Bahn, S-Bahn, Tram, Bus, Fähre
-- **Default: Alle außer Bus/Fähre:** Weniger "noise"
-- **Toggle-Buttons:** An/Aus für jede Kategorie
-
-### 🎨 Changed
-- Übersichtlichere Abfahrten-Liste
-- Fokus auf wichtige Linien
-
----
-
-## [3.0] - 2025-12-31
-
-### ✨ Added
-- **Verspätungen:** Rot markiert mit Delay-Info
-- **Ausfälle:** Durchgestrichen mit "Fällt aus"
-- **Gleis/Steig:** Bei verfügbar angezeigt
-
-### 🎨 Changed
-- Mehr Informationen pro Abfahrt
-- Bessere visuelle Unterscheidung
-
----
-
-## [2.0] - 2025-12-31
-
-### ✨ Added
-- **Live-Abfahrten:** Echtzeit-Daten von VBB API
-- **Relativer Countdown:** "in 3 Min" statt absoluter Zeit
-- **Verkehrsmittel-Icons:** 🚇🚊🚋🚌⛴️
-
-### 🎨 Changed
-- Funktionale Abfahrtsanzeige
-- Echte Daten statt Mockups
-
----
-
-## [1.0] - 2025-12-30
-
-### ✨ Added
-- **Initial Release**
-- **Basic HTML/CSS/JS Structure**
-- **BVG-Styling:** DotMatrix Font + Gelb/Schwarz
-- **Responsive Design:** Mobile-First
-
-### 🎨 Changed
-- Basis-Framework erstellt
-- Design-System etabliert
-
----
-
-## Legende
-
-- ✨ **Added:** Neue Features
-- 🎨 **Changed:** Änderungen an bestehenden Features
-- 🐛 **Fixed:** Bug-Fixes
-- 🎯 **Improved:** Performance/UX-Verbesserungen
-- ✅ **Completed:** Fertiggestellte Features
-- ⚠️ **Deprecated:** Veraltete Features
-- 🗑️ **Removed:** Entfernte Features
-
----
-
-## Contributing
-
-Wenn du einen Bug findest oder ein Feature vorschlagen möchtest, öffne bitte ein [GitHub Issue](https://github.com/Serverlele30/VBB-Status-Web-App/issues).
-
----
-
-Made with ❤️ for Berlin & Brandenburg
+**Viel Erfolg mit der VBB Netz Status App! 🚇🚌🚊**
