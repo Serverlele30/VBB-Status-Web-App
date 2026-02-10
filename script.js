@@ -2103,149 +2103,240 @@ document.addEventListener('DOMContentLoaded', () => {
 // UPDATES VIEW - CHANGELOG LOADER
 // ==========================================
 
+
+// ==========================================
+// CHANGELOG LOADER - VERBESSERT
+// Fetcht CHANGELOG.md und konvertiert Markdown zu HTML
+// ==========================================
+
 async function loadChangelog() {
     const container = document.getElementById('changelogContent');
     
     try {
+        // Lade CHANGELOG.md
         const response = await fetch('CHANGELOG.md');
-        if (!response.ok) throw new Error('CHANGELOG nicht gefunden');
+        if (!response.ok) throw new Error('CHANGELOG.md nicht gefunden');
         
         const markdown = await response.text();
-        const html = parseChangelog(markdown);
-        container.innerHTML = html;
         
-        // Accordion-Funktionalität
-        document.querySelectorAll('.version-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const versionBox = header.parentElement;
-                versionBox.classList.toggle('open');
-                
-                // Vibration Feedback
-                if (navigator.vibrate) navigator.vibrate(5);
-            });
-        });
+        // Konvertiere Markdown zu HTML
+        const html = markdownToHtml(markdown);
+        
+        // Wrapper mit changelog-container Klasse
+        container.innerHTML = `<div class="changelog-container">${html}</div>`;
         
     } catch (error) {
         console.error('Changelog Fehler:', error);
         container.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: #ff5555;">
-                <p style="font-size: 18px; margin-bottom: 10px;">⚠️ Changelog konnte nicht geladen werden</p>
-                <p style="font-size: 14px; opacity: 0.7;">${error.message}</p>
+            <div class="changelog-container">
+                <div style="text-align: center; padding: 40px 20px; color: #ff5555;">
+                    <p style="font-size: 18px; margin-bottom: 10px;">⚠️ Changelog konnte nicht geladen werden</p>
+                    <p style="font-size: 14px; opacity: 0.7;">${error.message}</p>
+                </div>
             </div>
         `;
     }
 }
 
-function parseChangelog(markdown) {
-    const lines = markdown.split('\n');
+// ==========================================
+// MARKDOWN TO HTML CONVERTER
+// ==========================================
+
+function markdownToHtml(markdown) {
     let html = '';
-    let currentVersion = null;
-    let currentCategory = null;
-    let changes = {};
+    const lines = markdown.split('\n');
+    let inList = false;
+    let inOrderedList = false;
+    let inCodeBlock = false;
+    let codeBlockContent = '';
     
-    // Parse Markdown
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+        let line = lines[i];
         
-        // Version Header: ## [30.0.0] - 2026-02-10
-        if (line.match(/^## \[(\d+\.\d+\.\d+)\] - (.+)$/)) {
-            // Speichere vorherige Version
-            if (currentVersion) {
-                html += renderVersion(currentVersion, changes);
-                changes = {};
+        // Code-Block Start/Ende (```)
+        if (line.trim().startsWith('```')) {
+            if (!inCodeBlock) {
+                inCodeBlock = true;
+                codeBlockContent = '';
+                continue;
+            } else {
+                inCodeBlock = false;
+                html += `<pre><code>${escapeHtml(codeBlockContent)}</code></pre>`;
+                codeBlockContent = '';
+                continue;
+            }
+        }
+        
+        // Innerhalb Code-Block
+        if (inCodeBlock) {
+            codeBlockContent += line + '\n';
+            continue;
+        }
+        
+        // Leere Zeile - Schließe Listen
+        if (line.trim() === '') {
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            if (inOrderedList) {
+                html += '</ol>';
+                inOrderedList = false;
+            }
+            continue;
+        }
+        
+        // Überschriften (# ## ### ####)
+        if (line.match(/^(#{1,6})\s+(.+)$/)) {
+            const match = line.match(/^(#{1,6})\s+(.+)$/);
+            const level = match[1].length;
+            const text = parseInline(match[2]);
+            
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            if (inOrderedList) {
+                html += '</ol>';
+                inOrderedList = false;
             }
             
-            const match = line.match(/^## \[(\d+\.\d+\.\d+)\] - (.+)$/);
-            currentVersion = {
-                number: match[1],
-                date: match[2]
-            };
+            html += `<h${level}>${text}</h${level}>`;
+            continue;
         }
         
-        // Kategorie: ### Added
-        else if (line.match(/^### (.+)$/)) {
-            const match = line.match(/^### (.+)$/);
-            currentCategory = match[1];
-            if (!changes[currentCategory]) {
-                changes[currentCategory] = [];
+        // Horizontale Linie (--- oder ***)
+        if (line.match(/^(---+|\*\*\*+)$/)) {
+            if (inList) {
+                html += '</ul>';
+                inList = false;
             }
+            if (inOrderedList) {
+                html += '</ol>';
+                inOrderedList = false;
+            }
+            html += '<hr>';
+            continue;
         }
         
-        // Change Item: - Feature xyz
-        else if (line.match(/^[-*] (.+)$/) && currentCategory) {
-            const match = line.match(/^[-*] (.+)$/);
-            changes[currentCategory].push(match[1]);
+        // Ungeordnete Liste (- oder *)
+        if (line.match(/^[-*]\s+(.+)$/)) {
+            const match = line.match(/^[-*]\s+(.+)$/);
+            const text = parseInline(match[1]);
+            
+            if (inOrderedList) {
+                html += '</ol>';
+                inOrderedList = false;
+            }
+            
+            if (!inList) {
+                html += '<ul>';
+                inList = true;
+            }
+            
+            html += `<li>${text}</li>`;
+            continue;
+        }
+        
+        // Geordnete Liste (1. 2. 3.)
+        if (line.match(/^\d+\.\s+(.+)$/)) {
+            const match = line.match(/^\d+\.\s+(.+)$/);
+            const text = parseInline(match[1]);
+            
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            
+            if (!inOrderedList) {
+                html += '<ol>';
+                inOrderedList = true;
+            }
+            
+            html += `<li>${text}</li>`;
+            continue;
+        }
+        
+        // Blockquote (>)
+        if (line.match(/^>\s+(.+)$/)) {
+            const match = line.match(/^>\s+(.+)$/);
+            const text = parseInline(match[1]);
+            
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            if (inOrderedList) {
+                html += '</ol>';
+                inOrderedList = false;
+            }
+            
+            html += `<blockquote>${text}</blockquote>`;
+            continue;
+        }
+        
+        // Normaler Paragraph
+        if (line.trim() !== '') {
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            if (inOrderedList) {
+                html += '</ol>';
+                inOrderedList = false;
+            }
+            
+            const text = parseInline(line);
+            html += `<p>${text}</p>`;
         }
     }
     
-    // Speichere letzte Version
-    if (currentVersion) {
-        html += renderVersion(currentVersion, changes);
-    }
-    
-    // GitHub Link Button
-    html += `
-        <a href="https://github.com/Serverlele30/VBB-Status-Web-App" 
-           target="_blank" 
-           class="github-link-btn">
-            💻 Alle Updates & Code auf GitHub
-        </a>
-    `;
+    // Schließe offene Listen am Ende
+    if (inList) html += '</ul>';
+    if (inOrderedList) html += '</ol>';
     
     return html;
 }
 
-function renderVersion(version, changes) {
-    const categoryIcons = {
-        'Added': '✨',
-        'Changed': '🔄',
-        'Fixed': '🐛',
-        'Removed': '🗑️',
-        'Deprecated': '⚠️',
-        'Security': '🔒'
-    };
+// ==========================================
+// INLINE MARKDOWN PARSER
+// ==========================================
+
+function parseInline(text) {
+    // Links [text](url)
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
     
-    let categoriesHtml = '';
+    // Inline Code `code`
+    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
     
-    for (const [category, items] of Object.entries(changes)) {
-        if (items.length === 0) continue;
-        
-        const icon = categoryIcons[category] || '📝';
-        const itemsHtml = items.map(item => `<li class="change-item">${item}</li>`).join('');
-        
-        categoriesHtml += `
-            <div class="change-category">
-                <div class="change-category-title">${icon} ${category}</div>
-                <ul class="change-list">
-                    ${itemsHtml}
-                </ul>
-            </div>
-        `;
-    }
+    // Bold **text** oder __text__
+    text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
     
-    return `
-        <div class="version-box">
-            <div class="version-header">
-                <div class="version-title">
-                    <span class="version-number">v${version.number}</span>
-                    <span class="version-date">${version.date}</span>
-                </div>
-                <span class="version-toggle">▼</span>
-            </div>
-            <div class="version-content">
-                <div class="version-content-inner">
-                    ${categoriesHtml}
-                </div>
-            </div>
-        </div>
-    `;
+    // Italic *text* oder _text_ (aber nicht ** oder __)
+    text = text.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+    text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
+    
+    // Strikethrough ~~text~~
+    text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+    
+    return text;
 }
 
-// Changelog laden wenn Updates-View geöffnet wird
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Changelog laden wenn Developer-View geöffnet wird
 document.addEventListener('DOMContentLoaded', () => {
-    // Wenn direkt Updates-View aktiv ist
-    if (document.getElementById('view-developer')?.classList.contains('active')) {
-        loadChangelog();
+    const developerView = document.getElementById('view-developer');
+    if (developerView?.classList.contains('active')) {
+        const changelogContent = document.getElementById('changelogContent');
+        if (changelogContent && !changelogContent.querySelector('.changelog-container')) {
+            loadChangelog();
+        }
     }
     
     // Beim View-Wechsel
@@ -2253,20 +2344,22 @@ document.addEventListener('DOMContentLoaded', () => {
         mutations.forEach((mutation) => {
             if (mutation.target.id === 'view-developer' && 
                 mutation.target.classList.contains('active')) {
-                // Nur laden wenn noch nicht geladen
                 const content = document.getElementById('changelogContent');
-                if (content.innerHTML.includes('Lade Changelog')) {
+                if (content && !content.querySelector('.changelog-container')) {
                     loadChangelog();
                 }
             }
         });
     });
     
-    const updatesView = document.getElementById('view-developer');
-    if (updatesView) {
-        observer.observe(updatesView, { attributes: true, attributeFilter: ['class'] });
+    if (developerView) {
+        observer.observe(developerView, { 
+            attributes: true, 
+            attributeFilter: ['class'] 
+        });
     }
 });
+
 
 // ==========================================
 // MOBILE DETECTION - GPS NUR AUF MOBILE

@@ -1,4 +1,4 @@
-        /* DotMatrix Font by NikBLN - https://github.com/NikBLN/weilSieDichLieben */
+/* DotMatrix Font by NikBLN - https://github.com/NikBLN/weilSieDichLieben */
         @font-face {
             font-family: 'DotMatrix';
             src: url('./DotMatrix.ttf') format('truetype');
@@ -1591,60 +1591,6 @@
             }
         }
 
-            .journey-leg {
-                padding: 10px;
-                gap: 10px;
-            }
-
-            .journey-leg-icon {
-                font-size: 18px;
-            }
-
-            .journey-leg-line {
-                font-size: 13px;
-            }
-
-            .journey-leg-stations {
-                font-size: 11px;
-            }
-
-            .journey-leg-time {
-                font-size: 10px;
-                min-width: 50px;
-            }
-
-            .journey-transfer {
-                padding: 10px 12px;
-                font-size: 13px;
-            }
-
-            .journey-transfer-time {
-                font-size: 15px;
-            }
-
-            .journey-label {
-                font-size: 14px;
-            }
-
-            .swap-btn {
-                margin: 10px 0;
-                font-size: 18px;
-            }
-
-            body {
-                overflow-x: hidden;
-            }
-
-            /* Text truncation für lange Namen */
-            .departure-destination {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-            }
-        }
-
         /* Extra Small Mobile (SE, kleine Geräte) */
         @media (max-width: 360px) {
             .header h1 {
@@ -2365,45 +2311,1361 @@
         .filter-btn:active, .transport-filter-btn:active {
             transform: scale(0.95);
         }
-/* Developer Tabs */
-        .developer-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            overflow-x: auto;
-            padding: 0 10px;
-        }
+/* ==========================================
+   DEVELOPER VIEW - PREMIUM DESIGN (NO GLOW)
+   Ersetze die bestehenden .developer-* und .dev-* Regeln
+   ========================================== */
 
-        .dev-tab {
-            background-color: #1a1a1a;
-            border: 2px solid #333;
-            color: #FFED00;
-            padding: 12px 20px;
-            border-radius: 8px 8px 0 0;
-            font-family: var(--font-stack);
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
+/* Developer Header - Schöner Gradient */
+.developer-header {
+    text-align: center;
+    padding: 30px 20px;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #000 0%, #1a1a00 50%, #000 100%);
+    border: 3px solid #FFED00;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
 
-        .dev-tab.active {
-            background-color: #000;
-            border-color: #FFED00;
-            border-bottom-color: #000;
-        }
+.developer-header h2 {
+    font-size: 32px;
+    color: #FFED00;
+    margin: 0 0 10px 0;
+    font-family: 'DotMatrix', 'Courier New', monospace;
+    letter-spacing: 2px;
+}
 
-        .dev-tab:hover {
-            background-color: #0a0a0a;
-        }
+.developer-subtitle {
+    font-size: 15px;
+    color: #aaa;
+    margin: 0;
+    opacity: 0.9;
+}
 
-        .dev-tab-content {
-            display: none;
-            padding: 10px;
-        }
+/* Developer Tabs - Premium Look */
+.developer-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 0;
+    overflow-x: auto;
+    padding: 15px;
+    background: linear-gradient(180deg, #0a0a0a 0%, #000 100%);
+    border-radius: 12px 12px 0 0;
+    border: 2px solid #222;
+    border-bottom: none;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #FFED00 #1a1a1a;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+}
 
-        .dev-tab-content.active {
-            display: block;
-        }
+.developer-tabs::-webkit-scrollbar {
+    height: 8px;
+}
 
+.developer-tabs::-webkit-scrollbar-track {
+    background: #0a0a0a;
+    border-radius: 4px;
+}
+
+.developer-tabs::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #FFED00 0%, #FFD700 100%);
+    border-radius: 4px;
+}
+
+.developer-tabs::-webkit-scrollbar-thumb:hover {
+    background: #FFED00;
+}
+
+/* Developer Tab - Schöne 3D Buttons */
+.dev-tab {
+    background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 2px solid #333;
+    color: #FFED00;
+    padding: 14px 24px;
+    border-radius: 10px 10px 0 0;
+    font-family: 'DotMatrix', 'Courier New', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 130px;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Tab Hover Effect */
+.dev-tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(255, 237, 0, 0) 0%, rgba(255, 237, 0, 0.05) 100%);
+    border-radius: 10px 10px 0 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dev-tab:hover::before {
+    opacity: 1;
+}
+
+/* Active Tab */
+.dev-tab.active {
+    background: linear-gradient(180deg, #FFED00 0%, #FFD700 100%);
+    color: #000;
+    border-color: #FFED00;
+    border-bottom-color: transparent;
+    font-weight: bold;
+    transform: translateY(3px);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+}
+
+.dev-tab.active::before {
+    display: none;
+}
+
+.dev-tab:active {
+    transform: scale(0.97) translateY(1px);
+}
+
+/* Tab Content */
+.dev-tab-content {
+    display: none;
+    padding: 25px 15px;
+    background: linear-gradient(180deg, #0a0a0a 0%, #000 100%);
+    border: 2px solid #222;
+    border-top: 3px solid #FFED00;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.dev-tab-content.active {
+    display: block;
+    animation: fadeInContent 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInContent {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================
+   CHANGELOG - VERBESSERTE FORMATIERUNG
+   ========================================== */
+
+.changelog-container {
+    padding: 0;
+}
+
+/* Changelog Item - Große Card */
+.changelog-item {
+    background: linear-gradient(135deg, #0a0a0a 0%, #000 100%);
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 0;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.changelog-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    border-color: #444;
+}
+
+.changelog-item.latest {
+    border: 3px solid #FFED00;
+    background: linear-gradient(135deg, #0a0a00 0%, #000 100%);
+}
+
+/* Changelog Header - Gelber Top-Bar */
+.changelog-header {
+    background: linear-gradient(90deg, #1a1a1a 0%, #0a0a0a 100%);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #333;
+}
+
+.changelog-item.latest .changelog-header {
+    background: linear-gradient(90deg, #FFED00 0%, #FFD700 100%);
+}
+
+.changelog-version {
+    background: #000;
+    color: #FFED00;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    border: 2px solid #FFED00;
+}
+
+.changelog-item.latest .changelog-version {
+    background: #000;
+    color: #FFED00;
+    border-color: #000;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.changelog-date {
+    color: #888;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.changelog-item.latest .changelog-date {
+    color: #000;
+}
+
+/* Changelog Body */
+.changelog-body {
+    padding: 20px;
+}
+
+.changelog-title {
+    font-size: 20px;
+    color: #FFED00;
+    margin: 0 0 15px 0;
+    font-weight: bold;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #222;
+}
+
+/* Changelog Changes - Grid Layout */
+.changelog-changes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+}
+
+.changelog-changes li {
+    background: #0a0a0a;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #555;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #ccc;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.changelog-changes li:hover {
+    background: #111;
+    border-left-color: #FFED00;
+    transform: translateX(3px);
+}
+
+/* Change Type Icons */
+.changelog-changes li::before {
+    content: '✓';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: #FFED00;
+    color: #000;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    font-weight: bold;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.changelog-changes li strong {
+    color: #FFED00;
+    font-weight: bold;
+}
+
+/* Spezielle Change Types */
+.changelog-changes li[data-type="new"]::before {
+    content: '★';
+    background: #FFED00;
+}
+
+.changelog-changes li[data-type="fix"]::before {
+    content: '🔧';
+    background: none;
+    font-size: 16px;
+}
+
+.changelog-changes li[data-type="improve"]::before {
+    content: '↑';
+    background: #00cc00;
+}
+
+.changelog-changes li[data-type="remove"]::before {
+    content: '✗';
+    background: #cc0000;
+}
+
+/* Info Boxes */
+.dev-info-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+}
+
+.dev-info-box {
+    background: linear-gradient(135deg, #0a0a0a 0%, #000 100%);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.dev-info-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    border-color: #FFED00;
+}
+
+.dev-info-box h3 {
+    font-size: 19px;
+    color: #FFED00;
+    margin: 0 0 15px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #333;
+    font-family: 'DotMatrix', 'Courier New', monospace;
+}
+
+.dev-info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dev-info-table tr {
+    border-bottom: 1px solid #1a1a1a;
+    transition: background-color 0.2s ease;
+}
+
+.dev-info-table tr:hover {
+    background-color: #0a0a0a;
+}
+
+.dev-info-table tr:last-child {
+    border-bottom: none;
+}
+
+.dev-info-table td {
+    padding: 12px 0;
+    font-size: 13px;
+    color: #ccc;
+}
+
+.dev-info-table td:first-child {
+    color: #888;
+    width: 40%;
+}
+
+.dev-info-table td:last-child {
+    color: #fff;
+    font-weight: bold;
+}
+
+.status-badge-dev {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #00cc00 0%, #00aa00 100%);
+}
+
+/* GitHub Link Button */
+.github-link-btn {
+    display: block;
+    text-align: center;
+    padding: 16px 28px;
+    margin: 25px 0 0 0;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    color: #FFED00;
+    text-decoration: none;
+    border-radius: 12px;
+    border: 2px solid #FFED00;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'DotMatrix', 'Courier New', monospace;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.github-link-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 237, 0, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.github-link-btn:hover::before {
+    left: 100%;
+}
+
+.github-link-btn:hover {
+    background: linear-gradient(135deg, #FFED00 0%, #FFD700 100%);
+    color: #000;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.github-link-btn:active {
+    transform: translateY(-1px);
+}
+
+/* Features Details */
+.dev-features-container {
+    padding: 0;
+}
+
+.feature-detail {
+    background: linear-gradient(135deg, #0a0a0a 0%, #000 100%);
+    border: 1px solid #333;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.feature-detail:hover {
+    border-color: #444;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5);
+}
+
+.feature-detail[open] {
+    border-color: #FFED00;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.feature-detail summary {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    padding: 16px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #FFED00;
+    user-select: none;
+    transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    list-style: none;
+    position: relative;
+}
+
+.feature-detail summary::-webkit-details-marker {
+    display: none;
+}
+
+.feature-detail summary::after {
+    content: '▼';
+    position: absolute;
+    right: 20px;
+    transition: transform 0.3s ease;
+    font-size: 12px;
+}
+
+.feature-detail[open] summary::after {
+    transform: rotate(180deg);
+}
+
+.feature-detail summary:hover {
+    background: linear-gradient(135deg, #222 0%, #111 100%);
+    padding-left: 25px;
+    box-shadow: inset 4px 0 0 #FFED00;
+}
+
+.feature-detail[open] summary {
+    background: linear-gradient(135deg, #000 0%, #0a0a0a 100%);
+    border-bottom: 1px solid #333;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.feature-content {
+    padding: 18px 20px;
+    animation: expandContent 0.3s ease;
+}
+
+@keyframes expandContent {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.feature-content p {
+    margin: 0 0 14px 0;
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.feature-content strong {
+    color: #FFED00;
+}
+
+.feature-content ul {
+    margin: 0 0 16px 0;
+    padding-left: 22px;
+    color: #ccc;
+}
+
+.feature-content li {
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.feature-api {
+    background: linear-gradient(135deg, #0a0a0a 0%, #000 100%);
+    padding: 12px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #FFED00;
+    font-size: 12px;
+    margin: 0;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.feature-api code {
+    font-family: 'Courier New', monospace;
+    color: #0f0;
+    background-color: #000;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+/* ==========================================
+   RESPONSIVE - MOBILE (max-width: 767px)
+   ========================================== */
+@media (max-width: 767px) {
+    .developer-header {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+
+    .developer-header h2 {
+        font-size: 24px;
+    }
+
+    .developer-subtitle {
+        font-size: 13px;
+    }
+
+    .developer-tabs {
+        padding: 12px 10px;
+        gap: 8px;
+    }
+
+    .dev-tab {
+        padding: 11px 18px;
+        font-size: 13px;
+        min-width: 110px;
+    }
+
+    .dev-tab-content {
+        padding: 18px 12px;
+    }
+
+    .changelog-item {
+        margin-bottom: 18px;
+    }
+
+    .changelog-header {
+        padding: 12px 15px;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .changelog-version {
+        font-size: 12px;
+        padding: 4px 12px;
+    }
+
+    .changelog-date {
+        font-size: 11px;
+    }
+
+    .changelog-body {
+        padding: 15px;
+    }
+
+    .changelog-title {
+        font-size: 17px;
+        margin-bottom: 12px;
+    }
+
+    .changelog-changes {
+        gap: 10px;
+    }
+
+    .changelog-changes li {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .dev-info-box {
+        padding: 16px;
+    }
+
+    .dev-info-box h3 {
+        font-size: 17px;
+    }
+
+    .github-link-btn {
+        padding: 14px 24px;
+        font-size: 15px;
+    }
+
+    .feature-detail summary {
+        font-size: 15px;
+        padding: 14px 18px;
+    }
+
+    .feature-content {
+        padding: 15px 16px;
+    }
+}
+
+/* ==========================================
+   RESPONSIVE - TABLET (768px - 1023px)
+   ========================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .developer-header {
+        padding: 25px 20px;
+    }
+
+    .developer-header h2 {
+        font-size: 30px;
+    }
+
+    .developer-tabs {
+        padding: 14px 12px;
+        gap: 10px;
+    }
+
+    .dev-tab {
+        padding: 13px 24px;
+        font-size: 14px;
+        min-width: 140px;
+    }
+
+    .dev-tab-content {
+        padding: 22px 16px;
+    }
+
+    .dev-info-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+    }
+
+    .github-link-btn {
+        grid-column: 1 / -1;
+    }
+
+    .changelog-changes {
+        gap: 14px;
+    }
+}
+
+/* ==========================================
+   RESPONSIVE - DESKTOP (min-width: 1024px)
+   ========================================== */
+@media (min-width: 1024px) {
+    .developer-header {
+        padding: 35px 25px;
+    }
+
+    .developer-header h2 {
+        font-size: 36px;
+    }
+
+    .developer-subtitle {
+        font-size: 16px;
+    }
+
+    .developer-tabs {
+        padding: 16px 15px;
+        gap: 12px;
+    }
+
+    .dev-tab {
+        padding: 15px 30px;
+        font-size: 15px;
+        min-width: 160px;
+    }
+
+    .dev-tab:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .dev-tab.active:hover {
+        transform: translateY(3px);
+    }
+
+    .dev-tab-content {
+        padding: 30px 25px;
+    }
+
+    .dev-info-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .dev-info-box {
+        padding: 24px;
+    }
+
+    .github-link-btn {
+        grid-column: 1 / -1;
+        padding: 18px 32px;
+        font-size: 17px;
+    }
+
+    .changelog-item {
+        margin-bottom: 24px;
+    }
+
+    .changelog-header {
+        padding: 18px 24px;
+    }
+
+    .changelog-version {
+        font-size: 15px;
+        padding: 7px 18px;
+    }
+
+    .changelog-body {
+        padding: 24px;
+    }
+
+    .changelog-title {
+        font-size: 22px;
+        margin-bottom: 18px;
+    }
+
+    .changelog-changes {
+        gap: 14px;
+    }
+
+    .changelog-changes li {
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+
+    .feature-detail summary {
+        font-size: 17px;
+        padding: 18px 24px;
+    }
+
+    .feature-content {
+        padding: 20px 24px;
+    }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 360px) {
+    .developer-header h2 {
+        font-size: 22px;
+    }
+
+    .dev-tab {
+        padding: 9px 14px;
+        font-size: 12px;
+        min-width: 95px;
+    }
+
+    .changelog-changes li {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+}
+/* ==========================================
+   CHANGELOG - MARKDOWN-STYLE FORMATIERUNG
+   Für automatisches Rendering von CHANGELOG.md
+   ========================================== */
+
+/* Changelog Container für Markdown Content */
+.changelog-container {
+    font-family: 'DotMatrix', 'Courier New', monospace;
+    line-height: 1.6;
+    color: #ccc;
+    padding: 0;
+}
+
+/* Überschriften - GitHub Style */
+.changelog-container h1 {
+    font-size: 28px;
+    color: #FFED00;
+    font-weight: bold;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #FFED00;
+    letter-spacing: 1px;
+}
+
+.changelog-container h2 {
+    font-size: 22px;
+    color: #FFED00;
+    font-weight: bold;
+    margin: 30px 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #333;
+    letter-spacing: 0.5px;
+}
+
+.changelog-container h3 {
+    font-size: 18px;
+    color: #fff;
+    font-weight: bold;
+    margin: 20px 0 12px 0;
+}
+
+.changelog-container h4 {
+    font-size: 16px;
+    color: #fff;
+    font-weight: bold;
+    margin: 15px 0 10px 0;
+}
+
+/* Absätze */
+.changelog-container p {
+    margin: 0 0 15px 0;
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* Fetter Text */
+.changelog-container strong,
+.changelog-container b {
+    color: #FFED00;
+    font-weight: bold;
+}
+
+/* Kursiver Text */
+.changelog-container em,
+.changelog-container i {
+    font-style: italic;
+    color: #ddd;
+}
+
+/* Listen */
+.changelog-container ul {
+    margin: 0 0 15px 0;
+    padding-left: 25px;
+    list-style-type: disc;
+}
+
+.changelog-container ol {
+    margin: 0 0 15px 0;
+    padding-left: 25px;
+}
+
+.changelog-container li {
+    margin-bottom: 8px;
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Nested Listen */
+.changelog-container ul ul,
+.changelog-container ul ol,
+.changelog-container ol ul,
+.changelog-container ol ol {
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+.changelog-container ul ul {
+    list-style-type: circle;
+}
+
+.changelog-container ul ul ul {
+    list-style-type: square;
+}
+
+/* Links */
+.changelog-container a {
+    color: #FFED00;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.changelog-container a:hover {
+    border-bottom-color: #FFED00;
+}
+
+/* Code-Blöcke */
+.changelog-container code {
+    background-color: #0a0a0a;
+    color: #0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    border: 1px solid #222;
+}
+
+.changelog-container pre {
+    background-color: #0a0a0a;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #222;
+    overflow-x: auto;
+    margin: 0 0 15px 0;
+}
+
+.changelog-container pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0f0;
+}
+
+/* Horizontale Linie */
+.changelog-container hr {
+    border: none;
+    border-top: 2px solid #333;
+    margin: 30px 0;
+}
+
+/* Blockquote */
+.changelog-container blockquote {
+    border-left: 4px solid #FFED00;
+    padding-left: 15px;
+    margin: 15px 0;
+    color: #aaa;
+    font-style: italic;
+}
+
+/* Tabellen */
+.changelog-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 15px 0;
+}
+
+.changelog-container th,
+.changelog-container td {
+    border: 1px solid #333;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.changelog-container th {
+    background-color: #1a1a1a;
+    color: #FFED00;
+    font-weight: bold;
+}
+
+.changelog-container tr:hover {
+    background-color: #0a0a0a;
+}
+
+/* Checkboxen in Listen (für Task Lists) */
+.changelog-container input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+/* Responsive - Markdown Changelog */
+@media (max-width: 767px) {
+    .changelog-container h1 {
+        font-size: 24px;
+    }
+
+    .changelog-container h2 {
+        font-size: 20px;
+    }
+
+    .changelog-container h3 {
+        font-size: 17px;
+    }
+
+    .changelog-container h4 {
+        font-size: 15px;
+    }
+
+    .changelog-container p,
+    .changelog-container li {
+        font-size: 13px;
+    }
+
+    .changelog-container pre {
+        font-size: 12px;
+        padding: 10px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .changelog-container h1 {
+        font-size: 32px;
+    }
+
+    .changelog-container h2 {
+        font-size: 26px;
+    }
+
+    .changelog-container h3 {
+        font-size: 20px;
+    }
+
+    .changelog-container h4 {
+        font-size: 18px;
+    }
+
+    .changelog-container p,
+    .changelog-container li {
+        font-size: 15px;
+    }
+}
+/* ==========================================
+   DEVELOPER VIEW - MOBILE OPTIMIERUNGEN
+   Füge diese Regeln zu styles-complete.css hinzu
+   ========================================== */
+
+/* Mobile-First Verbesserungen */
+@media (max-width: 767px) {
+    /* Developer Header - Kompakter auf Mobile */
+    .developer-header {
+        padding: 20px 15px;
+        margin: 15px 10px 20px 10px;
+        border-radius: 12px;
+    }
+
+    .developer-header h2 {
+        font-size: 22px;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .developer-subtitle {
+        font-size: 12px;
+    }
+
+    /* Tabs - Besseres Touch-Target */
+    .developer-tabs {
+        padding: 10px 8px;
+        gap: 6px;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .dev-tab {
+        padding: 12px 16px;
+        font-size: 13px;
+        min-width: 100px;
+        border-radius: 8px 8px 0 0;
+    }
+
+    /* Tab Content - Mehr Padding für Lesbarkeit */
+    .dev-tab-content {
+        padding: 20px 12px;
+        border-radius: 0 0 10px 10px;
+    }
+
+    /* Changelog Container - Bessere Lesbarkeit */
+    .changelog-container {
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .changelog-container h1 {
+        font-size: 22px;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+    }
+
+    .changelog-container h2 {
+        font-size: 18px;
+        margin: 25px 0 12px 0;
+        padding-bottom: 6px;
+    }
+
+    .changelog-container h3 {
+        font-size: 16px;
+        margin: 16px 0 10px 0;
+    }
+
+    .changelog-container h4 {
+        font-size: 14px;
+        margin: 12px 0 8px 0;
+    }
+
+    .changelog-container p {
+        font-size: 13px;
+        margin-bottom: 12px;
+        line-height: 1.6;
+    }
+
+    .changelog-container ul,
+    .changelog-container ol {
+        padding-left: 20px;
+        margin-bottom: 12px;
+    }
+
+    .changelog-container li {
+        font-size: 13px;
+        margin-bottom: 6px;
+        line-height: 1.5;
+    }
+
+    .changelog-container code {
+        font-size: 12px;
+        padding: 2px 5px;
+    }
+
+    .changelog-container pre {
+        padding: 10px;
+        font-size: 11px;
+        overflow-x: auto;
+    }
+
+    .changelog-container hr {
+        margin: 20px 0;
+    }
+
+    /* Info Boxes - Stack on Mobile */
+    .dev-info-container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .dev-info-box {
+        padding: 15px;
+    }
+
+    .dev-info-box h3 {
+        font-size: 16px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+    }
+
+    .dev-info-table td {
+        padding: 10px 0;
+        font-size: 12px;
+    }
+
+    .dev-info-table td:first-child {
+        width: 45%;
+    }
+
+    /* GitHub Link - Full Width auf Mobile */
+    .github-link-btn {
+        padding: 14px 20px;
+        font-size: 14px;
+        margin: 20px 0;
+    }
+
+    /* Feature Details - Kompakter */
+    .feature-detail {
+        margin-bottom: 12px;
+        border-radius: 10px;
+    }
+
+    .feature-detail summary {
+        padding: 14px 16px;
+        font-size: 14px;
+    }
+
+    .feature-detail summary::after {
+        right: 16px;
+        font-size: 11px;
+    }
+
+    .feature-content {
+        padding: 14px 16px;
+    }
+
+    .feature-content p {
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .feature-content li {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .feature-api {
+        padding: 10px 12px;
+        font-size: 11px;
+    }
+
+    .feature-api code {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    /* Links - Größere Touch-Targets */
+    .changelog-container a {
+        display: inline-block;
+        padding: 2px 0;
+        min-height: 30px;
+        line-height: 1.5;
+    }
+
+    /* Blockquotes - Kompakter */
+    .changelog-container blockquote {
+        padding-left: 12px;
+        margin: 12px 0;
+        font-size: 13px;
+        border-left-width: 3px;
+    }
+
+    /* Tabellen - Horizontal Scroll */
+    .changelog-container table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .changelog-container th,
+    .changelog-container td {
+        padding: 8px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    /* Bessere Touch-Feedback */
+    .dev-tab:active {
+        transform: scale(0.96) translateY(1px);
+        background-color: #222;
+    }
+
+    .feature-detail summary:active {
+        background: linear-gradient(135deg, #222 0%, #111 100%);
+    }
+
+    /* Scroll-Hint für Tabs */
+    .developer-tabs::after {
+        content: '→';
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #FFED00;
+        font-size: 20px;
+        opacity: 0.5;
+        pointer-events: none;
+        animation: scrollHint 2s ease-in-out infinite;
+    }
+
+    @keyframes scrollHint {
+        0%, 100% { opacity: 0.5; transform: translateY(-50%) translateX(0); }
+        50% { opacity: 0.8; transform: translateY(-50%) translateX(5px); }
+    }
+
+    /* Verstecke Scroll-Hint wenn am Ende */
+    .developer-tabs::-webkit-scrollbar-thumb:hover ~ .developer-tabs::after {
+        opacity: 0;
+    }
+}
+
+/* Extra Small Mobile - Weitere Anpassungen */
+@media (max-width: 360px) {
+    .developer-header h2 {
+        font-size: 20px;
+    }
+
+    .developer-subtitle {
+        font-size: 11px;
+    }
+
+    .dev-tab {
+        padding: 10px 14px;
+        font-size: 12px;
+        min-width: 90px;
+    }
+
+    .dev-tab-content {
+        padding: 16px 10px;
+    }
+
+    .changelog-container h1 {
+        font-size: 20px;
+    }
+
+    .changelog-container h2 {
+        font-size: 16px;
+    }
+
+    .changelog-container h3 {
+        font-size: 15px;
+    }
+
+    .changelog-container h4 {
+        font-size: 13px;
+    }
+
+    .changelog-container p,
+    .changelog-container li {
+        font-size: 12px;
+    }
+
+    .dev-info-box {
+        padding: 12px;
+    }
+
+    .github-link-btn {
+        font-size: 13px;
+        padding: 12px 16px;
+    }
+}
+
+/* Landscape Mobile - Horizontal Optimierung */
+@media (max-width: 767px) and (orientation: landscape) {
+    .developer-header {
+        padding: 15px;
+        margin: 10px;
+    }
+
+    .developer-header h2 {
+        font-size: 20px;
+    }
+
+    .dev-tab-content {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
