@@ -125,19 +125,89 @@
                 <div class="home-box">
                     <h2 class="home-box-title">📝 Updates</h2>
                     
-                    <!-- Latest Update -->
-                    <div class="home-update home-update-latest">
-                        <div class="home-update-header">
-                            <span class="home-update-version">v29.0</span>
-                            <span class="home-update-date">31.12.2025</span>
-                        </div>
-                        <h3>GitHub-Integration</h3>
-                        <ul>
-                            <li>GitHub-Link im Changelog-Bereich</li>
-                            <li>"Star on GitHub" im Footer</li>
-                            <li>Direkter Zugriff auf Code & Updates</li>
-                        </ul>
-                    </div>
+<!-- Latest Update -->
+<div class="home-update home-update-latest">
+    <div class="home-update-header">
+        <span class="home-update-version">v30.0.0</span>
+        <span class="home-update-date">10.02.2026</span>
+    </div>
+
+    <h3>🎉 Major Release – Code-Trennung & Desktop-Optimierung</h3>
+
+    <h4>➕ Added</h4>
+    <ul>
+        <li><strong>Modulare Dateistruktur</strong>: Trennung in HTML, CSS und JS</li>
+        <li><strong>Desktop-Optimierungen</strong> für große Bildschirme:
+            <ul>
+                <li>Tablet / Desktop (≥768px): 900px Container</li>
+                <li>Large Desktop (≥1200px): 1100px Container mit 2-Spalten</li>
+                <li>Extra Large (≥1600px): 1400px Container mit 3-Spalten</li>
+            </ul>
+        </li>
+        <li><strong>Hover-Effekte</strong> für Desktop:
+            <ul>
+                <li>Navigation</li>
+                <li>Buttons & Filter</li>
+                <li>Abfahrts-Items</li>
+                <li>Journey Results</li>
+            </ul>
+        </li>
+        <li><strong>Live-Map Desktop-Layout</strong>: Controls links statt oben</li>
+        <li><strong>Home-View Desktop</strong>: 3-Spalten Navigation</li>
+        <li><strong>README.md</strong>: Ausführliche Projektdokumentation</li>
+        <li><strong>CHANGELOG.md</strong>: Versions- & Änderungsverlauf</li>
+        <li><strong>GitHub Footer-Link</strong>: Direkter Zugriff auf Code & Updates</li>
+    </ul>
+
+    <h4>🔄 Changed</h4>
+    <ul>
+        <li><strong>Dateistruktur</strong>:
+            <ul>
+                <li><code>index.html</code>: 4.698 → 390 Zeilen</li>
+                <li><code>styles.css</code>: 2.467 Zeilen (vorher inline)</li>
+                <li><code>script.js</code>: 1.992 Zeilen (vorher inline)</li>
+            </ul>
+        </li>
+        <li><strong>Container-Breiten</strong>:
+            <ul>
+                <li>Vorher: 1200px (zu breit)</li>
+                <li>Jetzt: 900 / 1100 / 1400px je nach Screen</li>
+            </ul>
+        </li>
+        <li><strong>Navigation</strong>: Breite von 280px auf 320px erhöht</li>
+        <li><strong>Header-Schriftgröße</strong>: 36px → 38px auf Desktop</li>
+        <li><strong>Detail-Modal</strong>: Responsive Breiten:
+            <ul>
+                <li>Tablet: 900px</li>
+                <li>Desktop: 1100px</li>
+                <li>Extra Large: 1300px</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h4>🐞 Fixed</h4>
+    <ul>
+        <li><strong>Z-Index-Probleme</strong> (Popups & Modals):
+            <ul>
+                <li>Header: 10000</li>
+                <li>Detail-Modal: 10005</li>
+                <li>Detail-Header: 10006</li>
+                <li>Leaflet-Popups: 10010</li>
+            </ul>
+        </li>
+        <li>Fehlende Desktop-Optimierungen behoben</li>
+        <li>Live-Map Controls korrekt für Desktop positioniert</li>
+    </ul>
+
+    <h4>⚙️ Technical Details</h4>
+    <ul>
+        <li>CSS: 2.467 Zeilen inkl. Desktop-Optimierungen</li>
+        <li>JavaScript: 1.992 Zeilen (funktional unverändert)</li>
+        <li>HTML: Sauber getrennt, nur 390 Zeilen</li>
+        <li>Bessere Performance durch separates Browser-Caching</li>
+    </ul>
+</div>
+
 
                     <!-- GitHub Link -->
                     <div class="home-github-link">
