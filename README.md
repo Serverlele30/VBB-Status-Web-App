@@ -8,7 +8,12 @@ Die App wurde jetzt in separate Dateien aufgeteilt:
 vbb-netz-status/
 ├── index.html          # HTML-Struktur
 ├── styles.css          # Alle CSS-Styles
-├── script.js           # Alle JavaScript-Funktionen
+├── js/
+│   ├── api.js          # API-Schicht, Rate-Limit, Cache, Favoriten, Persistenz
+│   ├── app.js          # Views, Abfahrten, Routenplaner, Menü
+│   ├── livemap.js      # Live-Map (Leaflet, Fahrzeug-Radar)
+│   ├── changelog.js    # Changelog-Loader + Markdown-Parser
+│   └── extras.js       # Filter, Tabs, App-Start-Restore, Hover-Extras
 ├── server.js           # HTTPS-Entwicklungsserver
 ├── service-worker.js   # PWA Service Worker
 ├── manifest.json       # PWA Manifest
@@ -41,7 +46,7 @@ vbb-netz-status/
 **Nachher:**
 - `index.html` - Nur HTML-Struktur (~380 Zeilen)
 - `styles.css` - Alle CSS-Regeln (~2300 Zeilen)
-- `script.js` - Alle JavaScript-Funktionen (~1990 Zeilen)
+- `js/` - JavaScript, aufgeteilt in 5 Module (api, app, livemap, changelog, extras)
 
 ## ✅ Vorteile der Trennung
 
