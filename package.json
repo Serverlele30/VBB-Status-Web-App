@@ -1,6 +1,6 @@
 {
   "name": "vbb-netz-status",
-  "version": "33.0.0",
+  "version": "33.1.0",
   "description": "Live-Nahverkehr für Berlin & Brandenburg - Progressive Web App (PWA) für Echtzeit-Abfahrten, Routenplanung und Live-Fahrzeugverfolgung im VBB-Gebiet",
   "main": "server.js",
   "scripts": {

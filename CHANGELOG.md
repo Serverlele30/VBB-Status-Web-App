@@ -5,6 +5,16 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [33.1.0] - 2026-07-03
+
+### Automatischer API-Failover
+
+#### Added
+- **Failover auf v6.bvg.transport.rest**: Wenn die primäre VBB-API nicht antwortet (Netzwerkfehler, Timeout, HTTP 5xx), schaltet die App automatisch auf die baugleiche BVG-API um - gleicher Betreiber, identische Routen und Stop-IDs, deckt ebenfalls ganz Berlin/Brandenburg ab, nutzt aber eine andere Upstream-Quelle. Nach 10 Minuten wird die primäre API automatisch wieder probiert.
+- **12s-Timeout pro Request** (AbortController): hängende Verbindungen blockieren die App nicht mehr und lösen den Failover aus.
+- HTTP-4xx-Fehler lösen bewusst KEINEN Failover aus (fehlerhafte Anfrage, kein API-Ausfall).
+- Sind beide APIs down, werden notfalls abgelaufene Cache-Daten geliefert.
+
 ## [33.0.0] - 2026-07-03
 
 ### Favoriten, Persistenz, echte Filter & Modul-Architektur

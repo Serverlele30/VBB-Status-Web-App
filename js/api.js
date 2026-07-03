@@ -4,7 +4,15 @@
 // VBB NETZ STATUS - Haupt-Script
 // ==========================================
 
-        const API_BASE = 'https://v6.vbb.transport.rest';
+        // Primäre API + baugleicher Fallback (gleicher Betreiber, gleiche
+        // Routen/Stop-IDs, andere Upstream-Quelle - siehe apiFetch)
+        const API_BASES = [
+            'https://v6.vbb.transport.rest',
+            'https://v6.bvg.transport.rest'
+        ];
+        const API_BASE = API_BASES[0];   // Call-Sites bauen URLs immer mit der primären Basis
+        let activeApiBaseIndex = 0;      // 0 = VBB, 1 = BVG-Fallback
+        let apiFallbackSince = 0;        // Zeitpunkt des Failovers (für Recovery)
         let currentStationId = null;
         let currentStationName = null;
         let searchTimeout = null;
@@ -61,6 +69,24 @@
          * @returns {Promise<any>} JSON-Daten
          * Wirft Error('RATE_LIMIT') wenn Budget aufgebraucht (Cache wird trotzdem genutzt).
          */
+        /**
+         * Zentraler API-Aufruf mit automatischem Failover.
+         *
+         * Primär:   v6.vbb.transport.rest
+         * Fallback: v6.bvg.transport.rest (gleicher Betreiber, identische
+         *           Routen & Stop-IDs, deckt ebenfalls ganz Berlin/Brandenburg
+         *           ab - nutzt aber eine ANDERE Upstream-Quelle. Fällt VBB
+         *           aus, läuft die App über BVG weiter.)
+         *
+         * - Timeout 12s pro Versuch (hängende Requests blockieren nichts)
+         * - Failover bei Netzwerkfehler, Timeout oder HTTP 5xx
+         *   (NICHT bei 4xx - das ist ein Anfragefehler, kein API-Ausfall)
+         * - Nach 10 Minuten auf dem Fallback wird die primäre API erneut probiert
+         * - Cache-Keys basieren auf der primären URL -> Cache übersteht Failover
+         *
+         * @param {string} url - vollständige URL (mit API_BASE gebaut)
+         * @param {object} opts - { ttl: Cache-Dauer in ms (0 = kein Cache) }
+         */
         async function apiFetch(url, { ttl = 0 } = {}) {
             // 1) Frischer Cache-Treffer? -> kein Request nötig
             const cached = apiCache.get(url);
@@ -82,26 +108,88 @@
                 throw new Error('RATE_LIMIT');
             }
 
-            apiCallTimestamps.push(Date.now());
+            const promise = (async () => {
+                // Recovery: Nach 10 min auf dem Fallback wieder primär versuchen
+                if (activeApiBaseIndex !== 0 &&
+                    Date.now() - apiFallbackSince > 10 * 60 * 1000) {
+                    activeApiBaseIndex = 0;
+                    console.warn('API-Failover: Versuche wieder die primäre VBB-API');
+                }
 
-            const promise = fetch(url)
-                .then(async (response) => {
-                    if (!response.ok) throw new Error('HTTP ' + response.status);
-                    const data = await response.json();
-                    if (ttl > 0) {
-                        // Cache-Größe begrenzen (ältesten Eintrag entfernen)
-                        if (apiCache.size >= API_CACHE_MAX_ENTRIES) {
-                            const oldestKey = apiCache.keys().next().value;
-                            apiCache.delete(oldestKey);
+                const tryOrder = activeApiBaseIndex === 0 ? [0, 1] : [1, 0];
+                let lastError = null;
+
+                for (const idx of tryOrder) {
+                    const realUrl = url.replace(API_BASES[0], API_BASES[idx]);
+                    apiCallTimestamps.push(Date.now()); // jeder echte Versuch zählt
+
+                    try {
+                        const response = await fetchWithTimeout(realUrl, 12000);
+
+                        if (!response.ok) {
+                            if (response.status >= 500) {
+                                // Serverfehler -> Failover lohnt sich
+                                throw new Error('HTTP ' + response.status);
+                            }
+                            // 4xx: Anfrage ist falsch - andere API würde genauso antworten
+                            const err = new Error('HTTP ' + response.status);
+                            err.noFailover = true;
+                            throw err;
                         }
-                        apiCache.set(url, { data, time: Date.now(), ttl });
+
+                        const data = await response.json();
+
+                        // Basis-Wechsel dokumentieren
+                        if (idx !== activeApiBaseIndex) {
+                            activeApiBaseIndex = idx;
+                            if (idx !== 0) {
+                                apiFallbackSince = Date.now();
+                                console.warn(`API-Failover aktiv: ${API_BASES[idx]} (VBB-API antwortet nicht)`);
+                            } else {
+                                console.warn('API-Failover beendet: primäre VBB-API antwortet wieder');
+                            }
+                        }
+
+                        if (ttl > 0) {
+                            // Cache-Größe begrenzen (ältesten Eintrag entfernen)
+                            if (apiCache.size >= API_CACHE_MAX_ENTRIES) {
+                                const oldestKey = apiCache.keys().next().value;
+                                apiCache.delete(oldestKey);
+                            }
+                            apiCache.set(url, { data, time: Date.now(), ttl });
+                        }
+                        return data;
+
+                    } catch (e) {
+                        if (e.noFailover) throw e;
+                        lastError = e;
+                        // Budget für den zweiten Versuch noch da?
+                        if (apiBudgetLeft() <= 0) break;
+                        // -> nächste Basis probieren
                     }
-                    return data;
-                })
-                .finally(() => apiInflight.delete(url));
+                }
+
+                // Beide APIs down: notfalls abgelaufenen Cache liefern
+                if (cached) {
+                    console.warn('Beide APIs nicht erreichbar – liefere veraltete Cache-Daten');
+                    return cached.data;
+                }
+                throw lastError || new Error('API nicht erreichbar');
+            })().finally(() => apiInflight.delete(url));
 
             apiInflight.set(url, promise);
             return promise;
+        }
+
+        // fetch mit hartem Timeout (hängende Verbindungen brechen sauber ab)
+        async function fetchWithTimeout(realUrl, ms) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), ms);
+            try {
+                return await fetch(realUrl, { signal: controller.signal });
+            } finally {
+                clearTimeout(timer);
+            }
         }
 
         // HTML-Escaping für alle Strings aus der API (XSS-Schutz)
