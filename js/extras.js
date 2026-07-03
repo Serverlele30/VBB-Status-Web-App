@@ -375,31 +375,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Parallax-Effekt für Header
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.matchMedia('(hover: hover)').matches) {
-        const header = document.querySelector('.header');
-        if (header) {
-            // Mit requestAnimationFrame gedrosselt: max. 1 Update pro Frame
-            // statt bei jeder einzelnen Mausbewegung (weniger Layout-Arbeit)
-            header.style.transition = 'transform 0.3s ease-out'; // einmalig statt pro Event
-            let parallaxPending = false;
-            let lastX = 0, lastY = 0;
-            document.addEventListener('mousemove', (e) => {
-                lastX = e.clientX;
-                lastY = e.clientY;
-                if (parallaxPending) return;
-                parallaxPending = true;
-                requestAnimationFrame(() => {
-                    const x = (lastX / window.innerWidth - 0.5) * 10;
-                    const y = (lastY / window.innerHeight - 0.5) * 10;
-                    header.style.transform = `translate(${x}px, ${y}px)`;
-                    parallaxPending = false;
-                });
-            }, { passive: true });
-        }
-    }
-});
+// (Parallax-Effekt entfernt: Der Header inkl. Menü-Button bewegte sich
+//  mit der Maus mit - wirkte unruhig und hatte keinen Nutzen.)
 
 // Smooth Scroll bei Navigation
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {

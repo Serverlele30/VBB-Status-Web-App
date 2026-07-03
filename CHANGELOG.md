@@ -28,7 +28,7 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - **Code in 5 Module aufgeteilt** (`js/api.js`, `app.js`, `livemap.js`, `changelog.js`, `extras.js`); geteilter Zustand zentral in api.js deklariert.
 - **Live-Map-Marker werden bewegt statt neu erzeugt** (per tripId wiederverwendet): flüssigere Karte, offene Popups bleiben beim Update offen.
 - **Radar-Ergebnisanzahl an Zoom gekoppelt** (80/140/200): kleinere API-Responses bei hohem Zoom.
-- **Parallax-Effekt mit requestAnimationFrame gedrosselt** (max. 1 Update pro Frame statt pro Mausbewegung).
+- **Parallax-Effekt komplett entfernt**: Der Header inkl. Menü-Button bewegte sich mit der Maus mit - wirkte unruhig und hatte keinen Nutzen.
 - **Alle console.log-Ausgaben entfernt** (Fehler/Warnungen bleiben).
 
 ## [32.0.0] - 2026-07-02
