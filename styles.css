@@ -1,9 +1,3 @@
-/* DotMatrix Font by NikBLN - https://github.com/NikBLN/weilSieDichLieben */
-    /*    @font-face {
-            font-family: 'DotMatrix';
-            src: url('./DotMatrix.ttf') format('truetype');
-        } */
-
         * {
             margin: 0;
             padding: 0;
@@ -11,7 +5,7 @@
         }
 
         body {
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             background-color: #000;
             color: #FFED00;
             min-height: 100vh;
@@ -165,7 +159,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 16px;
             transition: background-color 0.2s;
             border-left: 4px solid transparent;
@@ -217,7 +211,7 @@
         .search-input {
             width: 100%;
             padding: 12px 45px 12px 12px;
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 16px;
             background-color: #000 !important;
             color: #FFED00;
@@ -328,7 +322,7 @@
         .btn {
             flex: 1;
             padding: 12px;
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 14px;
             background-color: #FFED00;
             color: #000;
@@ -727,7 +721,7 @@
             font-size: 22px;
             cursor: pointer;
             padding: 6px 12px;
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             border-radius: 6px;
             transition: background-color 0.15s;
         }
@@ -1662,7 +1656,7 @@
             color: #FFED00;
             padding: 8px 14px;
             border-radius: 6px;
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
@@ -1697,7 +1691,7 @@
         }
 
         .vehicle-line {
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 11px;
             font-weight: bold;
             padding: 3px 6px;
@@ -1716,7 +1710,7 @@
         }
 
         .vehicle-popup {
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             background-color: #000 !important;
             color: #fff;
         }
@@ -1855,7 +1849,7 @@
         }
 
         .home-hero-title h1 {
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 32px;
             color: #FFED00;
             margin: 0 0 8px 0;
@@ -1929,7 +1923,7 @@
         }
 
         .home-box-title {
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 18px;
             color: #FFED00;
             margin: 0 0 15px 0;
@@ -2063,7 +2057,7 @@
         }
 
         .home-features-box h3 {
-            font-family: 'DotMatrix', 'Courier New', monospace;
+            font-family: 'Courier New', monospace;
             font-size: 18px;
             color: #FFED00;
             margin: 0 0 12px 0;
@@ -2331,7 +2325,7 @@
     font-size: 32px;
     color: #FFED00;
     margin: 0 0 10px 0;
-    font-family: 'DotMatrix', 'Courier New', monospace;
+    font-family: 'Courier New', monospace;
     letter-spacing: 2px;
 }
 
@@ -2384,7 +2378,7 @@
     color: #FFED00;
     padding: 14px 24px;
     border-radius: 10px 10px 0 0;
-    font-family: 'DotMatrix', 'Courier New', monospace;
+    font-family: 'Courier New', monospace;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2654,7 +2648,7 @@
     margin: 0 0 15px 0;
     padding-bottom: 12px;
     border-bottom: 2px solid #333;
-    font-family: 'DotMatrix', 'Courier New', monospace;
+    font-family: 'Courier New', monospace;
 }
 
 .dev-info-table {
@@ -2714,7 +2708,7 @@
     font-size: 16px;
     font-weight: bold;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: 'DotMatrix', 'Courier New', monospace;
+    font-family: 'Courier New', monospace;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     position: relative;
     overflow: hidden;
@@ -3124,7 +3118,7 @@
 
 /* Changelog Container für Markdown Content */
 .changelog-container {
-    font-family: 'DotMatrix', 'Courier New', monospace;
+    font-family: 'Courier New', monospace;
     line-height: 1.6;
     color: #ccc;
     padding: 0;
@@ -3668,4 +3662,143 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
+}
+/* ==========================================
+   v33: Favoriten, Zeitwahl, Offline-Banner, Tastatur-Navigation
+   ========================================== */
+
+/* Favoriten auf dem Home-Screen */
+.home-favorites {
+    background: rgba(255, 237, 0, 0.06);
+    border: 1px solid rgba(255, 237, 0, 0.25);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.home-favorites-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #FFED00;
+    margin-bottom: 12px;
+}
+
+.home-favorites-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.home-favorite-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.home-favorite-item:hover,
+.home-favorite-item:focus-visible {
+    background: rgba(255, 237, 0, 0.12);
+    border-color: rgba(255, 237, 0, 0.5);
+    outline: none;
+}
+
+.home-favorite-arrow {
+    color: #FFED00;
+    font-weight: bold;
+}
+
+/* Station-Header mit Aktions-Buttons */
+.station-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.station-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Offline-Banner ("Stand: vor X min") */
+.stale-data-banner {
+    background: rgba(255, 165, 0, 0.15);
+    border: 1px solid rgba(255, 165, 0, 0.5);
+    color: #FFC966;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* Zeitwahl in der Routensuche */
+.journey-time-row {
+    margin: 12px 0;
+}
+
+.journey-time-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.journey-time-select,
+.journey-time-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+    padding: 10px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.journey-time-select option {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.journey-time-input {
+    flex: 1;
+    min-width: 0;
+    color-scheme: dark;
+}
+
+.journey-time-clear {
+    position: static;
+    flex-shrink: 0;
+}
+
+.journey-time-hint {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-top: 4px;
+}
+
+/* Tastatur-Navigation in Vorschlägen */
+.suggestion-item.kb-active {
+    background: rgba(255, 237, 0, 0.2);
+    outline: 2px solid rgba(255, 237, 0, 0.6);
+    outline-offset: -2px;
+}
+
+/* Sichtbarer Fokus für Tastaturnutzer */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid #FFED00;
+    outline-offset: 2px;
 }

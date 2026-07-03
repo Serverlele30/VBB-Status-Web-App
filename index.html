@@ -24,7 +24,7 @@
             crossorigin=""></script>
 </head>
 <body>
-    <div class="offline-indicator" id="offlineIndicator">
+    <div class="offline-indicator" id="offlineIndicator" role="status">
         📵 Offline-Modus - Zeige gespeicherte Daten
     </div>
 
@@ -46,10 +46,10 @@
     </div>
 
     <!-- Navigation Menu -->
-    <div class="nav-menu" id="navMenu">
+    <nav class="nav-menu" id="navMenu" aria-label="Hauptnavigation">
         <div class="nav-header">
             <h3>Funktionen</h3>
-            <button class="nav-close" id="navClose">×</button>
+            <button class="nav-close" id="navClose" aria-label="Menü schließen">×</button>
         </div>
         <div class="nav-items">
             <button class="nav-item" data-view="home">
@@ -73,7 +73,7 @@
                 <span class="nav-label">Für Entwickler</span>
             </button>
         </div>
-    </div>
+    </nav>
     <div class="nav-overlay" id="navOverlay"></div>
 
     <!-- View: Home -->
@@ -94,9 +94,12 @@
                 <div class="home-hero-title">
                     <h1>VBB NETZ STATUS</h1>
                     <p>Live-Nahverkehr für Berlin & Brandenburg</p>
-                    <div class="home-version">v31.0</div>
+                    <div class="home-version">v33.0</div>
                 </div>
             </div>
+
+            <!-- Favoriten (per JS aus localStorage gerendert) -->
+            <div class="home-favorites" id="homeFavorites" style="display: none;"></div>
 
             <!-- Quick Info Cards -->
             <div class="home-quick-info">
@@ -148,12 +151,13 @@
                             id="stationSearch" 
                             class="search-input" 
                             placeholder="Station suchen..."
+                            aria-label="Station suchen"
                             autocomplete="off"
                         >
-                        <button class="clear-btn" id="clearBtn">×</button>
+                        <button class="clear-btn" id="clearBtn" aria-label="Suche löschen">×</button>
                         <div class="suggestions" id="suggestions"></div>
                     </div>
-                    <button class="location-btn-side" id="locationBtn" title="Nächste Station per GPS finden">
+                    <button class="location-btn-side" id="locationBtn" title="Nächste Station per GPS finden" aria-label="Nächste Station per GPS finden">
                         📍
                     </button>
                 </div>
@@ -191,18 +195,19 @@
                                     id="journeyFrom" 
                                     class="search-input" 
                                     placeholder="Startstation..."
+                                    aria-label="Startstation"
                                     autocomplete="off"
                                 >
-                                <button class="clear-btn" id="clearFromBtn">×</button>
+                                <button class="clear-btn" id="clearFromBtn" aria-label="Startstation löschen">×</button>
                                 <div class="suggestions" id="suggestionsFrom"></div>
                             </div>
-                            <button class="location-btn-side" id="locationFromBtn" title="Aktuellen Standort nutzen">
+                            <button class="location-btn-side" id="locationFromBtn" title="Aktuellen Standort nutzen" aria-label="Aktuellen Standort als Start nutzen">
                                 📍
                             </button>
                         </div>
                     </div>
 
-                    <button class="swap-btn" id="swapBtn" title="Start und Ziel tauschen">
+                    <button class="swap-btn" id="swapBtn" title="Start und Ziel tauschen" aria-label="Start und Ziel tauschen">
                         ⇅
                     </button>
 
@@ -215,13 +220,30 @@
                                     id="journeyTo" 
                                     class="search-input" 
                                     placeholder="Zielstation..."
+                                    aria-label="Zielstation"
                                     autocomplete="off"
                                 >
-                                <button class="clear-btn" id="clearToBtn">×</button>
+                                <button class="clear-btn" id="clearToBtn" aria-label="Zielstation löschen">×</button>
                                 <div class="suggestions" id="suggestionsTo"></div>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Zeitwahl: Abfahrt/Ankunft -->
+                <div class="journey-time-row">
+                    <label class="journey-label" for="journeyTimeMode">🕐 Zeit</label>
+                    <div class="journey-time-controls">
+                        <select id="journeyTimeMode" class="journey-time-select" aria-label="Abfahrts- oder Ankunftszeit">
+                            <option value="departure">Abfahrt um</option>
+                            <option value="arrival">Ankunft bis</option>
+                        </select>
+                        <input type="datetime-local" id="journeyTimeInput" class="journey-time-input"
+                               aria-label="Datum und Uhrzeit (leer = jetzt)">
+                        <button type="button" id="journeyTimeClear" class="clear-btn journey-time-clear"
+                                aria-label="Zeitwahl zurücksetzen" title="Zurücksetzen (= jetzt)">×</button>
+                    </div>
+                    <div class="journey-time-hint">Leer lassen = jetzt abfahren</div>
                 </div>
 
                 <div class="button-group">
@@ -252,7 +274,7 @@
         <div class="livemap-container">
             <div class="livemap-controls">
                 <div class="livemap-info">
-                    <span id="vehicleCount">🚇 Lade Fahrzeuge...</span>
+                    <span id="vehicleCount" aria-live="polite">🚇 Lade Fahrzeuge...</span>
                 </div>
                 <div class="livemap-filters">
                     <button class="filter-btn active" data-type="all">🌐 Alle</button>
@@ -412,7 +434,6 @@
                             <ul>
                                 <li>Dark Mode (Standard)</li>
                                 <li>Responsive Design (Mobile → Desktop)</li>
-                                <li>DotMatrix Retro-Font</li>
                                 <li>Touch-optimiert</li>
                                 <li>Hover-Effekte (Desktop)</li>
                                 <li>Accessibility (WCAG)</li>
@@ -448,6 +469,11 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Module in fester Reihenfolge (klassische Scripts, gemeinsamer Scope) -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/livemap.js"></script>
+    <script src="js/changelog.js"></script>
+    <script src="js/extras.js"></script>
 </body>
 </html>

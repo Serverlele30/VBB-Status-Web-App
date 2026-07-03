@@ -104,7 +104,7 @@ Danke, dass du zu VBB Netz Status beitragen möchtest! Diese Anleitung hilft dir
    ```
 
 2. **Änderungen vornehmen**
-   - Editiere `index.html`, `styles.css`, `script.js`
+   - Editiere `index.html`, `styles.css` oder die Module in `js/`
    - Teste lokal: `https://localhost:3000`
 
 3. **Regelmäßig committen**
@@ -431,7 +431,7 @@ Vor Pull Request:
 
 ### APIs
 - **VBB API**: https://v6.vbb.transport.rest/api.html
-- **BVG Farben**: Siehe `getBVGLineColor()` in script.js
+- **BVG Farben**: Siehe `getBVGLineColor()` in js/livemap.js
 
 ### Libraries
 - **Leaflet.js**: https://leafletjs.com/

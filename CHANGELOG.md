@@ -5,6 +5,63 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [33.0.0] - 2026-07-03
+
+### Favoriten, Persistenz, echte Filter & Modul-Architektur
+
+#### Added
+- **Echte Favoriten**: Stern-Button an jeder Station speichert sie in localStorage; Favoriten erscheinen auf dem Home-Screen und öffnen mit einem Tap die Abfahrten. (Vorher war der Button eine Attrappe mit `alert()`.)
+- **Teilen-Button**: Nutzt die native Teilen-Funktion des Geräts (Web Share API), Fallback: in Zwischenablage kopieren.
+- **Persistenz über App-Starts**: Letzte Station und letzte Route werden gemerkt und beim Start wiederhergestellt - ohne API-Call; geladen wird erst beim Öffnen der jeweiligen View.
+- **Zeitwahl in der Routensuche**: "Abfahrt um" / "Ankunft bis" mit Datum/Uhrzeit (leer = jetzt).
+- **Offline-Modus für Abfahrten**: Letzte Daten werden lokal gespeichert; ohne Verbindung werden sie mit Banner "Stand: vor X min" angezeigt.
+- **Tastatur-Navigation** in allen Stationsvorschlägen (Pfeiltasten, Enter, Escape).
+- **aria-Labels** für alle Icon-Buttons und Eingabefelder, `aria-live` für Statusanzeigen, sichtbarer Tastatur-Fokus.
+
+#### Fixed
+- **Verkehrsmittel-Filter der Routensuche funktionieren jetzt wirklich**: Die Auswahl wurde vorher komplett ignoriert (kein `products`-Parameter in der API-URL). Fähren bleiben bewusst aktiv, da es keinen Button dafür gibt.
+- **ReferenceError bei jedem Tastendruck behoben**: Der Search-Hint-Handler referenzierte eine Variable außerhalb ihres Scopes.
+- **Fake-Daten entfernt**: Zufällige Gleisnummern, erfundene "GPS-Genauigkeit ±10m" und Alert-Attrappen (Export, Kalender) wurden angezeigt, als wären es echte Informationen.
+- **Auto-Refresh bricht bei Fehlern nicht mehr permanent ab**: Exponentieller Backoff (30s → 60s → ... max 5min), automatische Erholung.
+
+#### Changed
+- **Code in 5 Module aufgeteilt** (`js/api.js`, `app.js`, `livemap.js`, `changelog.js`, `extras.js`); geteilter Zustand zentral in api.js deklariert.
+- **Live-Map-Marker werden bewegt statt neu erzeugt** (per tripId wiederverwendet): flüssigere Karte, offene Popups bleiben beim Update offen.
+- **Radar-Ergebnisanzahl an Zoom gekoppelt** (80/140/200): kleinere API-Responses bei hohem Zoom.
+- **Parallax-Effekt mit requestAnimationFrame gedrosselt** (max. 1 Update pro Frame statt pro Mausbewegung).
+- **Alle console.log-Ausgaben entfernt** (Fehler/Warnungen bleiben).
+
+## [32.0.0] - 2026-07-02
+
+### Stabilität, Fehlerbehebungen & API-Optimierung
+
+#### Fixed
+- **Kritisch: ReferenceError-Crash behoben**: `const originalSearchJourneys = searchJourneys` referenzierte eine nie existierende Funktion. Der Fehler brach die Ausführung des restlichen Scripts ab (Hover-System, GPS-Handling u.a. luden nie).
+- **Kritisch: Service Worker installierte sich nie**: Die Cache-Liste enthielt `/DotMatrix.ttf` (Datei existiert nicht), wodurch `cache.addAll()` komplett fehlschlug. Dateien werden jetzt einzeln gecacht und Fehler toleriert.
+- **Doppeltes View-Switch-System entfernt**: Zwei konkurrierende `switchView`-Implementierungen und doppelte Menü-Handler feuerten bei jedem Klick beide. Jetzt gibt es genau ein generisches System, das alle Views (inkl. Developer) kennt.
+- **Doppelte `escapeHtml`-Definition entfernt**: Die zweite Version escapte keine Anführungszeichen (Risiko in HTML-Attributen).
+- **Changelog wurde bis zu 13× parallel geladen**: Drei redundante Lade-Mechanismen (switchView, MutationObserver, Tab-Handler) konkurrierend. Jetzt zentraler Guard, lädt genau einmal.
+- **Fragiler `navigator.geolocation`-Override entfernt**: `Object.defineProperty` auf navigator wirft in manchen Browsern. GPS-Buttons werden auf Desktop weiterhin versteckt.
+- **Pull-to-Refresh** löst nur noch in der Abfahrten-View aus.
+- **Endlos-Logging entfernt**: Hover-Statistiken wurden alle 30s dauerhaft in die Konsole geschrieben.
+
+#### Removed
+- **DotMatrix-Font komplett entfernt**: Font-Datei existierte nicht mehr im Projekt; alle Referenzen aus CSS (19 Stellen), HTML-Featureliste und Service Worker entfernt. Fallback ist überall 'Courier New', monospace.
+
+#### Changed
+- **Zentrale API-Schicht (`apiFetch`)**: Alle VBB-API-Aufrufe laufen jetzt durch eine Funktion mit:
+  - **Hartem Rate-Limit von 90 Requests/Minute** (API erlaubt 100 – 10 Puffer)
+  - **Response-Cache mit TTL pro Endpoint** (Stationssuche 6h, Nearby 2min, Abfahrten 15s, Radar 10s, Trips 60s, Journeys 30s)
+  - **Request-Deduplizierung**: identische parallele Anfragen werden nur einmal gefeuert
+  - **Cache-Fallback**: bei erreichtem Limit werden notfalls leicht veraltete Daten geliefert statt Fehler
+- **Polling pausiert im Hintergrund**: Abfahrten-Auto-Refresh (30s) und Live-Map-Radar (15s) laufen nur, wenn der Tab sichtbar UND die jeweilige View aktiv ist. Bei Rückkehr in den Tab wird einmalig aufgefrischt.
+- **Live-Map-Filter arbeiten lokal**: Filter-Klicks rendern die bereits geladenen Fahrzeugdaten neu, statt einen neuen Radar-Request auszulösen.
+- **Radar-Koordinaten werden gerundet** (3 Dezimalstellen) für stabile Cache-Treffer bei minimalen Kartenbewegungen.
+- **Service Worker: Network-first für App-Shell**: Nach einem Update bekommen Nutzer sofort neues HTML/JS/CSS; offline greift der Cache. API-Requests werden vom SW bewusst nicht gecacht (macht `apiFetch`).
+- **Autocomplete-Debounce** von 300ms auf 400ms erhöht (weniger Requests beim Tippen).
+- **XSS-Schutz**: Stationsnamen, Liniennamen und Richtungen aus der API werden vor dem Einfügen ins HTML escaped.
+- **Nutzerfreundliche Fehlermeldungen** bei erreichtem API-Limit statt kryptischer Fehler.
+
 ## [31.0.0] - 2026-02-10
 
 ### Developer View & Auto-Changelog System
