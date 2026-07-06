@@ -5,6 +5,79 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [36.0.0] - 2026-07-06
+
+### Schnellere Karte, offizielle Linienfarben, Desktop-Layout
+
+#### Added - Offizielle VBB-Linienfarben
+- **Linienfarben kommen jetzt direkt aus der API**: MOTIS liefert routeColor/routeTextColor aus dem GTFS-Feed bei Abfahrten, Routen UND Live-Map mit - das sind die offiziellen VBB-Farben (U1 grün, U2 rot, S1, S2, ... jeweils korrekt), ohne einen einzigen Extra-Request. Lokale Farbtabellen bleiben nur als Fallback.
+- **Textfarbe per Luminanz**: Ob Schwarz oder Weiß auf einem Linien-Badge, wird jetzt aus der Hintergrundfarbe berechnet statt über eine hartcodierte Liste.
+
+#### Changed - Karten-Ladegeschwindigkeit
+- **Vorinitialisierung im Leerlauf**: Nach dem App-Start wird die Leaflet-Karte im Hintergrund angelegt und die 9 Kacheln des Standard-Ausschnitts werden vorgeladen (exakt dieselben URLs inkl. Subdomain-/Retina-Logik wie Leaflet). Beim ersten Öffnen der Live-Map ist alles im Browser-Cache - gefühlt sofort. Kostet keine API-Requests.
+- **Preconnect/DNS-Prefetch** für api.transitous.org, Karten-CDN und unpkg: spart DNS+TLS-Zeit beim ersten Zugriff.
+- **Leaflet mit defer** geladen: blockiert das Rendern der App nicht mehr.
+- **Leaflet-Dateien im Service Worker gecacht** (cache-first, versioniert = unveränderlich): ab dem zweiten Besuch null Netzwerk für die Bibliothek.
+- **Tile-Tuning**: keepBuffer 4 (Randkacheln bleiben geladen -> flüssigeres Pannen), Kacheln laden schon während der Bewegung, minZoom 8 (ganz Brandenburg sichtbar).
+
+#### Removed
+- **Zoom-Tasten (+/-) auf der Karte entfernt** (vorher auf Desktop sichtbar). Zoomen weiterhin per Scrollrad, Doppelklick und Pinch-Geste.
+
+#### Changed - Desktop-Layout (Mobile First bleibt)
+- Header-Inhalt und Pull-to-Refresh richten sich am zentrierten Layout aus.
+- Home: Info-Karten und Favoriten als 2-Spalten-Raster ab 768px.
+- Live-Map bekommt auf dem Desktop deutlich mehr Höhe.
+- Ab 1100px: breiterer Inhalt (780px), luftigere Abfahrtszeilen, größere Linien-Badges, breiteres Detail-Modal.
+- Konflikt bereinigt: neue Regeln ergänzen den bestehenden 768px-Block (Journey-Grid, Header-Größen) statt ihn zu doppeln.
+
+## [35.0.0] - 2026-07-06
+
+### Transitous als einzige Datenquelle + animierte Live-Map
+
+#### Breaking / Changed
+- **transport.rest komplett entfernt**: Alle Funktionen (Stationssuche, Abfahrten, GPS-Nearby, Trip-Details, Routensuche, Live-Map) laufen jetzt ausschließlich über Transitous (api.transitous.org, MOTIS 2). Der VBB->BVG-Failover und alle HAFAS-Codepfade sind raus - js/api.js ist dadurch deutlich schlanker (nur noch Budget, Cache, Dedupe, Timeout, Störungs-Banner).
+- **Datenverarbeitung effizienter**: Fahrt-Segmente werden pro API-Poll EINMAL normalisiert (Polyline einmal dekodiert, Zeiten als ms vorberechnet); Positionen werden daraus lokal interpoliert. Abfahrten-Auto-Refresh aktualisiert Zeiten/Verspätungen in-place im DOM (kein Flackern, Scroll bleibt) und rendert nur bei geänderter Fahrten-Menge komplett neu.
+
+#### Added - Live-Map 2.0
+- **Flüssig animierte Fahrzeuge**: MOTIS liefert Fahrt-Segmente mit Polyline + Zeiten statt Punkt-Positionen. Ein lokaler 1s-Loop interpoliert die Position linear entlang der Strecke - die Fahrzeuge GLEITEN über die Karte (CSS-Transition passend zum Takt) statt alle 15s zu springen. Kostet null zusätzliche API-Requests.
+- **API-Poll auf 30s gedrosselt** (Rücksicht auf das Freiwilligen-Projekt Transitous); die Bewegung kommt aus der lokalen Animation.
+- **Berlin-Klemmung der Bounding-Box entfernt**: schnitt bisher Potsdam und ganz Brandenburg ab.
+- **Live-Indikator** (pulsierender Punkt) am Fahrzeugzähler.
+
+#### Added - GUI-Politur
+- Tabellarische Ziffern und feste Breite bei Abfahrtszeiten (keine Layout-Sprünge bei "9 min" -> "10 min").
+- Sanftes Einblenden der Vorschlags-Dropdowns, dezenteres Verspätungs-Badge.
+- `prefers-reduced-motion` wird respektiert (alle Animationen abschaltbar per Systemeinstellung).
+
+#### Removed
+- Dreistufiger API-Failover (obsolet - eine Quelle), shouldTryTransitous-Wrapper, Transitous-Direktpfade, HAFAS-URL-Bau.
+
+## [34.0.0] - 2026-07-06
+
+### Transitous als dritte, unabhängige Failover-Stufe
+
+#### Added
+- **Transitous-Adapter (js/transitous.js)**: Übersetzt die MOTIS-2-API von https://api.transitous.org in die HAFAS-Form der App. Transitous ist ein community-betriebener Dienst mit KOMPLETT eigener Infrastruktur - unabhängig von transport.rest. Beim Totalausfall von VBB+BVG (wie am 03.07.) übernimmt jetzt Stufe 3 für: Stationssuche (geocode), Abfahrten (stoptimes) und Routensuche (plan, inkl. Verkehrsmittel-Filter und Zeitwahl).
+- **Koordinaten-basierte Stationsidentität**: Bei Stationsauswahl werden jetzt Koordinaten mitgespeichert (Suggestions, Favoriten, letzte Station). Damit funktionieren Abfahrten und Routen über Transitous OHNE Stop-ID-Mapping (stoptimes per center=lat,lon; plan per Koordinaten-fromPlace). Alte Favoriten ohne Koordinaten werden einmalig per Name geocodet und das Mapping gecacht.
+- **Direktpfade für Transitous-Stationen**: Wird während eines Ausfalls eine Station aus Transitous-Vorschlägen gewählt (ID-Präfix "transitous:"), gehen Abfahrten/Routen direkt an Transitous statt sinnlos die HAFAS-APIs zu fragen.
+- **Pflicht-Attribution**: Sichtbarer Link auf transitous.org/sources (inkl. OpenStreetMap-Hinweis) in der Entwickler-View, wie von der Transitous-Nutzungsrichtlinie verlangt.
+
+#### Ressourcen-Rücksicht (Transitous ist ein Freiwilligen-Projekt)
+- Transitous wird NUR kontaktiert, wenn transport.rest (beide Endpoints) nicht antwortet.
+- Bewusst KEIN Radar-Polling über Transitous - die Live-Map bleibt zweistufig (VBB->BVG) und zeigt bei Totalausfall die Störungsmeldung.
+- 4xx-Fehler und eigenes Rate-Limit lösen keinen Transitous-Versuch aus.
+
+## [33.2.0] - 2026-07-03
+
+### Sichtbare Störungsanzeige bei Anbieter-Totalausfall
+
+#### Context
+Am 03.07.2026 lieferten sowohl v6.vbb.transport.rest als auch der Fallback v6.bvg.transport.rest HTTP 503 - beide laufen auf derselben Infrastruktur des Anbieters transport.rest. Gegen einen Totalausfall des Anbieters kann die App keine Livedaten beschaffen, aber sie zeigt ihn jetzt klar an.
+
+#### Added
+- **Globales Störungs-Banner**: Versagen primäre UND Fallback-API, erscheint oben ein deutlicher Hinweis "Datenanbieter gestört". Das Banner verschwindet automatisch beim nächsten erfolgreichen Request.
+- **Fehlerhinweis in der Stationssuche**: Statt stillem Versagen zeigen die Suchvorschläge "Suche derzeit nicht möglich - API nicht erreichbar" (Abfahrten- und Routenplaner-Felder).
+
 ## [33.1.0] - 2026-07-03
 
 ### Automatischer API-Failover

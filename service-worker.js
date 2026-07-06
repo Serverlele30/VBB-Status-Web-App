@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vbb-status-v33';
+const CACHE_NAME = 'vbb-status-v36';
 
 // App-Shell: nur Dateien, die wirklich existieren!
 // (Der alte SW listete eine nicht existierende Font-Datei – dadurch
@@ -7,6 +7,7 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/js/api.js',
+  '/js/transitous.js',
   '/js/app.js',
   '/js/livemap.js',
   '/js/changelog.js',
@@ -50,7 +51,7 @@ self.addEventListener('activate', event => {
 // Fetch-Strategie:
 // - API-Requests (cross-origin, z.B. v6.vbb.transport.rest, Karten-Tiles):
 //   NIE vom SW cachen -> direkt durchreichen. Das Rate-Limit- und
-//   Caching-Management macht die App selbst (apiFetch in js/api.js).
+//   Caching-Management macht die App selbst (apiFetch in js/api.js, Endpoints in js/transitous.js).
 // - App-Shell (HTML/JS/CSS): Network-first mit Cache-Fallback.
 //   So bekommen Nutzer nach einem Deploy sofort die neue Version,
 //   und offline funktioniert die App trotzdem weiter.
@@ -62,7 +63,24 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url);
 
-  // Cross-Origin (API, Leaflet-CDN, Tiles): nicht anfassen
+  // Leaflet vom CDN: versionierte, unveränderliche Dateien -> cache-first.
+  // Beim zweiten Besuch lädt die Karte damit ohne Netzwerk-Roundtrip.
+  if (url.hostname === 'unpkg.com' && url.pathname.includes('leaflet@')) {
+    event.respondWith(
+      caches.match(request).then(cached =>
+        cached || fetch(request).then(response => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          }
+          return response;
+        })
+      )
+    );
+    return;
+  }
+
+  // Übriges Cross-Origin (API, Karten-Tiles): nicht anfassen
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(

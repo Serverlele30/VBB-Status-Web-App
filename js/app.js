@@ -137,7 +137,7 @@
                                 if (document.hidden) return;
                                 if (currentView !== 'livemap') return;
                                 loadVehicles();
-                            }, 15000);
+                            }, 30000);
                             loadVehicles(); // Sofort frische Daten holen
                         }
                     }
@@ -310,19 +310,13 @@
                 }
                 
                 try {
-                    // 6h Cache: Stationsnamen ändern sich praktisch nie
-                    const locations = await apiFetch(
-                        `${API_BASE}/locations?query=${encodeURIComponent(query)}&results=10`,
-                        { ttl: 6 * 60 * 60 * 1000 }
-                    );
-                    
-                    const stations = locations.filter(loc => 
-                        loc.type === 'stop' || loc.type === 'station'
-                    );
-                    
+                    const stations = await transitousLocations(query);
                     displaySuggestions(stations);
                 } catch (error) {
                     console.error('Suchfehler:', error);
+                    suggestions.innerHTML =
+                        '<div class="suggestion-item suggestion-error">⚠️ Suche derzeit nicht möglich – API nicht erreichbar</div>';
+                    suggestions.classList.add('active');
                 }
             }, 400);
         });
@@ -391,14 +385,10 @@
                 
                 stationSearch.placeholder = '📍 Suche Stationen in der Nähe...';
 
-                // Search nearby stations - VBB API endpoint
-                const nearbyUrl = `${API_BASE}/locations/nearby?latitude=${latitude}&longitude=${longitude}&results=10`;
-                
-                
+                // Stationen in der Nähe über Transitous (map/stops)
                 let locations;
                 try {
-                    // 2min Cache: Standort ändert sich kurzfristig kaum
-                    locations = await apiFetch(nearbyUrl, { ttl: 2 * 60 * 1000 });
+                    locations = await transitousNearby(latitude, longitude);
                 } catch (e) {
                     if (e.message === 'RATE_LIMIT') throw e;
                     console.error('API Response error:', e.message);
@@ -418,7 +408,7 @@
                 const nearest = stations[0];
                 const distance = nearest.distance ? Math.round(nearest.distance) : '?';
                 
-                selectStation(nearest.id, nearest.name);
+                selectStation(nearest.id, nearest.name, nearest.location?.latitude ?? null, nearest.location?.longitude ?? null);
 
                 // Show success feedback
                 if (navigator.vibrate) {
@@ -500,7 +490,8 @@
                         .join(', ') : '';
 
                 return `
-                    <div class="suggestion-item" data-id="${escapeHtml(station.id)}" data-name="${escapeHtml(station.name)}">
+                    <div class="suggestion-item" data-id="${escapeHtml(station.id)}" data-name="${escapeHtml(station.name)}"
+                         data-lat="${station.location?.latitude ?? ''}" data-lon="${station.location?.longitude ?? ''}">
                         <div class="suggestion-name">${escapeHtml(station.name)}</div>
                         ${products ? `<div class="suggestion-products">${escapeHtml(products)}</div>` : ''}
                     </div>
@@ -514,24 +505,29 @@
                 item.addEventListener('click', () => {
                     const stationId = item.dataset.id;
                     const stationName = item.dataset.name;
+                    const lat = item.dataset.lat ? parseFloat(item.dataset.lat) : null;
+                    const lon = item.dataset.lon ? parseFloat(item.dataset.lon) : null;
                     
                     if (stationId && stationName) {
-                        selectStation(stationId, stationName);
+                        selectStation(stationId, stationName, lat, lon);
                     }
                 });
             });
         }
 
-        function selectStation(stationId, stationName) {
+
+        function selectStation(stationId, stationName, lat = null, lon = null) {
             currentStationId = stationId;
             currentStationName = stationName;
+            currentStationLat = lat;
+            currentStationLon = lon;
             
             stationSearch.value = stationName;
             suggestions.classList.remove('active');
             refreshBtn.disabled = false;
             
             // Station für den nächsten App-Start merken
-            storageSet(STORAGE_KEYS.lastStation, { id: stationId, name: stationName });
+            storageSet(STORAGE_KEYS.lastStation, { id: stationId, name: stationName, lat, lon });
             updateFavoriteButton();
             
             // Haptic feedback
@@ -592,22 +588,16 @@
             departuresContainer.innerHTML = '<div class="loading">⏳ Lade Abfahrten...</div>';
 
             try {
-                // 15s Cache: schützt vor Refresh-Spam (Button-Hämmern, Pull-to-Refresh)
-                const data = await apiFetch(
-                    `${API_BASE}/stops/${encodeURIComponent(currentStationId)}/departures?duration=60&results=20`,
-                    { ttl: 15000 }
-                );
+                const data = await transitousDepartures({
+                    id: currentStationId, name: currentStationName,
+                    lat: currentStationLat, lon: currentStationLon
+                });
                 displayDepartures(data.departures || []);
                 saveDeparturesCache(currentStationId, data.departures || []);
                 noteRefreshSuccess();
                 
                 // Start auto-refresh after successful load
                 startAutoRefresh();
-                
-                // Haptic feedback
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
             } catch (error) {
                 console.error('Fehler beim Laden:', error);
                 noteRefreshFailure();
@@ -634,8 +624,7 @@
                         <small>Automatischer Neuversuch läuft…</small>
                     </div>
                 `;
-                // WICHTIG: Auto-Refresh läuft weiter (mit Backoff),
-                // statt wie früher permanent zu stoppen.
+                // Auto-Refresh läuft weiter (mit Backoff)
             }
         }
 
@@ -644,46 +633,49 @@
             if (!currentStationId) return;
 
             try {
-                // ttl 0: Auto-Refresh soll echte Frischdaten holen
-                // (Rate-Limit wird trotzdem zentral erzwungen)
-                const data = await apiFetch(
-                    `${API_BASE}/stops/${encodeURIComponent(currentStationId)}/departures?duration=60&results=20`,
-                    { ttl: 15000 }
-                );
-                const departures = data.departures || [];
-                
-                // Aktualisiere nur die Zeitanzeigen
-                const now = new Date();
-                const departureItems = departuresContainer.querySelectorAll('.departure-item');
-                
-                departures.forEach((dep, index) => {
-                    if (index >= departureItems.length) return;
-                    
-                    const item = departureItems[index];
-                    const when = new Date(dep.when);
-                    const minutes = Math.round((when - now) / 60000);
-                    const timeDisplay = minutes <= 0 ? 'Jetzt' : `${minutes} min`;
-                    
-                    const delay = dep.delay ? Math.round(dep.delay / 60) : 0;
-                    
-                    // Update Zeit
-                    const timeElement = item.querySelector('.departure-time');
-                    if (timeElement) {
-                        const delayHTML = delay > 0 ? 
-                            `<div class="departure-delay">+${delay} min Verspätung</div>` : '';
-                        timeElement.innerHTML = timeDisplay + delayHTML;
-                    }
+                const data = await transitousDepartures({
+                    id: currentStationId, name: currentStationName,
+                    lat: currentStationLat, lon: currentStationLon
                 });
-                
-                // Update Timestamp in Station Info
-                const lastUpdateElement = departuresContainer.querySelector('.last-update');
-                if (lastUpdateElement) {
-                    lastUpdateElement.textContent = `Aktualisiert: ${now.toLocaleTimeString('de-DE')} • Auto-Refresh alle 30s`;
+                const departures = data.departures || [];
+                const now = new Date();
+
+                // In-Place-Update: nur Zeiten/Verspätungen im bestehenden DOM
+                // aktualisieren (kein Flackern, Scroll-Position bleibt).
+                // Hat sich die Fahrten-Menge geändert -> voller Re-Render.
+                const items = departuresContainer.querySelectorAll('.departure-item');
+                const domTripIds = Array.from(items).map(i => i.dataset.tripId);
+                const newTripIds = departures.map(d => String(d.tripId));
+
+                const sameSet = domTripIds.length === newTripIds.length &&
+                    domTripIds.every((id, i) => id === newTripIds[i]);
+
+                if (!sameSet) {
+                    displayDepartures(departures);
+                } else {
+                    departures.forEach((dep, i) => {
+                        const item = items[i];
+                        if (!item) return;
+                        const when = new Date(dep.when);
+                        const minutes = Math.round((when - now) / 60000);
+                        const timeDisplay = minutes <= 0 ? 'Jetzt' : `${minutes} min`;
+                        const delay = dep.delay ? Math.round(dep.delay / 60) : 0;
+                        const delayHTML = delay > 0 ?
+                            `<div class="departure-delay">+${delay} min Verspätung</div>` : '';
+                        const timeEl = item.querySelector('.departure-time');
+                        if (timeEl) timeEl.innerHTML = timeDisplay + delayHTML;
+                    });
+
+                    const lastUpdateElement = departuresContainer.querySelector('.last-update');
+                    if (lastUpdateElement) {
+                        lastUpdateElement.textContent =
+                            `Aktualisiert: ${now.toLocaleTimeString('de-DE')} • Auto-Refresh alle 30s`;
+                    }
                 }
-                
+
                 saveDeparturesCache(currentStationId, departures);
                 noteRefreshSuccess();
-                
+
             } catch (error) {
                 console.error('Fehler beim Aktualisieren:', error);
                 noteRefreshFailure(); // Backoff: 30s -> 60s -> 120s -> ... max 5min
@@ -739,7 +731,7 @@
                     <div class="departure-item" style="border-left-color: ${lineColor}" data-trip-id="${dep.tripId}" data-index="${index}">
                         <div class="departure-info">
                             <div class="departure-header">
-                                <div class="line-badge" style="background-color: ${lineColor}; color: #000;">
+                                <div class="line-badge" style="background-color: ${lineColor}; color: ${dep.line?.textColor || bestTextColor(lineColor)};">
                                     ${dep.line.name}${cancelled}
                                 </div>
                                 ${platformHTML}
@@ -790,12 +782,10 @@
                 // Versuche Trip-Details zu laden (60s Cache)
                 if (departure.tripId) {
                     try {
-                        const data = await apiFetch(
-                            `${API_BASE}/trips/${encodeURIComponent(departure.tripId)}`,
-                            { ttl: 60000 }
-                        );
+                        const data = await transitousTrip(departure.tripId);
                         tripDetails = data.trip;
                     } catch (e) {
+                        console.warn('Keine Trip-Details verfügbar');
                     }
                 }
 
@@ -1011,7 +1001,11 @@
         }
 
         function getLineColor(line) {
-            if (!line || !line.product) return '#666';
+            if (!line) return '#666';
+            // OFFIZIELLE Farbe aus dem GTFS-Feed (kommt direkt mit der
+            // API-Antwort) - lokale Tabellen sind nur noch Fallback
+            if (line.color) return line.color;
+            if (!line.product) return '#666';
             
             const product = line.product.toLowerCase();
             const name = line.name ? line.name.toUpperCase() : '';
@@ -1060,6 +1054,33 @@
         let journeyFromTimeout = null;
         let journeyToTimeout = null;
 
+        // Journey-Vorschläge rendern (gemeinsam für HAFAS- und Transitous-Pfad)
+        function renderJourneySuggestions(stops, suggestionsContainer, inputField, onSelect) {
+            if (stops.length === 0) return;
+            suggestionsContainer.innerHTML = stops.map(stop => `
+                <div class="suggestion-item" data-id="${escapeHtml(stop.id)}" data-name="${escapeHtml(stop.name)}"
+                     data-lat="${stop.location?.latitude ?? ''}" data-lon="${stop.location?.longitude ?? ''}">
+                    ${escapeHtml(stop.name)}
+                </div>
+            `).join('');
+
+            suggestionsContainer.classList.add('active');
+
+            suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = item.dataset.id;
+                    const name = item.dataset.name;
+                    const lat = item.dataset.lat ? parseFloat(item.dataset.lat) : null;
+                    const lon = item.dataset.lon ? parseFloat(item.dataset.lon) : null;
+                    onSelect(id, name, lat, lon);
+                    inputField.value = name;
+                    suggestionsContainer.classList.remove('active');
+
+                    if (navigator.vibrate) navigator.vibrate(10);
+                });
+            });
+        }
+
         function setupJourneyAutocomplete(inputField, suggestionsContainer, onSelect) {
             let timeout = null;
 
@@ -1081,53 +1102,27 @@
                     }
                     
                     try {
-                        // 6h Cache: gleiche Suchanfragen kosten keinen zweiten Request
-                        const locations = await apiFetch(
-                            `${API_BASE}/locations?query=${encodeURIComponent(query)}&results=10`,
-                            { ttl: 6 * 60 * 60 * 1000 }
-                        );
-                        
-                        const stops = locations.filter(loc => 
-                            loc.type === 'stop' || loc.type === 'station'
-                        );
-                        
-                        if (stops.length > 0) {
-                            suggestionsContainer.innerHTML = stops.map(stop => `
-                                <div class="suggestion-item" data-id="${escapeHtml(stop.id)}" data-name="${escapeHtml(stop.name)}">
-                                    ${escapeHtml(stop.name)}
-                                </div>
-                            `).join('');
-                            
-                            suggestionsContainer.classList.add('active');
-                            
-                            suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
-                                item.addEventListener('click', () => {
-                                    const id = item.dataset.id;
-                                    const name = item.dataset.name;
-                                    onSelect(id, name);
-                                    inputField.value = name;
-                                    suggestionsContainer.classList.remove('active');
-                                    
-                                    if (navigator.vibrate) navigator.vibrate(10);
-                                });
-                            });
-                        }
+                        const stops = await transitousLocations(query);
+                        renderJourneySuggestions(stops, suggestionsContainer, inputField, onSelect);
                     } catch (error) {
                         console.error('Autocomplete error:', error);
+                        suggestionsContainer.innerHTML =
+                            '<div class="suggestion-item suggestion-error">⚠️ Suche derzeit nicht möglich – API nicht erreichbar</div>';
+                        suggestionsContainer.classList.add('active');
                     }
                 }, 400);
             });
         }
 
         // Setup Journey From
-        setupJourneyAutocomplete(journeyFrom, suggestionsFrom, (id, name) => {
-            journeyFromStation = { id, name };
+        setupJourneyAutocomplete(journeyFrom, suggestionsFrom, (id, name, lat, lon) => {
+            journeyFromStation = { id, name, lat, lon };
             checkJourneySearchReady();
         });
 
         // Setup Journey To
-        setupJourneyAutocomplete(journeyTo, suggestionsTo, (id, name) => {
-            journeyToStation = { id, name };
+        setupJourneyAutocomplete(journeyTo, suggestionsTo, (id, name, lat, lon) => {
+            journeyToStation = { id, name, lat, lon };
             checkJourneySearchReady();
         });
 
@@ -1188,10 +1183,7 @@
 
                 const { latitude, longitude } = position.coords;
                 
-                const locations = await apiFetch(
-                    `${API_BASE}/locations/nearby?latitude=${latitude}&longitude=${longitude}&results=10`,
-                    { ttl: 2 * 60 * 1000 }
-                );
+                const locations = await transitousNearby(latitude, longitude);
                 const stations = locations.filter(loc => 
                     loc.type === 'stop' || loc.type === 'station'
                 );
@@ -1235,38 +1227,22 @@
             journeyContainer.innerHTML = '<div class="loading">⏳ Suche Verbindungen...</div>';
 
             try {
-                // Verkehrsmittel-Filter anwenden (vorher totes UI - Auswahl wurde ignoriert!)
-                // Nur Produkte mit UI-Button steuern; Fähre bleibt API-Default (true),
-                // sonst würden z.B. Wannsee-Routen unerwartet wegfallen.
-                const filterableProducts = ['suburban', 'subway', 'tram', 'bus', 'regional', 'express'];
-                const productParams = filterableProducts
-                    .map(p => `&${p}=${activeTransportModes.has(p) ? 'true' : 'false'}`)
-                    .join('');
+                const tIn = document.getElementById('journeyTimeInput');
+                const tMode = document.getElementById('journeyTimeMode');
 
-                // Zeitwahl: "Abfahrt um" oder "Ankunft bis" (leer = jetzt)
-                let timeParam = '';
-                const timeModeEl = document.getElementById('journeyTimeMode');
-                const timeInputEl = document.getElementById('journeyTimeInput');
-                if (timeInputEl && timeInputEl.value) {
-                    const iso = new Date(timeInputEl.value).toISOString();
-                    const mode = timeModeEl ? timeModeEl.value : 'departure';
-                    timeParam = `&${mode === 'arrival' ? 'arrival' : 'departure'}=${encodeURIComponent(iso)}`;
-                }
+                const data = await transitousJourneys(journeyFromStation, journeyToStation, {
+                    timeISO: (tIn && tIn.value) ? new Date(tIn.value).toISOString() : null,
+                    arriveBy: tMode ? tMode.value === 'arrival' : false,
+                    products: activeTransportModes
+                });
 
-                const url = `${API_BASE}/journeys?from=${encodeURIComponent(journeyFromStation.id)}&to=${encodeURIComponent(journeyToStation.id)}&results=5&transfers=3&transferTime=5${productParams}${timeParam}`;
-                
                 // Route für den nächsten App-Start merken
                 storageSet(STORAGE_KEYS.lastJourney, {
                     from: journeyFromStation,
                     to: journeyToStation
                 });
-                
-                // 30s Cache: identische Suche direkt hintereinander = 1 Request
-                const data = await apiFetch(url, { ttl: 30000 });
+
                 displayJourneys(data.journeys || []);
-
-                if (navigator.vibrate) navigator.vibrate(10);
-
             } catch (error) {
                 console.error('Journey search error:', error);
                 const msg = error.message === 'RATE_LIMIT'
@@ -1280,9 +1256,6 @@
                 `;
             }
         });
-
-        // Display Journeys
-        let currentJourneys = []; // Speichert aktuelle Journeys für Detail-Ansicht
 
         function displayJourneys(journeys) {
             currentJourneys = journeys; // Speichern für später

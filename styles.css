@@ -1760,12 +1760,7 @@
             z-index: 10010 !important;
         }
 
-        /* Leaflet Zoom Controls nur Desktop */
         @media (max-width: 767px) {
-            .leaflet-control-zoom {
-                display: none !important;
-            }
-
             .livemap-controls {
                 top: 5px;
                 left: 5px;
@@ -3801,4 +3796,168 @@ input:focus-visible,
 select:focus-visible {
     outline: 2px solid #FFED00;
     outline-offset: 2px;
+}
+
+/* ==========================================
+   v33.2: Störungs-Banner & Such-Fehlerhinweis
+   ========================================== */
+
+.api-outage-banner {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, #8B0000 0%, #B22222 100%);
+    color: #fff;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 13px;
+    border-bottom: 2px solid #FFED00;
+    animation: outage-slide-in 0.3s ease-out;
+}
+
+@keyframes outage-slide-in {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+.suggestion-error {
+    color: #FFC966;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* ==========================================
+   v35: Live-Map-Animation & GUI-Politur
+   ========================================== */
+
+/* Flüssige Fahrzeug-Bewegung: 1s-Transition passt exakt zum
+   1s-Animationstakt -> Fahrzeuge GLEITEN statt zu springen */
+.leaflet-marker-icon.custom-marker {
+    transition: transform 1s linear;
+}
+
+/* Pulsierender Live-Punkt am Fahrzeugzähler */
+.live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    animation: live-pulse 2s ease-in-out infinite;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+@keyframes live-pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(76, 175, 80, 0); }
+}
+
+/* Abfahrten: ruhige, gleichbleibende Zahlendarstellung
+   (keine Layout-Sprünge, wenn "9 min" zu "10 min" wird) */
+.departure-time {
+    font-variant-numeric: tabular-nums;
+    min-width: 64px;
+    text-align: right;
+}
+
+/* Verspätungs-Badge dezenter und konsistenter */
+.departure-delay {
+    font-size: 11px;
+    color: #FF6B6B;
+    white-space: nowrap;
+}
+
+/* Sanfter Übergang bei Wert-Updates durch Auto-Refresh */
+.departure-item {
+    transition: background-color 0.3s ease;
+}
+
+/* Vorschlags-Dropdown: klarere Trennung, sanftes Einblenden */
+.suggestions.active {
+    animation: sug-fade-in 0.15s ease-out;
+}
+
+@keyframes sug-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Reduzierte Bewegung respektieren (Barrierefreiheit) */
+@media (prefers-reduced-motion: reduce) {
+    .leaflet-marker-icon.custom-marker,
+    .departure-item,
+    .suggestions.active {
+        transition: none;
+        animation: none;
+    }
+    .live-dot { animation: none; }
+}
+
+/* ==========================================
+   v36: Desktop-Layout - Ergänzungen
+   (Basis-Desktop-Regeln existieren bereits im 768px-Block weiter oben:
+    Journey-Grid, Header-Größen, Hover-Effekte. Hier nur die Lücken.)
+   ========================================== */
+
+@media (min-width: 768px) {
+    /* Header-Inhalt und Pull-to-Refresh am zentrierten Layout ausrichten */
+    .header-content,
+    .ptr-container {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    /* Home: Info-Karten und Favoriten als 2-Spalten-Raster */
+    .home-quick-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .home-favorites-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    /* Live-Map: mehr sichtbare Kartenfläche */
+    .livemap-container {
+        height: calc(100vh - 110px);
+    }
+}
+
+/* --- Große Desktops (ab 1100px): breiterer Inhalt, luftigere Listen --- */
+@media (min-width: 1100px) {
+    .container,
+    .header-content,
+    .ptr-container {
+        max-width: 780px;
+    }
+
+    .container {
+        padding: 28px 24px;
+    }
+
+    .departure-item {
+        padding: 16px 18px;
+    }
+
+    .line-badge {
+        font-size: 15px;
+        padding: 5px 12px;
+    }
+
+    .departure-time {
+        font-size: 18px;
+        min-width: 76px;
+    }
+
+    .detail-modal {
+        max-width: 720px;
+    }
+
+    .livemap-container {
+        height: calc(100vh - 100px);
+    }
 }

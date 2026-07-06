@@ -4,15 +4,9 @@
 // VBB NETZ STATUS - Haupt-Script
 // ==========================================
 
-        // Primäre API + baugleicher Fallback (gleicher Betreiber, gleiche
-        // Routen/Stop-IDs, andere Upstream-Quelle - siehe apiFetch)
-        const API_BASES = [
-            'https://v6.vbb.transport.rest',
-            'https://v6.bvg.transport.rest'
-        ];
-        const API_BASE = API_BASES[0];   // Call-Sites bauen URLs immer mit der primären Basis
-        let activeApiBaseIndex = 0;      // 0 = VBB, 1 = BVG-Fallback
-        let apiFallbackSince = 0;        // Zeitpunkt des Failovers (für Recovery)
+        // Seit v35: Transitous (api.transitous.org) ist die einzige
+        // Datenquelle. transport.rest (VBB/BVG) wurde komplett entfernt.
+        // Die konkreten Endpoints kapselt js/transitous.js.
         let currentStationId = null;
         let currentStationName = null;
         let searchTimeout = null;
@@ -24,11 +18,14 @@
         // Zentral hier deklariert, damit KEIN Modul auf Variablen aus
         // später geladenen Dateien angewiesen ist.
         let currentView = 'home';
+        let currentStationLat = null;   // Koordinaten der gewählten Station
+        let currentStationLon = null;   // (für Transitous-Fallback ohne ID-Mapping)
         let liveMap = null;
         let liveMapUpdateInterval = null;
         let activeVehicleTypes = new Set(['all']);
         let debounceTimer = null;
-        let lastVehicleMovements = [];  // Letzte Radar-Daten für lokales Filtern
+        let liveMapSegments = [];        // Fahrt-Segmente von Transitous (für lokale Animation)
+        let liveMapAnimationInterval = null; // 1s-Loop: Positionen lokal interpolieren
         const vehicleMarkerMap = new Map(); // tripId -> { marker, lineName }
         let activeTransportModes = new Set(['subway', 'suburban', 'tram', 'bus', 'regional', 'express']);
 
@@ -70,21 +67,14 @@
          * Wirft Error('RATE_LIMIT') wenn Budget aufgebraucht (Cache wird trotzdem genutzt).
          */
         /**
-         * Zentraler API-Aufruf mit automatischem Failover.
+         * Zentraler API-Aufruf.
+         * - Budget: max. 90 Requests/Minute (Selbstschutz gegenüber Transitous)
+         * - Response-Cache mit TTL, Dedupe paralleler identischer Requests
+         * - Timeout 12s pro Request
+         * - Störungs-Banner bei Ausfall, automatisches Ausblenden bei Erholung
+         * - Bei Fehler oder leerem Budget wird notfalls abgelaufener Cache geliefert
          *
-         * Primär:   v6.vbb.transport.rest
-         * Fallback: v6.bvg.transport.rest (gleicher Betreiber, identische
-         *           Routen & Stop-IDs, deckt ebenfalls ganz Berlin/Brandenburg
-         *           ab - nutzt aber eine ANDERE Upstream-Quelle. Fällt VBB
-         *           aus, läuft die App über BVG weiter.)
-         *
-         * - Timeout 12s pro Versuch (hängende Requests blockieren nichts)
-         * - Failover bei Netzwerkfehler, Timeout oder HTTP 5xx
-         *   (NICHT bei 4xx - das ist ein Anfragefehler, kein API-Ausfall)
-         * - Nach 10 Minuten auf dem Fallback wird die primäre API erneut probiert
-         * - Cache-Keys basieren auf der primären URL -> Cache übersteht Failover
-         *
-         * @param {string} url - vollständige URL (mit API_BASE gebaut)
+         * @param {string} url - vollständige URL
          * @param {object} opts - { ttl: Cache-Dauer in ms (0 = kein Cache) }
          */
         async function apiFetch(url, { ttl = 0 } = {}) {
@@ -108,73 +98,44 @@
                 throw new Error('RATE_LIMIT');
             }
 
+            apiCallTimestamps.push(Date.now());
+
             const promise = (async () => {
-                // Recovery: Nach 10 min auf dem Fallback wieder primär versuchen
-                if (activeApiBaseIndex !== 0 &&
-                    Date.now() - apiFallbackSince > 10 * 60 * 1000) {
-                    activeApiBaseIndex = 0;
-                    console.warn('API-Failover: Versuche wieder die primäre VBB-API');
-                }
+                try {
+                    const response = await fetchWithTimeout(url, 12000);
 
-                const tryOrder = activeApiBaseIndex === 0 ? [0, 1] : [1, 0];
-                let lastError = null;
-
-                for (const idx of tryOrder) {
-                    const realUrl = url.replace(API_BASES[0], API_BASES[idx]);
-                    apiCallTimestamps.push(Date.now()); // jeder echte Versuch zählt
-
-                    try {
-                        const response = await fetchWithTimeout(realUrl, 12000);
-
-                        if (!response.ok) {
-                            if (response.status >= 500) {
-                                // Serverfehler -> Failover lohnt sich
-                                throw new Error('HTTP ' + response.status);
-                            }
-                            // 4xx: Anfrage ist falsch - andere API würde genauso antworten
-                            const err = new Error('HTTP ' + response.status);
-                            err.noFailover = true;
-                            throw err;
-                        }
-
-                        const data = await response.json();
-
-                        // Basis-Wechsel dokumentieren
-                        if (idx !== activeApiBaseIndex) {
-                            activeApiBaseIndex = idx;
-                            if (idx !== 0) {
-                                apiFallbackSince = Date.now();
-                                console.warn(`API-Failover aktiv: ${API_BASES[idx]} (VBB-API antwortet nicht)`);
-                            } else {
-                                console.warn('API-Failover beendet: primäre VBB-API antwortet wieder');
-                            }
-                        }
-
-                        if (ttl > 0) {
-                            // Cache-Größe begrenzen (ältesten Eintrag entfernen)
-                            if (apiCache.size >= API_CACHE_MAX_ENTRIES) {
-                                const oldestKey = apiCache.keys().next().value;
-                                apiCache.delete(oldestKey);
-                            }
-                            apiCache.set(url, { data, time: Date.now(), ttl });
-                        }
-                        return data;
-
-                    } catch (e) {
-                        if (e.noFailover) throw e;
-                        lastError = e;
-                        // Budget für den zweiten Versuch noch da?
-                        if (apiBudgetLeft() <= 0) break;
-                        // -> nächste Basis probieren
+                    if (!response.ok) {
+                        const err = new Error('HTTP ' + response.status);
+                        // 4xx = Anfragefehler, kein API-Ausfall -> kein Banner
+                        if (response.status >= 500) showApiOutageBanner();
+                        throw err;
                     }
-                }
 
-                // Beide APIs down: notfalls abgelaufenen Cache liefern
-                if (cached) {
-                    console.warn('Beide APIs nicht erreichbar – liefere veraltete Cache-Daten');
-                    return cached.data;
+                    const data = await response.json();
+
+                    if (ttl > 0) {
+                        // Cache-Größe begrenzen (ältesten Eintrag entfernen)
+                        if (apiCache.size >= API_CACHE_MAX_ENTRIES) {
+                            const oldestKey = apiCache.keys().next().value;
+                            apiCache.delete(oldestKey);
+                        }
+                        apiCache.set(url, { data, time: Date.now(), ttl });
+                    }
+                    hideApiOutageBanner(); // API antwortet -> alles gut
+                    return data;
+
+                } catch (e) {
+                    if (!/^HTTP 4/.test(e.message || '')) {
+                        // Netzwerkfehler/Timeout/5xx -> Störung anzeigen,
+                        // notfalls alten Cache liefern
+                        showApiOutageBanner();
+                        if (cached) {
+                            console.warn('API nicht erreichbar – liefere veraltete Cache-Daten');
+                            return cached.data;
+                        }
+                    }
+                    throw e;
                 }
-                throw lastError || new Error('API nicht erreichbar');
             })().finally(() => apiInflight.delete(url));
 
             apiInflight.set(url, promise);
@@ -190,6 +151,33 @@
             } finally {
                 clearTimeout(timer);
             }
+        }
+
+        // ==========================================
+        // GLOBALES STÖRUNGS-BANNER
+        // Erscheint, wenn primäre UND Fallback-API versagen
+        // (z.B. Wartung/Ausfall bei Transitous).
+        // Verschwindet automatisch beim nächsten erfolgreichen Request.
+        // ==========================================
+        function showApiOutageBanner() {
+            let banner = document.getElementById('apiOutageBanner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'apiOutageBanner';
+                banner.className = 'api-outage-banner';
+                banner.setAttribute('role', 'alert');
+                banner.innerHTML =
+                    '⚠️ <strong>Datenanbieter gestört</strong> – Transitous ' +
+                    '(transitous.org) ist aktuell nicht erreichbar. ' +
+                    'Die App versucht es automatisch weiter.';
+                document.body.prepend(banner);
+            }
+            banner.style.display = '';
+        }
+
+        function hideApiOutageBanner() {
+            const banner = document.getElementById('apiOutageBanner');
+            if (banner) banner.style.display = 'none';
         }
 
         // HTML-Escaping für alle Strings aus der API (XSS-Schutz)
@@ -247,7 +235,10 @@
             if (favorites.some(f => f.id === stationId)) {
                 favorites = favorites.filter(f => f.id !== stationId);
             } else {
-                favorites.unshift({ id: stationId, name: stationName });
+                favorites.unshift({
+                    id: stationId, name: stationName,
+                    lat: currentStationLat, lon: currentStationLon
+                });
                 favorites = favorites.slice(0, MAX_FAVORITES);
             }
             storageSet(STORAGE_KEYS.favorites, favorites);
@@ -274,6 +265,7 @@
                 <div class="home-favorites-list">
                     ${favorites.map(f => `
                         <button class="home-favorite-item" data-id="${escapeHtml(f.id)}" data-name="${escapeHtml(f.name)}"
+                                data-lat="${f.lat != null ? f.lat : ''}" data-lon="${f.lon != null ? f.lon : ''}"
                                 aria-label="Abfahrten für ${escapeHtml(f.name)} anzeigen">
                             <span class="home-favorite-name">${escapeHtml(f.name)}</span>
                             <span class="home-favorite-arrow" aria-hidden="true">→</span>

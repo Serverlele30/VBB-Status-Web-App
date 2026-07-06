@@ -147,33 +147,37 @@
             if (liveMap) return; // Bereits initialisiert
 
             // Zoom-Control nur auf Desktop
-            const isMobile = window.innerWidth < 768;
             
             // Map zentriert auf Berlin
             liveMap = L.map('liveMap', {
                 center: [52.52, 13.405],
                 zoom: 12,
-                zoomControl: !isMobile  // Nur auf Desktop!
+                zoomControl: false  // Keine +/- Tasten (Zoomen per Geste/Scrollrad)
             });
 
             // Tile Layer (CartoDB Dark Matter - Dark Mode!)
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '© OpenStreetMap contributors, © CartoDB',
                 maxZoom: 19,
-                minZoom: 10,
-                subdomains: 'abcd'
+                minZoom: 8,
+                subdomains: 'abcd',
+                keepBuffer: 4,          // Rand-Kacheln behalten -> flüssigeres Pannen
+                updateWhenIdle: false   // Kacheln schon WÄHREND der Bewegung laden
             }).addTo(liveMap);
 
-            // Fahrzeuge initial laden
-            loadVehicles();
-            
-            // Auto-Update alle 15 Sekunden
-            // Pausiert automatisch, wenn Tab im Hintergrund oder andere View aktiv
-            liveMapUpdateInterval = setInterval(() => {
-                if (document.hidden) return;
-                if (currentView !== 'livemap') return;
-                loadVehicles();
-            }, 15000);
+            // HINWEIS: Daten-Polling startet NICHT hier, sondern beim Öffnen
+            // der View (switchView). Dadurch kann die Karte selbst schon im
+            // Hintergrund vorinitialisiert werden (Leaflet-Setup + erste
+            // Kacheln), ohne einen einzigen API-Request zu verursachen.
+
+            // Lokaler Animations-Loop (1s-Takt, kostet keine API-Requests)
+            if (!liveMapAnimationInterval) {
+                liveMapAnimationInterval = setInterval(() => {
+                    if (document.hidden) return;
+                    if (currentView !== 'livemap') return;
+                    renderVehiclesFromSegments();
+                }, 1000);
+            }
             
             // Event-Listener: Neu laden wenn Karte bewegt/gezoomt wird
             // Mit Debouncing (1 Sekunde Verzögerung) um API zu schonen
@@ -209,30 +213,23 @@
                 const latPadding = latDiff * 0.15;
                 const lngPadding = lngDiff * 0.15;
                 
+                // Keine Berlin-Klemmung mehr: Transitous deckt ganz
+                // Brandenburg (und darüber hinaus) ab - die alte Klemmung
+                // schnitt z.B. Potsdam ab.
                 const bounds = {
-                    north: Math.min(52.70, mapBounds.getNorth() + latPadding),  // Max: Berlin Nord
-                    south: Math.max(52.35, mapBounds.getSouth() - latPadding),  // Min: Berlin Süd
-                    west: Math.max(13.08, mapBounds.getWest() - lngPadding),    // Min: Berlin West
-                    east: Math.min(13.76, mapBounds.getEast() + lngPadding)     // Max: Berlin Ost
+                    north: mapBounds.getNorth() + latPadding,
+                    south: mapBounds.getSouth() - latPadding,
+                    west: mapBounds.getWest() - lngPadding,
+                    east: mapBounds.getEast() + lngPadding
                 };
 
 
-                // Ergebnisanzahl an Zoom koppeln: nah dran reichen wenige Fahrzeuge,
-                // weit rausgezoomt begrenzen wir auf 200 (kleinere API-Responses)
                 const zoom = liveMap.getZoom ? liveMap.getZoom() : 12;
-                const maxResults = zoom >= 15 ? 80 : zoom >= 13 ? 140 : 200;
 
-                // Koordinaten runden -> stabile Cache-Keys bei minimalen Kartenbewegungen
-                const url = `${API_BASE}/radar?` +
-                    `north=${bounds.north.toFixed(3)}&south=${bounds.south.toFixed(3)}&` +
-                    `west=${bounds.west.toFixed(3)}&east=${bounds.east.toFixed(3)}&` +
-                    `results=${maxResults}&duration=60&` +
-                    `subway=true&bus=true&tram=true&suburban=true&regional=true`;
-
-                // 10s Cache: schnelles Hin- und Herzoomen kostet keine Extra-Requests
-                const data = await apiFetch(url, { ttl: 10000 });
-                lastVehicleMovements = data.movements || [];
-                displayVehicles(lastVehicleMovements);
+                // Fahrt-Segmente von Transitous holen (map/trips) und für
+                // die lokale Animation zwischenspeichern
+                liveMapSegments = await transitousRadarSegments(bounds, zoom);
+                renderVehiclesFromSegments();
 
             } catch (error) {
                 console.error('Load vehicles error:', error);
@@ -243,6 +240,28 @@
                         : '⚠️ Fehler beim Laden der Fahrzeuge';
                 }
             }
+        }
+
+        // Aus den gespeicherten Segmenten die AKTUELLEN Positionen berechnen
+        // und rendern. Läuft jede Sekunde lokal - null API-Kosten.
+        function renderVehiclesFromSegments() {
+            if (!liveMap) return;
+            const nowMs = Date.now();
+            const movements = [];
+
+            for (const seg of liveMapSegments) {
+                const pos = segmentPositionAt(seg, nowMs);
+                if (!pos) continue; // Fahrzeug (noch) nicht auf diesem Segment unterwegs
+                movements.push({
+                    tripId: seg.tripId,
+                    direction: seg.direction,
+                    delay: seg.delay,
+                    line: { name: seg.lineName, product: seg.product, color: seg.color },
+                    location: pos
+                });
+            }
+
+            displayVehicles(movements);
         }
 
         // Fahrzeuge auf Map anzeigen
@@ -259,11 +278,12 @@
                 return activeVehicleTypes.has(vehicleType);
             });
 
-            // Update Counter
+            // Update Counter mit Live-Indikator
             const countEl = document.getElementById('vehicleCount');
             if (countEl) {
                 countEl.innerHTML =
-                    `🚇 <span style="color: #fff;">${filteredMovements.length}</span> Fahrzeuge aktiv`;
+                    `<span class="live-dot" aria-hidden="true"></span> ` +
+                    `<span style="color: #fff;">${filteredMovements.length}</span> Fahrzeuge live`;
             }
 
             const seenTripIds = new Set();
@@ -281,9 +301,9 @@
 
                 const direction = movement.direction || 'Keine Angabe';
                 const delay = movement.delay ? `+${Math.round(movement.delay / 60)} min Verspätung` : 'Pünktlich';
-                const lineColor = getBVGLineColor(lineName);
-                const isLightBg = lineColor === '#F0D722' || lineColor === '#FFFFFF' || lineColor === '#55A823';
-                const textColor = isLightBg ? '#000' : '#FFF';
+                // Offizielle GTFS-Farbe aus der API, lokale Tabelle als Fallback
+                const lineColor = movement.line?.color || getBVGLineColor(lineName);
+                const textColor = bestTextColor(lineColor);
                 const emoji = getVehicleEmoji(movement.line?.product, lineName);
 
                 const popupContent = `
@@ -375,8 +395,8 @@
                 
                 
                 // Lokal filtern - Daten sind bereits da, KEIN neuer API-Call nötig!
-                if (lastVehicleMovements.length > 0) {
-                    displayVehicles(lastVehicleMovements);
+                if (liveMapSegments.length > 0) {
+                    renderVehiclesFromSegments();
                 } else {
                     loadVehicles();
                 }

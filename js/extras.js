@@ -378,6 +378,49 @@ document.addEventListener('DOMContentLoaded', () => {
 // (Parallax-Effekt entfernt: Der Header inkl. Menü-Button bewegte sich
 //  mit der Maus mit - wirkte unruhig und hatte keinen Nutzen.)
 
+// ==========================================
+// LIVE-MAP VORINITIALISIERUNG
+// Nach App-Start im Leerlauf: Leaflet-Map schon anlegen (Setup + erste
+// Kacheln laden im Hintergrund). Beim ersten Öffnen der Live-Map ist
+// dann alles da - gefühlt sofortiges Laden. Kostet KEINE API-Requests
+// (Daten-Polling startet erst beim Öffnen der View).
+// ==========================================
+window.addEventListener('load', () => {
+    const warmup = () => {
+        // 1) Leaflet-Objekt vorbauen (Setup-Kosten aus dem ersten Öffnen raus)
+        if (typeof L !== 'undefined' && typeof initLiveMap === 'function' && !liveMap) {
+            try { initLiveMap(); } catch (e) { /* Karte lädt dann eben beim Öffnen */ }
+        }
+
+        // 2) Kacheln des Standard-Ausschnitts vorladen. Im versteckten
+        //    Container lädt Leaflet nichts - also holen wir die exakt
+        //    gleichen URLs selbst als <img>; der Browser-Cache liefert
+        //    sie beim Öffnen dann sofort. (3x3-Raster um Berlin-Mitte,
+        //    Zoom 12, gleiche Subdomain-Wahl und Retina-Logik wie Leaflet.)
+        const zoom = 12, lat = 52.52, lon = 13.405;
+        const n = Math.pow(2, zoom);
+        const cx = Math.floor((lon + 180) / 360 * n);
+        const latRad = lat * Math.PI / 180;
+        const cy = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+        const r = (window.devicePixelRatio > 1) ? '@2x' : '';
+        const subs = 'abcd';
+
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                const x = cx + dx, y = cy + dy;
+                const s = subs[Math.abs(x + y) % subs.length]; // wie Leaflet
+                const img = new Image();
+                img.src = `https://${s}.basemaps.cartocdn.com/dark_all/${zoom}/${x}/${y}${r}.png`;
+            }
+        }
+    };
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(warmup, { timeout: 5000 });
+    } else {
+        setTimeout(warmup, 3000);
+    }
+});
+
 // Smooth Scroll bei Navigation
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
@@ -406,6 +449,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (lastStation && lastStation.id) {
         currentStationId = lastStation.id;
         currentStationName = lastStation.name;
+        currentStationLat = lastStation.lat ?? null;
+        currentStationLon = lastStation.lon ?? null;
         stationSearch.value = lastStation.name;
         refreshBtn.disabled = false;
         updateFavoriteButton();
@@ -426,7 +471,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const favItem = e.target.closest('.home-favorite-item');
         if (favItem) {
             switchView('departures');
-            selectStation(favItem.dataset.id, favItem.dataset.name);
+            selectStation(
+                favItem.dataset.id, favItem.dataset.name,
+                favItem.dataset.lat ? parseFloat(favItem.dataset.lat) : null,
+                favItem.dataset.lon ? parseFloat(favItem.dataset.lon) : null
+            );
         }
     });
 
