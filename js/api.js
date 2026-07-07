@@ -4,6 +4,12 @@
 // VBB NETZ STATUS - Haupt-Script
 // ==========================================
 
+        // ZENTRALE VERSIONSNUMMER - einzige Stelle, die bei Releases
+        // angepasst wird. Alle Anzeigen (Startseite, Entwickler-Tab)
+        // lesen von hier; package.json + SW-Cache-Name manuell mitziehen.
+        const APP_VERSION = '37.2.0';
+        const APP_RELEASE_DATE = '07.07.2026';
+
         // Seit v35: Transitous (api.transitous.org) ist die einzige
         // Datenquelle. transport.rest (VBB/BVG) wurde komplett entfernt.
         // Die konkreten Endpoints kapselt js/transitous.js.
@@ -18,6 +24,7 @@
         // Zentral hier deklariert, damit KEIN Modul auf Variablen aus
         // später geladenen Dateien angewiesen ist.
         let currentView = 'home';
+        let departuresCount = 20;       // Wie viele Abfahrten laden ("Mehr laden" erhöht)
         let currentStationLat = null;   // Koordinaten der gewählten Station
         let currentStationLon = null;   // (für Transitous-Fallback ohne ID-Mapping)
         let liveMap = null;
@@ -247,11 +254,40 @@
             return isFavorite(stationId);
         }
 
-        // Favoriten auf dem Home-Screen rendern
+        // Favoriten rendern - an ZWEI Stellen:
+        // 1) Abfahrten-View: ALLE Favoriten als wischbare Chip-Reihe
+        //    (1-Tap-Wechsel zwischen Stationen, aktive Station markiert)
+        // 2) Startseite: kompakt nur die Top 3 + "Alle anzeigen"
         function renderFavorites() {
+            const favorites = getFavorites();
+
+            // --- Abfahrten-View: Chips ---
+            const chipsContainer = document.getElementById('departureFavorites');
+            if (chipsContainer) {
+                if (favorites.length === 0) {
+                    chipsContainer.innerHTML = '';
+                    chipsContainer.style.display = 'none';
+                } else {
+                    chipsContainer.style.display = 'block';
+                    chipsContainer.innerHTML = `
+                        <div class="filter-label">⭐ Deine Stationen</div>
+                        <div class="filter-chips">
+                            ${favorites.map(f => `
+                                <button class="fav-chip ${f.id === currentStationId ? 'active' : ''}"
+                                        data-id="${escapeHtml(f.id)}" data-name="${escapeHtml(f.name)}"
+                                        data-lat="${f.lat != null ? f.lat : ''}" data-lon="${f.lon != null ? f.lon : ''}"
+                                        aria-label="Abfahrten für ${escapeHtml(f.name)} anzeigen">
+                                    ${escapeHtml(f.name)}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            // --- Startseite: kompakte Top 3 ---
             const container = document.getElementById('homeFavorites');
             if (!container) return;
-            const favorites = getFavorites();
 
             if (favorites.length === 0) {
                 container.innerHTML = '';
@@ -259,11 +295,14 @@
                 return;
             }
 
+            const top = favorites.slice(0, 3);
+            const rest = favorites.length - top.length;
+
             container.style.display = '';
             container.innerHTML = `
                 <div class="home-favorites-title">⭐ Deine Stationen</div>
                 <div class="home-favorites-list">
-                    ${favorites.map(f => `
+                    ${top.map(f => `
                         <button class="home-favorite-item" data-id="${escapeHtml(f.id)}" data-name="${escapeHtml(f.name)}"
                                 data-lat="${f.lat != null ? f.lat : ''}" data-lon="${f.lon != null ? f.lon : ''}"
                                 aria-label="Abfahrten für ${escapeHtml(f.name)} anzeigen">
@@ -271,6 +310,12 @@
                             <span class="home-favorite-arrow" aria-hidden="true">→</span>
                         </button>
                     `).join('')}
+                    ${rest > 0 ? `
+                        <button class="home-favorite-item home-favorites-more" id="homeShowAllFavs"
+                                aria-label="Alle Favoriten in der Abfahrten-Ansicht zeigen">
+                            <span class="home-favorite-name">Alle ${favorites.length} Stationen anzeigen</span>
+                            <span class="home-favorite-arrow" aria-hidden="true">→</span>
+                        </button>` : ''}
                 </div>
             `;
         }

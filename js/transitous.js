@@ -135,10 +135,10 @@ async function transitousStopQuery({ id, name, lat, lon }) {
 // ==========================================
 // ABFAHRTEN  (stoptimes -> HAFAS-departures-Form)
 // ==========================================
-async function transitousDepartures(station) {
+async function transitousDepartures(station, n = 20) {
     const stopQuery = await transitousStopQuery(station);
     // 15s Cache: schützt vor Refresh-Spam
-    const data = await transitousFetch(`/v6/stoptimes?${stopQuery}&n=20`, 15000);
+    const data = await transitousFetch(`/v6/stoptimes?${stopQuery}&n=${n}`, 15000);
 
     const departures = (data.stopTimes || []).map(st => {
         const p = st.place || {};
@@ -294,6 +294,31 @@ async function transitousTrip(tripId) {
     return { trip: { stopovers } };
 }
 
+// Kompletter Streckenverlauf einer Fahrt (für die Live-Map).
+// map/trips liefert nur das Segment im Kartenausschnitt - die GANZE
+// Route steckt in der legGeometry des /trip-Endpoints. Gleiche URL wie
+// transitousTrip -> geteilter 60s-Cache, Details+Route = 1 Request.
+async function transitousTripGeometry(tripId) {
+    const rawId = tripId.startsWith(TRANSITOUS_ID_PREFIX)
+        ? tripId.slice(TRANSITOUS_ID_PREFIX.length) : tripId;
+    const itinerary = await transitousFetch(
+        `/v6/trip?tripId=${encodeURIComponent(rawId)}`,
+        60000
+    );
+
+    const leg = (itinerary.legs || []).find(l => l.mode !== 'WALK') || (itinerary.legs || [])[0];
+    if (!leg || !leg.legGeometry || !leg.legGeometry.points) return null;
+
+    const precision = leg.legGeometry.precision || 6;
+    const points = decodePolyline(leg.legGeometry.points, precision);
+    if (points.length < 2) return null;
+
+    return {
+        points,
+        color: motisColor(leg.routeColor)
+    };
+}
+
 // ==========================================
 // RADAR / LIVE-MAP  (map/trips -> HAFAS-radar-Form)
 //
@@ -303,8 +328,10 @@ async function transitousTrip(tripId) {
 // Transitous-Web-Karte selbst auch).
 // ==========================================
 
-// Google-Polyline dekodieren (Precision 5 laut MOTIS-Spec für map/trips)
-function decodePolyline5(encoded) {
+// Google-Polyline dekodieren. Die Precision variiert je Endpoint:
+// map/trips liefert 5, legGeometry (trip/plan) liefert precision als Feld mit.
+function decodePolyline(encoded, precision = 5) {
+    const factor = Math.pow(10, precision);
     const points = [];
     let index = 0, lat = 0, lon = 0;
     while (index < encoded.length) {
@@ -318,9 +345,14 @@ function decodePolyline5(encoded) {
             const delta = (result & 1) ? ~(result >> 1) : (result >> 1);
             if (which === 0) lat += delta; else lon += delta;
         }
-        points.push([lat / 1e5, lon / 1e5]);
+        points.push([lat / factor, lon / factor]);
     }
     return points;
+}
+
+// Kompatibilitäts-Alias (Tests + map/trips)
+function decodePolyline5(encoded) {
+    return decodePolyline(encoded, 5);
 }
 
 async function transitousRadarSegments(bounds, zoom) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vbb-status-v36';
+const CACHE_NAME = 'vbb-status-v37.2.0';
 
 // App-Shell: nur Dateien, die wirklich existieren!
 // (Der alte SW listete eine nicht existierende Font-Datei – dadurch

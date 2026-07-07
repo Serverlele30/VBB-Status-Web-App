@@ -1,11 +1,13 @@
 {
   "name": "vbb-netz-status",
-  "version": "36.0.0",
+  "version": "37.2.0",
   "description": "Live-Nahverkehr für Berlin & Brandenburg - Progressive Web App (PWA) für Echtzeit-Abfahrten, Routenplanung und Live-Fahrzeugverfolgung im VBB-Gebiet",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node tests/adapter.test.js && node tests/smoke.test.js",
+    "test:syntax": "node --check js/api.js && node --check js/transitous.js && node --check js/app.js && node --check js/livemap.js && node --check js/changelog.js && node --check js/extras.js && node --check service-worker.js"
   },
   "keywords": [
     "vbb",
@@ -33,7 +35,9 @@
   "dependencies": {
     "mime-types": "^2.1.35"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  },
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"

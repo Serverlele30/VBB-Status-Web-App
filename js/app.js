@@ -516,7 +516,18 @@
         }
 
 
+        // "Mehr Abfahrten laden" (Event-Delegation: Button wird bei jedem
+        // Render neu erzeugt, der Handler hier überlebt das)
+        departuresContainer.addEventListener('click', (e) => {
+            if (e.target.closest('#loadMoreDepartures')) {
+                departuresCount = Math.min(60, departuresCount + 20);
+                if (navigator.vibrate) navigator.vibrate(10);
+                loadDepartures();
+            }
+        });
+
         function selectStation(stationId, stationName, lat = null, lon = null) {
+            departuresCount = 20; // Neue Station -> wieder mit 20 Abfahrten starten
             currentStationId = stationId;
             currentStationName = stationName;
             currentStationLat = lat;
@@ -529,6 +540,7 @@
             // Station für den nächsten App-Start merken
             storageSet(STORAGE_KEYS.lastStation, { id: stationId, name: stationName, lat, lon });
             updateFavoriteButton();
+            renderFavorites(); // Aktiv-Markierung der Favoriten-Chips auffrischen
             
             // Haptic feedback
             if (navigator.vibrate) {
@@ -591,7 +603,7 @@
                 const data = await transitousDepartures({
                     id: currentStationId, name: currentStationName,
                     lat: currentStationLat, lon: currentStationLon
-                });
+                }, departuresCount);
                 displayDepartures(data.departures || []);
                 saveDeparturesCache(currentStationId, data.departures || []);
                 noteRefreshSuccess();
@@ -636,13 +648,18 @@
                 const data = await transitousDepartures({
                     id: currentStationId, name: currentStationName,
                     lat: currentStationLat, lon: currentStationLon
-                });
-                const departures = data.departures || [];
+                }, departuresCount);
+                const fullDepartures = data.departures || [];
+                allDepartures = fullDepartures;
+                const departures = (typeof applyDepartureFilter === 'function')
+                    ? applyDepartureFilter(fullDepartures) : fullDepartures;
                 const now = new Date();
 
                 // In-Place-Update: nur Zeiten/Verspätungen im bestehenden DOM
                 // aktualisieren (kein Flackern, Scroll-Position bleibt).
-                // Hat sich die Fahrten-Menge geändert -> voller Re-Render.
+                // WICHTIG: Vergleich gegen die GEFILTERTE Sicht - vorher hat
+                // ein aktiver Filter den Vergleich immer scheitern lassen und
+                // der Auto-Refresh hat alle 30s die UNGEFILTERTE Liste gerendert.
                 const items = departuresContainer.querySelectorAll('.departure-item');
                 const domTripIds = Array.from(items).map(i => i.dataset.tripId);
                 const newTripIds = departures.map(d => String(d.tripId));
@@ -651,7 +668,7 @@
                     domTripIds.every((id, i) => id === newTripIds[i]);
 
                 if (!sameSet) {
-                    displayDepartures(departures);
+                    displayDepartures(fullDepartures);
                 } else {
                     departures.forEach((dep, i) => {
                         const item = items[i];
@@ -673,7 +690,7 @@
                     }
                 }
 
-                saveDeparturesCache(currentStationId, departures);
+                saveDeparturesCache(currentStationId, fullDepartures);
                 noteRefreshSuccess();
 
             } catch (error) {
@@ -682,12 +699,35 @@
             }
         }
 
-        function displayDepartures(departures) {
-            if (departures.length === 0) {
+        function displayDepartures(fullDepartures) {
+            // Volle Liste für den Abfahrten-Filter merken (Zustand in extras.js)
+            allDepartures = fullDepartures;
+
+            // Filterleiste nur zeigen, wenn es überhaupt Abfahrten gibt
+            const filtersEl = document.getElementById('departureFilters');
+            if (filtersEl) {
+                filtersEl.style.display = fullDepartures.length > 0 ? 'block' : 'none';
+            }
+
+            if (fullDepartures.length === 0) {
                 departuresContainer.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">🚉</div>
                         <div>Keine Abfahrten in den nächsten 60 Minuten</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Aktiven Verkehrsmittel-Filter anwenden
+            const departures = (typeof applyDepartureFilter === 'function')
+                ? applyDepartureFilter(fullDepartures) : fullDepartures;
+
+            if (departures.length === 0) {
+                departuresContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div>Keine Abfahrten mit diesem Filter</div>
                     </div>
                 `;
                 return;
@@ -746,7 +786,14 @@
                 `;
             }).join('');
 
-            departuresContainer.innerHTML = stationInfoHTML + departuresHTML;
+            // "Mehr laden": erhöht n (max. 60) und lädt neu - so bleibt die
+            // erweiterte Liste auch beim Auto-Refresh erhalten
+            const loadMoreHTML = departuresCount < 60 ? `
+                <button class="btn btn-full-width load-more-btn" id="loadMoreDepartures">
+                    ⏬ Mehr Abfahrten laden
+                </button>` : '';
+
+            departuresContainer.innerHTML = stationInfoHTML + departuresHTML + loadMoreHTML;
 
             // Event-Listener für Departure-Items
             departuresContainer.querySelectorAll('.departure-item').forEach(item => {

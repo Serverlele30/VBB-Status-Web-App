@@ -242,6 +242,62 @@
             }
         }
 
+        // ==========================================
+        // STRECKEN-ANZEIGE BEIM FAHRZEUG-KLICK
+        // Die Polylines liegen bereits dekodiert in liveMapSegments -
+        // die Route zu zeichnen kostet also NULL API-Requests.
+        // ==========================================
+        let activeRouteLine = null;
+        let focusedVehicleTripId = null; // Fokus-Modus: nur diese Fahrt zeigen
+
+        async function showVehicleRoute(tripId) {
+            hideVehicleRoute();
+            focusedVehicleTripId = tripId;
+
+            const seg = liveMapSegments.find(s => s.tripId === tripId);
+            const color = seg?.color || getBVGLineColor(seg?.lineName || '');
+
+            // 1) SOFORT das lokale Segment zeichnen (null Wartezeit)...
+            if (seg && seg.points && seg.points.length >= 2) {
+                activeRouteLine = L.polyline(seg.points, {
+                    color, weight: 5, opacity: 0.75,
+                    lineCap: 'round', interactive: false
+                }).addTo(liveMap);
+            }
+
+            // Fokus-Modus aktivieren: andere Fahrzeuge ausblenden
+            renderVehiclesFromSegments();
+
+            // 2) ...dann die KOMPLETTE Route nachladen (map/trips liefert nur
+            // das Segment im Ausschnitt; die ganze Strecke steckt in /trip).
+            // Gleicher Cache wie die Abfahrts-Details -> max. 1 Request.
+            try {
+                const route = await transitousTripGeometry(tripId);
+                // Nutzer könnte inzwischen woanders geklickt haben
+                if (route && focusedVehicleTripId === tripId) {
+                    if (activeRouteLine) activeRouteLine.remove();
+                    activeRouteLine = L.polyline(route.points, {
+                        color: route.color || color, weight: 5, opacity: 0.75,
+                        lineCap: 'round', interactive: false
+                    }).addTo(liveMap);
+                }
+            } catch (e) {
+                // Volle Route nicht verfügbar -> Segment bleibt stehen
+                console.warn('Komplette Route nicht ladbar:', e.message);
+            }
+        }
+
+        function hideVehicleRoute() {
+            if (activeRouteLine) {
+                activeRouteLine.remove();
+                activeRouteLine = null;
+            }
+            if (focusedVehicleTripId) {
+                focusedVehicleTripId = null;
+                renderVehiclesFromSegments(); // alle Fahrzeuge wieder zeigen
+            }
+        }
+
         // Aus den gespeicherten Segmenten die AKTUELLEN Positionen berechnen
         // und rendern. Läuft jede Sekunde lokal - null API-Kosten.
         function renderVehiclesFromSegments() {
@@ -250,6 +306,8 @@
             const movements = [];
 
             for (const seg of liveMapSegments) {
+                // Fokus-Modus: nur die angetippte Fahrt rendern
+                if (focusedVehicleTripId && seg.tripId !== focusedVehicleTripId) continue;
                 const pos = segmentPositionAt(seg, nowMs);
                 if (!pos) continue; // Fahrzeug (noch) nicht auf diesem Segment unterwegs
                 movements.push({
@@ -278,12 +336,18 @@
                 return activeVehicleTypes.has(vehicleType);
             });
 
-            // Update Counter mit Live-Indikator
+            // Update Counter mit Live-Indikator (bzw. Fokus-Hinweis)
             const countEl = document.getElementById('vehicleCount');
             if (countEl) {
-                countEl.innerHTML =
-                    `<span class="live-dot" aria-hidden="true"></span> ` +
-                    `<span style="color: #fff;">${filteredMovements.length}</span> Fahrzeuge live`;
+                if (focusedVehicleTripId) {
+                    const focusName = filteredMovements[0]?.line?.name || '';
+                    countEl.innerHTML =
+                        `🎯 <span style="color: #fff;">${escapeHtml(focusName)}</span> im Fokus – Popup schließen zum Beenden`;
+                } else {
+                    countEl.innerHTML =
+                        `<span class="live-dot" aria-hidden="true"></span> ` +
+                        `<span style="color: #fff;">${filteredMovements.length}</span> Fahrzeuge live`;
+                }
             }
 
             const seenTripIds = new Set();
@@ -342,6 +406,9 @@
 
                 const marker = L.marker([lat, lon], { icon: icon });
                 marker.bindPopup(popupContent);
+                // Popup auf = Strecke dieser Fahrt einzeichnen (in Linienfarbe)
+                marker.on('popupopen', () => showVehicleRoute(tripId));
+                marker.on('popupclose', hideVehicleRoute);
                 marker.addTo(liveMap);
                 vehicleMarkerMap.set(tripId, { marker, lineName });
             });
@@ -353,6 +420,12 @@
                     entry.marker.remove();
                     vehicleMarkerMap.delete(tripId);
                 }
+            }
+
+            // Route eines nicht mehr existierenden Fahrzeugs mit aufräumen
+            if (activeRouteLine && ![...vehicleMarkerMap.values()]
+                    .some(e => e.marker.isPopupOpen && e.marker.isPopupOpen())) {
+                hideVehicleRoute();
             }
         }
 

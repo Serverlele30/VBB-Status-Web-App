@@ -102,7 +102,7 @@
                 <div class="home-hero-title">
                     <h1>VBB NETZ STATUS</h1>
                     <p>Live-Nahverkehr für Berlin & Brandenburg</p>
-                    <div class="home-version">v36.0</div>
+                    <div class="home-version" id="homeVersion"></div>
                 </div>
             </div>
 
@@ -132,6 +132,14 @@
                         <p>Fahrzeuge in Echtzeit verfolgen</p>
                     </div>
                 </div>
+                <button class="home-info-card home-info-card-btn" id="homeDevCard"
+                        aria-label="Entwickler-Bereich mit Changelog öffnen">
+                    <div class="home-info-icon">👨‍💻</div>
+                    <div class="home-info-text">
+                        <strong>Für Entwickler</strong>
+                        <p>Changelog &amp; Infos – <span id="homeDevVersion"></span></p>
+                    </div>
+                </button>
             </div>
 
 
@@ -151,6 +159,10 @@
     <!-- View: Abfahrten -->
     <div class="view-container" id="view-departures">
         <div class="container">
+            <!-- Favoriten-Chips: 1-Tap-Wechsel zwischen deinen Stationen -->
+            <div class="departure-favorites" id="departureFavorites" style="display: none;"
+                 role="group" aria-label="Favoriten-Stationen"></div>
+
             <div class="controls">
                 <div class="search-row">
                     <div class="search-container">
@@ -176,12 +188,14 @@
                 <!-- Filter für Linientypen -->
                 <div class="departure-filters" id="departureFilters" style="display: none;">
                     <div class="filter-label">Filter:</div>
+                    <div class="filter-chips">
                     <button class="filter-btn active" data-filter="all">Alle</button>
                     <button class="filter-btn" data-filter="subway">🚇 U-Bahn</button>
                     <button class="filter-btn" data-filter="suburban">🚆 S-Bahn</button>
                     <button class="filter-btn" data-filter="tram">🚊 Tram</button>
                     <button class="filter-btn" data-filter="bus">🚌 Bus</button>
                     <button class="filter-btn" data-filter="regional">🚄 Regional</button>
+                    </div>
                 </div>
             </div>
 
@@ -264,12 +278,14 @@
                 <!-- Verkehrsmittel-Filter -->
                 <div class="journey-transport-filters">
                     <div class="filter-label">Verkehrsmittel:</div>
+                    <div class="filter-chips">
                     <button class="transport-filter-btn active" data-transport="subway">🚇 U-Bahn</button>
                     <button class="transport-filter-btn active" data-transport="suburban">🚆 S-Bahn</button>
                     <button class="transport-filter-btn active" data-transport="tram">🚊 Tram</button>
                     <button class="transport-filter-btn active" data-transport="bus">🚌 Bus</button>
                     <button class="transport-filter-btn active" data-transport="regional">🚄 Regional</button>
                     <button class="transport-filter-btn active" data-transport="express">🚅 Express</button>
+                    </div>
                 </div>
             </div>
 
@@ -324,8 +340,8 @@
                     <div class="dev-info-box">
                         <h3>🚀 Version Info</h3>
                         <table class="dev-info-table">
-                            <tr><td>Version:</td><td><strong>30.0</strong></td></tr>
-                            <tr><td>Release:</td><td>10.02.2026</td></tr>
+                            <tr><td>Version:</td><td><strong id="devVersion"></strong></td></tr>
+                            <tr><td>Release:</td><td id="devRelease"></td></tr>
                             <tr><td>Lizenz:</td><td>MIT</td></tr>
                             <tr><td>Status:</td><td><span class="status-badge-dev">✅ Stabil</span></td></tr>
                         </table>
@@ -353,12 +369,12 @@
                     </div>
 
                     <div class="dev-info-box">
-                        <h3>📊 Statistiken</h3>
+                        <h3>📊 Architektur</h3>
                         <table class="dev-info-table">
-                            <tr><td>HTML:</td><td>407 Zeilen</td></tr>
-                            <tr><td>CSS:</td><td>2689 Zeilen</td></tr>
-                            <tr><td>JavaScript:</td><td>2161 Zeilen</td></tr>
-                            <tr><td>Gesamt:</td><td>~5.300 Zeilen Code</td></tr>
+                            <tr><td>Module:</td><td>6 (api, transitous, app, livemap, changelog, extras)</td></tr>
+                            <tr><td>Datenquelle:</td><td>Transitous / MOTIS 2</td></tr>
+                            <tr><td>Tests:</td><td>Adapter- + Smoke-Suite (GitHub Actions)</td></tr>
+                            <tr><td>Code:</td><td>~8.500 Zeilen (HTML, CSS, JS)</td></tr>
                         </table>
                     </div>
 
@@ -385,7 +401,7 @@
                                 <li>Linien-Filter</li>
                                 <li>Detail-Ansicht mit Zwischenhalten</li>
                             </ul>
-                            <p class="feature-api"><strong>API:</strong> <code>GET /stops/:id/departures</code></p>
+                            <p class="feature-api"><strong>API:</strong> <code>GET /v6/stoptimes</code></p>
                         </div>
                     </details>
 
@@ -401,7 +417,7 @@
                                 <li>Verkehrsmittel-Filter</li>
                                 <li>Detail-Ansicht mit allen Haltestellen</li>
                             </ul>
-                            <p class="feature-api"><strong>API:</strong> <code>GET /journeys</code></p>
+                            <p class="feature-api"><strong>API:</strong> <code>GET /v6/plan</code></p>
                         </div>
                     </details>
 
@@ -413,11 +429,12 @@
                                 <li>Leaflet.js Kartenintegration</li>
                                 <li>Dynamische Bounding Box</li>
                                 <li>Fahrzeug-Filter (U-Bahn, S-Bahn, Bus, Tram)</li>
-                                <li>BVG-Linienfarben</li>
-                                <li>Auto-Update alle 15s</li>
+                                <li>Offizielle Linienfarben aus dem GTFS-Feed</li>
+                                <li>Strecken-Anzeige + Fokus-Modus per Fahrzeug-Tap</li>
+                                <li>API-Poll alle 30s + lokale 1s-Animation</li>
                                 <li>Zoom & Pan optimiert</li>
                             </ul>
-                            <p class="feature-api"><strong>API:</strong> <code>GET /radar</code></p>
+                            <p class="feature-api"><strong>API:</strong> <code>GET /v6/map/trips</code></p>
                         </div>
                     </details>
 
@@ -429,10 +446,10 @@
                                 <li>Installierbar (Add to Home Screen)</li>
                                 <li>Service Worker mit Caching</li>
                                 <li>Offline-Modus</li>
-                                <li>Push-Benachrichtigungen (geplant)</li>
+                                <li>Favoriten &amp; Offline-Abfahrten (localStorage)</li>
                                 <li>App-Manifest</li>
                             </ul>
-                            <p class="feature-api"><strong>Cache:</strong> <code>vbb-status-v36</code></p>
+                            <p class="feature-api"><strong>Cache:</strong> <code id="devCacheName"></code></p>
                         </div>
                     </details>
 

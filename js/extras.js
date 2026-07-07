@@ -101,25 +101,21 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Reine Filterfunktion - wird von displayDepartures (app.js) beim
+// Rendern angewendet. Der Filter-Zustand lebt hier.
+function applyDepartureFilter(departures) {
+    if (activeDepartureFilters.has('all')) return departures;
+    return departures.filter(dep => {
+        const product = dep.line?.product?.toLowerCase() || '';
+        return activeDepartureFilters.has(product);
+    });
+}
+
+// Filter geändert -> mit der vollen Liste neu rendern
+// (displayDepartures filtert selbst; so geht nie Datenbestand verloren)
 function filterDepartures() {
     if (!allDepartures || allDepartures.length === 0) return;
-    
-    let filtered = allDepartures;
-    
-    if (!activeDepartureFilters.has('all')) {
-        filtered = allDepartures.filter(dep => {
-            const product = dep.line?.product?.toLowerCase() || '';
-            return activeDepartureFilters.has(product);
-        });
-    }
-    
-    // Container neu rendern
-    const container = document.getElementById('departuresContainer');
-    if (filtered.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #FFED00;">Keine Abfahrten mit diesem Filter</div>';
-    } else {
-        displayDepartures(filtered);
-    }
+    displayDepartures(allDepartures);
 }
 
 // ==========================================
@@ -166,34 +162,6 @@ function getActiveTransportModes() {
     return modes.length > 0 ? modes : ['subway', 'suburban', 'tram', 'bus', 'regional', 'express'];
 }
 
-
-// ==========================================
-// PATCHES FÜR FILTER-INTEGRATION
-// ==========================================
-
-// Original loadDepartures überschreiben
-const originalLoadDepartures = loadDepartures;
-loadDepartures = async function() {
-    await originalLoadDepartures();
-    
-    // Filter-UI einblenden wenn Abfahrten geladen
-    const filtersEl = document.getElementById('departureFilters');
-    if (filtersEl && allDepartures.length > 0) {
-        filtersEl.style.display = 'flex';
-    }
-};
-
-// displayDepartures erweitern um allDepartures zu speichern
-const originalDisplayDepartures = displayDepartures;
-displayDepartures = function(departures) {
-    // Speichere alle Abfahrten für Filter
-    if (!activeDepartureFilters || activeDepartureFilters.has('all')) {
-        allDepartures = departures;
-    }
-    
-    // Normale Anzeige
-    originalDisplayDepartures(departures);
-};
 
 // HINWEIS: Der frühere "searchJourneys"-Patch wurde entfernt.
 // Die Funktion existierte nie und verursachte einen ReferenceError,
@@ -440,6 +408,23 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // APP-START: GESPEICHERTEN ZUSTAND WIEDERHERSTELLEN
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Versionsnummer überall aus der EINEN Quelle (APP_VERSION) befüllen
+    const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    };
+    setText('homeVersion', 'v' + APP_VERSION);
+    setText('homeDevVersion', 'v' + APP_VERSION);
+    setText('devVersion', APP_VERSION);
+    setText('devRelease', APP_RELEASE_DATE);
+    setText('devCacheName', 'vbb-status-v' + APP_VERSION);
+
+    // Entwickler-Karte auf der Startseite -> Entwickler-View
+    const devCard = document.getElementById('homeDevCard');
+    if (devCard) {
+        devCard.addEventListener('click', () => switchView('developer'));
+    }
+
     // Favoriten auf dem Home-Screen anzeigen
     renderFavorites();
 
@@ -466,8 +451,27 @@ document.addEventListener('DOMContentLoaded', () => {
         checkJourneySearchReady();
     }
 
-    // Klick auf Favorit (Home-Screen) -> direkt zu den Abfahrten
+    // Klick auf Favorit:
+    // - "Alle anzeigen" (Home) -> nur zur Abfahrten-View wechseln
+    // - Favorit auf Home -> Abfahrten-View + Station laden
+    // - Favoriten-Chip in der Abfahrten-View -> Station direkt wechseln
     document.addEventListener('click', (e) => {
+        if (e.target.closest('#homeShowAllFavs')) {
+            switchView('departures');
+            return;
+        }
+
+        const chip = e.target.closest('.fav-chip');
+        if (chip) {
+            if (chip.dataset.id === currentStationId) return; // schon aktiv
+            selectStation(
+                chip.dataset.id, chip.dataset.name,
+                chip.dataset.lat ? parseFloat(chip.dataset.lat) : null,
+                chip.dataset.lon ? parseFloat(chip.dataset.lon) : null
+            );
+            return;
+        }
+
         const favItem = e.target.closest('.home-favorite-item');
         if (favItem) {
             switchView('departures');
@@ -531,74 +535,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// HOVER-EXTRAS (bereinigt)
-// Frühere Version zeigte FAKE-Daten (zufällige Gleisnummern,
-// erfundene "Genauigkeit ±10m", Alert-Attrappen für Favorit/Teilen/
-// Export/Kalender) und hatte einen Scope-Bug im Search-Hint,
-// der bei jedem Tastendruck einen ReferenceError warf.
+// HOVER-EXTRAS: KOMPLETT ENTFERNT (v37.1)
+// - Nav-Quick-Infos: standen als doppelte Beschriftung im Menü
+// - Search-Hints ("Tippe mindestens 2 Zeichen"): hatten kein CSS und
+//   klebten als permanenter Rohtext unter den Suchfeldern
+// - data-tooltip-Attribute: hatten ebenfalls kein CSS -> tote Attribute
+// Die title-Attribute der Buttons liefern native Browser-Tooltips.
 // ==========================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.matchMedia('(hover: hover)').matches) {
-
-        // Navigation Items - Quick Info hinzufügen
-        const navQuickInfos = [
-            { selector: '[data-view="home"]', info: 'Startseite' },
-            { selector: '[data-view="departures"]', info: 'Live-Abfahrten' },
-            { selector: '[data-view="journey"]', info: 'Routenplaner' },
-            { selector: '[data-view="livemap"]', info: 'Fahrzeuge live' },
-            { selector: '[data-view="developer"]', info: 'Changelog & Infos' }
-        ];
-
-        navQuickInfos.forEach(item => {
-            const el = document.querySelector(item.selector);
-            if (el && !el.querySelector('.nav-quick-info')) {
-                const info = document.createElement('div');
-                info.className = 'nav-quick-info';
-                info.textContent = item.info;
-                el.appendChild(info);
-            }
-        });
-
-        // Search Hints (Scope-Bug behoben: hint jetzt im richtigen Scope)
-        document.querySelectorAll('.search-input').forEach(input => {
-            let hint = input.parentElement.querySelector('.search-hint');
-            if (!hint) {
-                hint = document.createElement('div');
-                hint.className = 'search-hint';
-                hint.textContent = 'Tippe mindestens 2 Zeichen';
-                input.parentElement.appendChild(hint);
-            }
-
-            input.addEventListener('input', () => {
-                const len = input.value.length;
-                if (len === 0) {
-                    hint.textContent = 'Tippe mindestens 2 Zeichen';
-                } else if (len === 1) {
-                    hint.textContent = 'Noch 1 Zeichen...';
-                } else {
-                    hint.textContent = 'Suche aktiv';
-                }
-            });
-        });
-
-        // Rich Tooltips (nur belegbare Aussagen)
-        const tooltips = {
-            '#refreshBtn': 'Lädt die neuesten Abfahrtszeiten. Auto-Refresh alle 30 Sekunden.',
-            '#searchJourneyBtn': 'Sucht Routen zwischen zwei Stationen mit Echtzeit-Daten.',
-            '#locationBtn': 'Findet die nächstgelegene Station per GPS.',
-            '#swapBtn': 'Vertauscht Start- und Zielstation.'
-        };
-
-        Object.entries(tooltips).forEach(([selector, tooltip]) => {
-            const el = document.querySelector(selector);
-            if (el) {
-                el.setAttribute('data-tooltip', tooltip);
-                el.style.position = 'relative';
-            }
-        });
-    }
-});
 
 // Quick Actions an Abfahrten: ECHTE Funktionen statt Alert-Attrappen
 // (Event-Delegation statt MutationObserver - robuster und günstiger)

@@ -5,6 +5,56 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [37.2.0] - 2026-07-07
+
+### Favoriten-Chips in der Abfahrten-View
+
+#### Changed
+- **Favoriten wohnen jetzt in der Abfahrten-View**: Über dem Suchfeld sitzt eine wischbare Chip-Reihe (Pillenform) mit ALLEN Favoriten - die aktive Station ist gelb markiert, ein Tap wechselt die Station ohne Umweg über die Startseite. Auf Mobile gleiche Wisch-Mechanik wie die Filter-Chips.
+- **Startseite aufgeräumt**: zeigt nur noch kompakt die Top 3 Favoriten plus "Alle N Stationen anzeigen" (springt in die Abfahrten-View), statt bis zu 10 Einträge zu stapeln.
+- Stationswechsel frischt die Aktiv-Markierung der Chips automatisch auf.
+
+## [37.1.1] - 2026-07-07
+
+### Komplette Route + Fokus-Modus, Entwickler-Tab, eine Versionsnummer
+
+#### Added - Live-Map
+- **Komplette Route beim Fahrzeug-Tap**: map/trips liefert nur das Segment im Kartenausschnitt - beim Antippen wird jetzt sofort das lokale Segment gezeichnet und im Hintergrund die GANZE Strecke über /v6/trip nachgeladen (gleicher 60s-Cache wie die Abfahrts-Details: Details + Route = maximal 1 Request).
+- **Fokus-Modus**: Solange das Popup offen ist, werden alle anderen Fahrzeuge ausgeblendet - nur die angetippte Fahrt mit ihrer Route bleibt sichtbar. Der Zähler zeigt "🎯 [Linie] im Fokus". Popup schließen stellt alles wieder her.
+- Polyline-Decoder generalisiert (Precision 5/6/7 je Endpoint, legGeometry liefert precision als Feld).
+
+#### Fixed - Filter auf Mobile
+- **Alle Filtergruppen vereinheitlicht** (Abfahrten, Routenplaner, Live-Map): Label auf eigener Zeile, Buttons als EINE horizontal wischbare Chip-Reihe statt zerklüftetem Umbruch. Die Routenplaner-Buttons hatten zudem eine 20px-Sondergröße (doppelt so groß wie alle anderen Filter) - jetzt Einheitsgröße mit 40px-Touch-Zielen.
+
+#### Changed - Entwickler-Bereich & Version
+- **Eine Versionsnummer für alles**: APP_VERSION (js/api.js) ist die einzige Quelle; Startseite, Entwickler-Tab und Cache-Anzeige werden daraus befüllt. Ein neuer Smoke-Test erzwingt, dass package.json, APP_VERSION und SW-Cache-Name übereinstimmen - Versions-Drift wie bisher (v30/v33 auf der Website) fällt ab jetzt in der CI auf.
+- **Entwickler-Tab aktualisiert**: veraltete Angaben korrigiert (15s-Radar -> 30s+Animation, HAFAS-Endpoints -> MOTIS, BVG-Farbtabelle -> GTFS-Farben, "Push geplant" -> Favoriten/Offline), Statistik-Box durch Architektur-Fakten ersetzt.
+- **Entwickler-Kachel auf der Startseite**: vierte Kachel im Feature-Raster (neben Live-Map) mit Versionsnummer, öffnet den Entwickler-Bereich. Füllt nebenbei die leere Rasterlücke im 2-Spalten-Layout.
+
+## [37.1.0] - 2026-07-07
+
+### Desktop-Aufräumaktion (nach Screenshots)
+
+#### Fixed
+- **Doppelte Beschriftung im Menü**: Die per JS injizierten "Nav-Quick-Infos" standen ohne CSS als zweites Label neben jedem Menüpunkt ("Start | Startseite"). Komplett entfernt - ebenso die Search-Hints ("Tippe mindestens 2 Zeichen"), die als permanenter Rohtext unter den Suchfeldern klebten, und tote data-tooltip-Attribute ohne CSS.
+- **Abfahrten auf Desktop unsymmetrisch**: Das 2-Spalten- (ab 768px) bzw. 3-Spalten-Grid (ab 1600px) erzeugte ungleich hohe, unruhige Karten. Jetzt überall eine ruhige einspaltige Liste; die Breite regelt der zentrierte Container. Die 1600px-Stufe nutzt Lesebreite (820px) statt 1400px Riesenfläche.
+- **Detail-Modal auf Desktop kaputt**: Eine alte Regel machte das Vollbild-Overlay selbst 600px schmal und links verankert - die Seite schaute rechts durch, mit eigener Scrollbar in der Mitte. Jetzt: Overlay bleibt Vollbild (nichts scheint durch), nur der Inhalt ist auf Lesebreite zentriert.
+
+#### Hinweis zur OS-Frage
+Layout-Anpassung läuft bewusst über Viewport-Breite und hover/pointer-Media-Queries statt User-Agent/OS-Erkennung: Touch-Laptops und große Tablets brechen jede OS-Annahme, und Browser reduzieren den User-Agent zunehmend. Die Media-Queries waren richtig - nur an drei Stellen kaputt.
+
+## [37.0.0] - 2026-07-07
+
+### Tests im Repo, funktionierender Abfahrten-Filter, Strecken-Anzeige, Mehr-laden
+
+#### Added
+- **Tests + CI im Repo**: 19 Adapter-Tests und der komplette Smoke-Test liegen jetzt unter tests/ (`npm test`), plus GitHub Action (.github/workflows/test.yml), die bei jedem Push Syntax-Checks und beide Test-Suiten ausführt.
+- **Strecken-Anzeige auf der Live-Map**: Fahrzeug antippen -> die komplette Route der Fahrt wird in der Linienfarbe eingezeichnet (Popup schließen -> Linie verschwindet). Die Polylines liegen bereits im Speicher - kostet null API-Requests.
+- **"Mehr Abfahrten laden"**: Button unter der Abfahrtsliste erhöht die Anzahl schrittweise (20 -> 40 -> 60). Bewusst über den n-Parameter statt Cursor gelöst: die erweiterte Liste bleibt so auch beim 30s-Auto-Refresh erhalten. Stationswechsel setzt auf 20 zurück.
+
+#### Fixed
+- **Abfahrten-Filter repariert und entpatcht**: Der Filter (U-Bahn/S-Bahn/Tram/Bus/Regional über den Abfahrten) hing an fragilen Monkey-Patches, die loadDepartures/displayDepartures zur Laufzeit überschrieben - und hatte einen echten Bug: Bei aktivem Filter hat der Auto-Refresh alle 30 Sekunden die UNGEFILTERTE Liste gerendert (der tripId-Vergleich lief gegen die gefilterte DOM-Sicht und schlug immer fehl). Jetzt: displayDepartures merkt sich die volle Liste und filtert intern, der Auto-Refresh vergleicht gegen die gefilterte Sicht, die Monkey-Patches sind entfernt.
+
 ## [36.0.0] - 2026-07-06
 
 ### Schnellere Karte, offizielle Linienfarben, Desktop-Layout
