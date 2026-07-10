@@ -382,6 +382,7 @@
                 });
 
                 const { latitude, longitude } = position.coords;
+                rememberPosition(latitude, longitude); // für Geocode-Bias merken
                 
                 stationSearch.placeholder = '📍 Suche Stationen in der Nähe...';
 
@@ -1229,6 +1230,7 @@
                 });
 
                 const { latitude, longitude } = position.coords;
+                rememberPosition(latitude, longitude); // für Geocode-Bias merken
                 
                 const locations = await transitousNearby(latitude, longitude);
                 const stations = locations.filter(loc => 
@@ -1271,6 +1273,13 @@
                 return;
             }
 
+            runJourneySearch();
+        });
+
+        // Cursor der letzten Suche (für "Früher"/"Später"-Blättern)
+        let journeyPageCursors = { prev: null, next: null };
+
+        async function runJourneySearch(pageCursor = null) {
             journeyContainer.innerHTML = '<div class="loading">⏳ Suche Verbindungen...</div>';
 
             try {
@@ -1280,8 +1289,14 @@
                 const data = await transitousJourneys(journeyFromStation, journeyToStation, {
                     timeISO: (tIn && tIn.value) ? new Date(tIn.value).toISOString() : null,
                     arriveBy: tMode ? tMode.value === 'arrival' : false,
-                    products: activeTransportModes
+                    products: activeTransportModes,
+                    pageCursor
                 });
+
+                journeyPageCursors = {
+                    prev: data.previousPageCursor,
+                    next: data.nextPageCursor
+                };
 
                 // Route für den nächsten App-Start merken
                 storageSet(STORAGE_KEYS.lastJourney, {
@@ -1302,6 +1317,29 @@
                     </div>
                 `;
             }
+        }
+
+        // "Früher"/"Später"-Blättern (Event-Delegation, Buttons werden
+        // bei jedem Render neu erzeugt)
+        journeyContainer.addEventListener('click', (e) => {
+            // "Route merken"-Toggle
+            const saveBtn = e.target.closest('#saveRouteBtn');
+            if (saveBtn) {
+                const nowFav = toggleFavRoute(journeyFromStation, journeyToStation);
+                saveBtn.textContent = nowFav ? '⭐ Route gemerkt ✓' : '☆ Route merken';
+                saveBtn.classList.toggle('active', nowFav);
+                saveBtn.setAttribute('aria-pressed', String(nowFav));
+                if (navigator.vibrate) navigator.vibrate(10);
+                return;
+            }
+
+            const pagerBtn = e.target.closest('.journey-pager-btn');
+            if (pagerBtn && pagerBtn.dataset.cursor) {
+                if (navigator.vibrate) navigator.vibrate(10);
+                runJourneySearch(pagerBtn.dataset.cursor);
+                // Nach oben scrollen, damit man die neuen Ergebnisse sieht
+                journeyContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         });
 
         function displayJourneys(journeys) {
@@ -1316,6 +1354,28 @@
                 `;
                 return;
             }
+
+            const favRouteActive = isFavRoute(journeyFromStation, journeyToStation);
+            const saveRouteHTML = `
+                <button class="journey-pager-btn save-route-btn ${favRouteActive ? 'active' : ''}" id="saveRouteBtn"
+                        aria-pressed="${favRouteActive}">
+                    ${favRouteActive ? '⭐ Route gemerkt ✓' : '☆ Route merken'}
+                </button>
+            `;
+
+            const pagerHTML = (pos) => `
+                ${pos === 'top' ? saveRouteHTML : ''}
+                <div class="journey-pager journey-pager-${pos}">
+                    ${journeyPageCursors.prev ? `
+                        <button class="journey-pager-btn" data-cursor="${escapeHtml(journeyPageCursors.prev)}">
+                            ◀ Frühere Verbindungen
+                        </button>` : '<span></span>'}
+                    ${journeyPageCursors.next ? `
+                        <button class="journey-pager-btn" data-cursor="${escapeHtml(journeyPageCursors.next)}">
+                            Spätere Verbindungen ▶
+                        </button>` : '<span></span>'}
+                </div>
+            `;
 
             const html = journeys.map((journey, journeyIndex) => {
                 const departure = new Date(journey.legs[0].plannedDeparture || journey.legs[0].departure);
@@ -1480,7 +1540,7 @@
                 `;
             }).join('');
 
-            journeyContainer.innerHTML = html;
+            journeyContainer.innerHTML = pagerHTML('top') + html + pagerHTML('bottom');
 
             // Click-Handler für Journey Results
             journeyContainer.querySelectorAll('.journey-result').forEach(item => {
@@ -1597,9 +1657,16 @@
                         </div>
 
                         ${leg.stopovers && leg.stopovers.length > 0 ? `
-                            <div class="journey-detail-intermediate">
-                                <span style="opacity: 0.6; font-size: 12px;">🔄 ${leg.stopovers.length} Halte</span>
-                            </div>
+                            <details class="journey-detail-intermediate">
+                                <summary>🔄 ${leg.stopovers.length} Zwischenhalte anzeigen</summary>
+                                <ul class="intermediate-stops-list">
+                                    ${leg.stopovers.map(s => {
+                                        const t = s.arrival || s.plannedArrival;
+                                        const time = t ? new Date(t).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+                                        return `<li><span class="intermediate-time">${time}</span> ${escapeHtml(s.stop?.name || '?')}</li>`;
+                                    }).join('')}
+                                </ul>
+                            </details>
                         ` : ''}
 
                         <div class="journey-detail-stop">

@@ -4067,3 +4067,146 @@ select:focus-visible {
     border-style: dashed;
     opacity: 0.85;
 }
+
+/* ==========================================
+   v37.3: Blätter-Buttons, Zwischenhalte, Stations-Popups
+   ========================================== */
+
+/* "Früher"/"Später"-Blättern in der Routensuche */
+.journey-pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.journey-pager-btn {
+    background: rgba(255, 237, 0, 0.08);
+    border: 1px dashed rgba(255, 237, 0, 0.4);
+    color: #FFED00;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: var(--font-stack);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.journey-pager-btn:hover,
+.journey-pager-btn:focus-visible {
+    background: rgba(255, 237, 0, 0.15);
+    border-style: solid;
+    outline: none;
+}
+
+/* Ausklappbare Zwischenhalte (natives <details>) */
+.journey-detail-intermediate {
+    margin: 8px 0 8px 12px;
+}
+
+.journey-detail-intermediate summary {
+    cursor: pointer;
+    opacity: 0.65;
+    font-size: 12px;
+    padding: 4px 0;
+    list-style-position: inside;
+}
+
+.journey-detail-intermediate summary:hover,
+.journey-detail-intermediate summary:focus-visible {
+    opacity: 1;
+    color: #FFED00;
+    outline: none;
+}
+
+.intermediate-stops-list {
+    list-style: none;
+    margin: 6px 0 4px 6px;
+    padding: 0;
+    border-left: 2px dotted rgba(255, 255, 255, 0.25);
+}
+
+.intermediate-stops-list li {
+    padding: 4px 0 4px 12px;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.intermediate-time {
+    display: inline-block;
+    min-width: 44px;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+}
+
+/* Stations-Popups auf der Live-Map */
+.stop-popup-name {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.stop-popup-dep {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    font-size: 13px;
+}
+
+.stop-popup-line {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.stop-popup-dir {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stop-popup-min {
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.stop-popup-loading {
+    opacity: 0.6;
+    font-size: 12px;
+    padding: 6px 0;
+}
+
+.map-stop-open {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    background: #FFED00;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-stack);
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* v37.4: Route-merken-Button + Standort-Button */
+.save-route-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+.save-route-btn.active {
+    background: rgba(255, 237, 0, 0.2);
+    border-style: solid;
+}
+
+.locate-btn {
+    font-size: 15px;
+}

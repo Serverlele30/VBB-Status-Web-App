@@ -18,7 +18,7 @@ const fixtures = {
         mode: 'SUBWAY', realTime: true, headsign: 'U Ruhleben', routeShortName: 'U2', tripId: 'trip123',
         agencyName: 'BVG', cancelled: false, tripCancelled: false
     }], place: {}, previousPageCursor: '', nextPageCursor: '' },
-    plan: { itineraries: [{
+    plan: { previousPageCursor: 'CURSOR_PREV', nextPageCursor: 'CURSOR_NEXT', itineraries: [{
         duration: 1200, startTime: '2026-07-06T10:00:00+02:00', endTime: '2026-07-06T10:20:00+02:00', transfers: 0, id: 'it1',
         legs: [
             { mode: 'WALK', from: { name: 'Start', lat: 0, lon: 0 }, to: { name: 'S Südkreuz', lat: 0, lon: 0 },
@@ -28,7 +28,11 @@ const fixtures = {
             { mode: 'SUBURBAN', from: { name: 'S Südkreuz', track: '2', lat: 0, lon: 0 }, to: { name: 'S+U Alexanderplatz', lat: 0, lon: 0 },
               startTime: '2026-07-06T10:06:00+02:00', endTime: '2026-07-06T10:20:00+02:00',
               scheduledStartTime: '2026-07-06T10:05:00+02:00', scheduledEndTime: '2026-07-06T10:19:00+02:00',
-              realTime: true, scheduled: false, duration: 840, routeShortName: 'S2', headsign: 'S Bernau', legGeometry: {} }
+              realTime: true, scheduled: false, duration: 840, routeShortName: 'S2', headsign: 'S Bernau', legGeometry: {},
+              intermediateStops: [
+                  { name: 'S Yorckstr.', stopId: 'Y1', arrival: '2026-07-06T10:09:00+02:00', scheduledArrival: '2026-07-06T10:08:00+02:00' },
+                  { name: 'S Anhalter Bf', stopId: 'A1', arrival: '2026-07-06T10:12:00+02:00', scheduledArrival: '2026-07-06T10:11:00+02:00' }
+              ] }
         ]
     }] }
 };
@@ -89,12 +93,14 @@ global.fetch = async (url) => {
 
 // api.js-Ausschnitte + Adapter in EINEM Scope evaluieren
 const combined =
-      api.slice(api.indexOf('const API_SOFT_LIMIT'), api.indexOf('/**'))
+      'let lastKnownLat = null, lastKnownLon = null;'
+    + api.slice(api.indexOf('const STORAGE_KEYS'), api.indexOf('function storageGet'))
+    + api.slice(api.indexOf('const API_SOFT_LIMIT'), api.indexOf('/**'))
     + api.slice(api.indexOf('async function apiFetch'), api.indexOf('// ==========================================\n        // GLOBALES'))
     + api.slice(api.indexOf('function showApiOutageBanner'), api.indexOf('// HTML-Escaping'))
     + api.slice(api.indexOf('function storageGet'), api.indexOf('// --- Favoriten ---'))
     + adapter
-    + ';global.__a = { transitousLocations, transitousDepartures, transitousJourneys, motisModeToProduct, productsToMotisModes, transitousNearby, transitousTrip, transitousRadarSegments, segmentPositionAt, decodePolyline5, apiCache };';
+    + ';global.__a = { transitousLocations, transitousDepartures, transitousJourneys, motisModeToProduct, productsToMotisModes, transitousNearby, transitousTrip, transitousRadarSegments, segmentPositionAt, decodePolyline5, apiCache, transitousMapStops };global.__t = (c) => eval(c);';
 eval(combined);
 const A = global.__a;
 
@@ -170,6 +176,41 @@ const A = global.__a;
       pos && Math.abs(pos.latitude - 52.55) < 0.01 && Math.abs(pos.longitude - 13.35) < 0.01);
     t('Interpolation: außerhalb des Zeitfensters -> null',
       A.segmentPositionAt(segs[0], Date.now() + 120000) === null);
+
+    // 10) Blätter-Cursor: rein in die URL, raus aus der Antwort
+    A.apiCache.clear();
+    requestedUrls.length = 0;
+    const jPage = await A.transitousJourneys(
+        { id: 'x', name: 'Start', lat: 52.47, lon: 13.36 },
+        { id: 'y', name: 'Ziel', lat: 52.52, lon: 13.41 },
+        { pageCursor: 'CURSOR_NEXT' }
+    );
+    const pagedUrl = requestedUrls.find(u => u.includes('/plan'));
+    t('pageCursor in plan-URL', pagedUrl.includes('pageCursor=CURSOR_NEXT'));
+    t('Cursor aus Antwort normalisiert', jPage.previousPageCursor === 'CURSOR_PREV' && jPage.nextPageCursor === 'CURSOR_NEXT');
+
+    // 11) Zwischenhalte im Leg
+    const legWithStops = jPage.journeys[0].legs[1];
+    t('Zwischenhalte gemappt (2 Stück, Name + Zeit)',
+      legWithStops.stopovers.length === 2 &&
+      legWithStops.stopovers[0].stop.name === 'S Yorckstr.' &&
+      legWithStops.stopovers[0].arrival.includes('10:09'));
+
+    // 12) map/stops normalisiert (transitous:-Präfix + Koordinaten)
+    const mapStops = await A.transitousMapStops({ north: 52.55, south: 52.53, west: 13.33, east: 13.36 });
+    t('map/stops -> id-Präfix + Koordinaten',
+      mapStops.length === 2 && mapStops[0].id.startsWith('transitous:') && mapStops[0].lat > 52);
+
+    // 13) Geocode-Bias: ohne Position Berlin-Mitte, mit Position deren Koordinaten
+    A.apiCache.clear();
+    requestedUrls.length = 0;
+    await A.transitousLocations('teststr');
+    t('Bias-Default Berlin-Mitte', requestedUrls[0].includes('place=52.52,13.41'));
+    global.__t('lastKnownLat = 52.401; lastKnownLon = 13.052;'); // Potsdam
+    A.apiCache.clear();
+    requestedUrls.length = 0;
+    await A.transitousLocations('teststr2');
+    t('Bias nutzt letzte GPS-Position', requestedUrls[0].includes('place=52.401,13.052'));
 
     console.log(fails === 0 ? '\n🎉 TRANSITOUS-ADAPTER-TESTS BESTANDEN' : `\n❌ ${fails} fehlgeschlagen`);
     process.exit(fails ? 1 : 0);

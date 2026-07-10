@@ -251,6 +251,26 @@ setTimeout(() => {
         if (homeItems.length !== 3 || !moreBtn) errors.push('Startseite nicht kompakt (Top 3 + Alle anzeigen)');
         else console.log('✅ Startseite kompakt: Top 3 + "Alle anzeigen"-Button');
 
+        // 14) Routen-Favoriten: merken -> Chip erscheint -> Chip füllt Felder + sucht
+        lastJourneyUrl = null;
+        window.__t(`
+            journeyFromStation = { id: 'rA', name: 'S Pendlerheim (Berlin)', lat: 52.4, lon: 13.2 };
+            journeyToStation = { id: 'rB', name: 'U Arbeitsplatz (Berlin)', lat: 52.5, lon: 13.4 };
+            toggleFavRoute(journeyFromStation, journeyToStation);
+        `);
+        const routeChip = doc.querySelector('#journeyFavorites .route-chip');
+        if (!routeChip) errors.push('Routen-Chip erscheint nicht');
+        else if (!routeChip.textContent.includes('Pendlerheim → Arbeitsplatz')) errors.push('Routen-Chip-Kurzname falsch: ' + routeChip.textContent.trim());
+        else console.log('✅ Routen-Favorit gespeichert, Chip mit Kurznamen gerendert');
+
+        window.__t(`journeyFromStation = null; journeyToStation = null; journeyFrom.value = ''; journeyTo.value = '';`);
+        routeChip?.click();
+        await new Promise(r => setTimeout(r, 200));
+        const filled = doc.getElementById('journeyFrom').value.includes('Pendlerheim');
+        if (!filled) errors.push('Routen-Chip füllt Felder nicht');
+        else if (!lastJourneyUrl) errors.push('Routen-Chip startet keine Suche');
+        else console.log('✅ Routen-Chip: 1 Tap füllt Felder und sucht sofort');
+
         console.log('✅ Struktur-Checks abgeschlossen');
 
         if (errors.length === 0) {

@@ -5,6 +5,27 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [37.4.0] - 2026-07-08
+
+### Favoriten-Routen, Standort auf der Karte, smarterer Geocode
+
+#### Added
+- **Favoriten-Routen für Pendler**: Nach einer Suche merkt "☆ Route merken" die Verbindung (max. 5). Gespeicherte Routen erscheinen als Chips über dem Routenplaner-Formular - 1 Tap füllt Start/Ziel und sucht sofort. Chips zeigen Kurznamen ("Alexanderplatz → Zoolog. Garten" statt der vollen Stationsnamen).
+- **Eigener Standort auf der Live-Map**: 📍-Button in der Filterleiste setzt einen blauen Punkt auf die eigene Position und zentriert die Karte (Marker wird bei erneutem Tap bewegt, nicht neu erzeugt).
+- **Geocode-Bias per GPS**: Die Stationssuche sortiert Treffer jetzt nach der letzten bekannten Position (aus GPS-Nutzung, max. 1h alt, lokal gespeichert) statt hart nach Berlin-Mitte - spürbar bessere Vorschläge in Brandenburg.
+
+#### Fixed
+- **localStorage räumt jetzt auf**: Abfahrten-Caches älter als 7 Tage und Geocode-Mappings älter als 30 Tage werden beim App-Start gelöscht (wuchsen bisher unbegrenzt). Alte Mapping-Einträge werden automatisch ins neue Format mit Zeitstempel migriert.
+
+## [37.3.0] - 2026-07-07
+
+### Blättern, Zwischenhalte, Stationen auf der Karte
+
+#### Added
+- **"Frühere / Spätere Verbindungen"**: Die Routensuche blättert jetzt per pageCursor durch Alternativverbindungen - Buttons oberhalb und unterhalb der Ergebnisliste, mit sanftem Scroll nach oben beim Blättern.
+- **Zwischenhalte ausklappbar**: In der Routen-Detailansicht zeigt jeder Fahrt-Abschnitt "🔄 N Zwischenhalte anzeigen" (natives details-Element, tastaturbedienbar) mit Haltestellenliste inkl. Ankunftszeiten. Die Daten kamen schon immer mit der plan-Antwort - der alte Platzhalter ("N Halte") bekam sie nur nie.
+- **Stationen auf der Live-Map**: Ab Zoom 15 erscheinen die Haltestellen im Ausschnitt als gelbe Punkte (map/stops, 5min-Cache). Tap -> Popup mit den nächsten 3 Abfahrten (1 Request, 15s-Cache) und "Alle Abfahrten →" springt direkt in die Abfahrten-View mit dieser Station. Im Fokus-Modus werden die Punkte automatisch ausgeblendet.
+
 ## [37.2.0] - 2026-07-07
 
 ### Favoriten-Chips in der Abfahrten-View

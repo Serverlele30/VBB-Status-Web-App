@@ -66,6 +66,15 @@ function motisDelaySeconds(actual, scheduled) {
     return Number.isFinite(diff) ? Math.round(diff) : null;
 }
 
+// Geocode-Bias: letzte bekannte GPS-Position bevorzugen (bessere
+// Trefferreihenfolge in Brandenburg), sonst Berlin-Mitte als Default
+function geocodeBias() {
+    if (lastKnownLat != null && lastKnownLon != null) {
+        return `${lastKnownLat.toFixed(3)},${lastKnownLon.toFixed(3)}`;
+    }
+    return '52.52,13.41';
+}
+
 // GTFS-Farbe aus der API normalisieren ('DA421E' -> '#DA421E')
 // Das sind die OFFIZIELLEN VBB-Linienfarben aus dem GTFS-Feed -
 // kein Extra-Request nötig, sie stecken in stoptimes/plan/map-trips.
@@ -95,7 +104,7 @@ async function transitousLocations(query) {
     // place=Berlin-Mitte als Bias, damit VBB-Gebiet zuerst kommt
     // 6h Cache: Stationsnamen ändern sich praktisch nie
     const matches = await transitousFetch(
-        `/v1/geocode?text=${encodeURIComponent(query)}&type=STOP&place=52.52,13.41&numResults=10`,
+        `/v1/geocode?text=${encodeURIComponent(query)}&type=STOP&place=${geocodeBias()}&numResults=10`,
         6 * 60 * 60 * 1000
     );
 
@@ -119,16 +128,19 @@ async function transitousStopQuery({ id, name, lat, lon }) {
         return `center=${lat},${lon}&radius=250`;
     }
     // Nur Name bekannt (alte Favoriten): einmalig geocoden, Mapping cachen
-    const cacheKey = 'vbb_transitous_stop_' + name;
+    const cacheKey = STORAGE_KEYS.stopMapPrefix + name;
     const cached = storageGet(cacheKey);
-    if (cached) return 'stopId=' + encodeURIComponent(cached);
+    // Neues Format {id, time}; altes Format (String) wird von
+    // cleanupStorage beim Start migriert, hier zur Sicherheit beides lesen
+    const cachedId = cached && (typeof cached === 'string' ? cached : cached.id);
+    if (cachedId) return 'stopId=' + encodeURIComponent(cachedId);
 
     const matches = await transitousFetch(
-        `/v1/geocode?text=${encodeURIComponent(name)}&type=STOP&place=52.52,13.41&numResults=1`,
+        `/v1/geocode?text=${encodeURIComponent(name)}&type=STOP&place=${geocodeBias()}&numResults=1`,
         6 * 60 * 60 * 1000
     );
     if (!matches || matches.length === 0) throw new Error('Station bei Transitous nicht gefunden');
-    storageSet(cacheKey, matches[0].id);
+    storageSet(cacheKey, { id: matches[0].id, time: Date.now() });
     return 'stopId=' + encodeURIComponent(matches[0].id);
 }
 
@@ -181,14 +193,14 @@ async function transitousPlace(station) {
         return `${station.lat},${station.lon}`;
     }
     const matches = await transitousFetch(
-        `/v1/geocode?text=${encodeURIComponent(station.name)}&type=STOP&place=52.52,13.41&numResults=1`,
+        `/v1/geocode?text=${encodeURIComponent(station.name)}&type=STOP&place=${geocodeBias()}&numResults=1`,
         6 * 60 * 60 * 1000
     );
     if (!matches || matches.length === 0) throw new Error('Station bei Transitous nicht gefunden');
     return matches[0].id;
 }
 
-async function transitousJourneys(fromStation, toStation, { timeISO = null, arriveBy = false, products = null } = {}) {
+async function transitousJourneys(fromStation, toStation, { timeISO = null, arriveBy = false, products = null, pageCursor = null } = {}) {
     const fromPlace = await transitousPlace(fromStation);
     const toPlace = await transitousPlace(toStation);
 
@@ -197,6 +209,8 @@ async function transitousJourneys(fromStation, toStation, { timeISO = null, arri
               `&maxTransfers=3&minTransferTime=5`;
     if (timeISO) url += `&time=${encodeURIComponent(timeISO)}&arriveBy=${arriveBy}`;
     if (products) url += `&transitModes=${productsToMotisModes(products)}`;
+    // Blättern: Cursor aus der vorherigen Antwort ("Früher"/"Später")
+    if (pageCursor) url += `&pageCursor=${encodeURIComponent(pageCursor)}`;
 
     // 30s Cache: identische Suche direkt hintereinander = 1 Request
     const data = await transitousFetch(url, 30000);
@@ -220,12 +234,22 @@ async function transitousJourneys(fromStation, toStation, { timeISO = null, arri
                 arrival: leg.endTime,
                 plannedArrival: leg.scheduledEndTime,
                 departurePlatform: leg.from?.track || null,
-                arrivalPlatform: leg.to?.track || null
+                arrivalPlatform: leg.to?.track || null,
+                // Zwischenhalte (kamen bisher mit und wurden weggeworfen)
+                stopovers: (leg.intermediateStops || []).map(s => ({
+                    stop: { name: s.name },
+                    arrival: s.arrival || s.departure || null,
+                    plannedArrival: s.scheduledArrival || s.scheduledDeparture || null
+                }))
             };
         })
     }));
 
-    return { journeys };
+    return {
+        journeys,
+        previousPageCursor: data.previousPageCursor || null,
+        nextPageCursor: data.nextPageCursor || null
+    };
 }
 
 
@@ -292,6 +316,24 @@ async function transitousTrip(tripId) {
     ];
 
     return { trip: { stopovers } };
+}
+
+// Stationen im Kartenausschnitt (für die Stations-Punkte auf der Live-Map).
+// Koordinaten gerundet -> stabile Cache-Keys, 5min TTL.
+async function transitousMapStops(bounds) {
+    const stops = await transitousFetch(
+        `/v6/map/stops?min=${bounds.south.toFixed(3)},${bounds.west.toFixed(3)}` +
+        `&max=${bounds.north.toFixed(3)},${bounds.east.toFixed(3)}`,
+        5 * 60 * 1000
+    );
+    return (stops || [])
+        .filter(s => s.stopId && s.lat != null && s.lon != null)
+        .map(s => ({
+            id: TRANSITOUS_ID_PREFIX + s.stopId,
+            name: s.name,
+            lat: s.lat,
+            lon: s.lon
+        }));
 }
 
 // Kompletter Streckenverlauf einer Fahrt (für die Live-Map).

@@ -7,7 +7,7 @@
         // ZENTRALE VERSIONSNUMMER - einzige Stelle, die bei Releases
         // angepasst wird. Alle Anzeigen (Startseite, Entwickler-Tab)
         // lesen von hier; package.json + SW-Cache-Name manuell mitziehen.
-        const APP_VERSION = '37.2.0';
+        const APP_VERSION = '37.4.0';
         const APP_RELEASE_DATE = '07.07.2026';
 
         // Seit v35: Transitous (api.transitous.org) ist die einzige
@@ -25,6 +25,8 @@
         // später geladenen Dateien angewiesen ist.
         let currentView = 'home';
         let departuresCount = 20;       // Wie viele Abfahrten laden ("Mehr laden" erhöht)
+        let lastKnownLat = null;        // Letzte bekannte GPS-Position
+        let lastKnownLon = null;        // (für Geocode-Bias + Karten-Zentrierung)
         let currentStationLat = null;   // Koordinaten der gewählten Station
         let currentStationLon = null;   // (für Transitous-Fallback ohne ID-Mapping)
         let liveMap = null;
@@ -203,9 +205,12 @@
         // ==========================================
         const STORAGE_KEYS = {
             favorites: 'vbb_favorites',
+            favRoutes: 'vbb_fav_routes',
             lastStation: 'vbb_last_station',
             lastJourney: 'vbb_last_journey',
-            depCachePrefix: 'vbb_dep_cache_'
+            lastPosition: 'vbb_last_position',
+            depCachePrefix: 'vbb_dep_cache_',
+            stopMapPrefix: 'vbb_transitous_stop_'
         };
 
         function storageGet(key, fallback = null) {
@@ -333,6 +338,117 @@
             btn.textContent = fav ? '⭐' : '☆';
             btn.setAttribute('aria-pressed', String(fav));
             btn.title = fav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen';
+        }
+
+        // --- Routen-Favoriten (Pendler: 1-Tap-Suche) ---
+        const MAX_FAV_ROUTES = 5;
+
+        function getFavRoutes() {
+            return storageGet(STORAGE_KEYS.favRoutes, []);
+        }
+
+        function routeKey(from, to) {
+            return `${from?.id}→${to?.id}`;
+        }
+
+        function isFavRoute(from, to) {
+            const key = routeKey(from, to);
+            return getFavRoutes().some(r => routeKey(r.from, r.to) === key);
+        }
+
+        function toggleFavRoute(from, to) {
+            if (!from || !to) return false;
+            let routes = getFavRoutes();
+            const key = routeKey(from, to);
+            if (routes.some(r => routeKey(r.from, r.to) === key)) {
+                routes = routes.filter(r => routeKey(r.from, r.to) !== key);
+            } else {
+                routes.unshift({ from, to });
+                routes = routes.slice(0, MAX_FAV_ROUTES);
+            }
+            storageSet(STORAGE_KEYS.favRoutes, routes);
+            renderRouteFavorites();
+            return isFavRoute(from, to);
+        }
+
+        // Kurzname für Chips: "S+U Alexanderplatz (Berlin)" -> "Alexanderplatz"
+        function shortStationName(name) {
+            return String(name || '')
+                .replace(/\s*\(Berlin\)\s*/g, '')
+                .replace(/^(S\+U|S|U|Bhf\.?)\s+/i, '')
+                .trim();
+        }
+
+        function renderRouteFavorites() {
+            const container = document.getElementById('journeyFavorites');
+            if (!container) return;
+            const routes = getFavRoutes();
+
+            if (routes.length === 0) {
+                container.innerHTML = '';
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            container.innerHTML = `
+                <div class="filter-label">⭐ Deine Routen</div>
+                <div class="filter-chips">
+                    ${routes.map((r, i) => `
+                        <button class="fav-chip route-chip" data-route-index="${i}"
+                                aria-label="Route ${escapeHtml(r.from.name)} nach ${escapeHtml(r.to.name)} suchen">
+                            ${escapeHtml(shortStationName(r.from.name))} → ${escapeHtml(shortStationName(r.to.name))}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // --- Letzte bekannte Position (für Geocode-Bias) ---
+        function rememberPosition(lat, lon) {
+            lastKnownLat = lat;
+            lastKnownLon = lon;
+            storageSet(STORAGE_KEYS.lastPosition, { lat, lon, time: Date.now() });
+        }
+
+        function restorePosition() {
+            const pos = storageGet(STORAGE_KEYS.lastPosition);
+            // Nur nutzen, wenn jünger als 1 Stunde (sonst evtl. ganz woanders)
+            if (pos && Date.now() - pos.time < 60 * 60 * 1000) {
+                lastKnownLat = pos.lat;
+                lastKnownLon = pos.lon;
+            }
+        }
+
+        // --- localStorage-Aufräumung beim App-Start ---
+        // Abfahrten-Caches und Geocode-Mappings wuchsen bisher unbegrenzt.
+        function cleanupStorage() {
+            const now = Date.now();
+            const WEEK = 7 * 24 * 60 * 60 * 1000;
+            const MONTH = 30 * 24 * 60 * 60 * 1000;
+            const toDelete = [];
+
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith(STORAGE_KEYS.depCachePrefix)) {
+                        const entry = storageGet(key);
+                        if (!entry || !entry.time || now - entry.time > WEEK) toDelete.push(key);
+                    } else if (key.startsWith(STORAGE_KEYS.stopMapPrefix)) {
+                        const entry = storageGet(key);
+                        // Altes Format (reiner String, ohne Zeitstempel) -> migrieren
+                        if (typeof entry === 'string') {
+                            storageSet(key, { id: entry, time: now });
+                        } else if (!entry || !entry.time || now - entry.time > MONTH) {
+                            toDelete.push(key);
+                        }
+                    }
+                }
+                toDelete.forEach(k => localStorage.removeItem(k));
+                if (toDelete.length > 0) {
+                    console.warn(`Storage-Aufräumung: ${toDelete.length} alte Einträge entfernt`);
+                }
+            } catch (e) { /* localStorage nicht verfügbar */ }
         }
 
         // --- Abfahrten-Cache für Offline-Modus ---

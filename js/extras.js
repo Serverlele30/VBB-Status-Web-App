@@ -425,8 +425,29 @@ document.addEventListener('DOMContentLoaded', () => {
         devCard.addEventListener('click', () => switchView('developer'));
     }
 
-    // Favoriten auf dem Home-Screen anzeigen
+    // Alte Cache-Einträge aufräumen + letzte Position wiederherstellen
+    cleanupStorage();
+    restorePosition();
+
+    // Favoriten (Stationen + Routen) rendern
     renderFavorites();
+    renderRouteFavorites();
+
+    // Routen-Chip -> Route laden und sofort suchen
+    document.addEventListener('click', (e) => {
+        const chip = e.target.closest('.route-chip');
+        if (!chip) return;
+        const route = getFavRoutes()[parseInt(chip.dataset.routeIndex, 10)];
+        if (!route) return;
+
+        journeyFromStation = route.from;
+        journeyToStation = route.to;
+        journeyFrom.value = route.from.name;
+        journeyTo.value = route.to.name;
+        checkJourneySearchReady();
+        if (navigator.vibrate) navigator.vibrate(10);
+        runJourneySearch();
+    });
 
     // Letzte Station wiederherstellen (OHNE sofortigen API-Call -
     // geladen wird erst, wenn die Abfahrten-View geöffnet wird)

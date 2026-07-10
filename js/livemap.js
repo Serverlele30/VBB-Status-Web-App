@@ -230,6 +230,7 @@
                 // die lokale Animation zwischenspeichern
                 liveMapSegments = await transitousRadarSegments(bounds, zoom);
                 renderVehiclesFromSegments();
+                updateMapStops(); // Stations-Punkte im selben Takt pflegen
 
             } catch (error) {
                 console.error('Load vehicles error:', error);
@@ -241,6 +242,164 @@
                 }
             }
         }
+
+        // ==========================================
+        // EIGENER STANDORT AUF DER KARTE
+        // 📍-Button: blauer Punkt + Karte zentrieren
+        // ==========================================
+        let userLocationMarker = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const locateBtn = document.getElementById('locateBtn');
+            if (!locateBtn) return;
+
+            locateBtn.addEventListener('click', () => {
+                if (!navigator.geolocation || !liveMap) return;
+                locateBtn.textContent = '⏳';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        rememberPosition(latitude, longitude);
+
+                        // Blauer Punkt (wird bei erneutem Tap nur bewegt)
+                        if (userLocationMarker) {
+                            userLocationMarker.setLatLng([latitude, longitude]);
+                        } else {
+                            userLocationMarker = L.circleMarker([latitude, longitude], {
+                                radius: 8,
+                                color: '#FFFFFF',
+                                weight: 3,
+                                fillColor: '#2A93EE',
+                                fillOpacity: 1
+                            }).addTo(liveMap);
+                        }
+
+                        liveMap.setView([latitude, longitude], Math.max(liveMap.getZoom(), 15));
+                        locateBtn.textContent = '📍';
+                        if (navigator.vibrate) navigator.vibrate(10);
+                    },
+                    (error) => {
+                        console.warn('Standort nicht verfügbar:', error.message);
+                        locateBtn.textContent = '📍';
+                        const countEl = document.getElementById('vehicleCount');
+                        if (countEl) countEl.textContent = '⚠️ Standort nicht verfügbar';
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                );
+            });
+        });
+
+        // ==========================================
+        // STATIONS-PUNKTE AUF DER KARTE (ab Zoom 15)
+        // Tap auf einen Punkt -> Popup mit den nächsten 3 Abfahrten
+        // (1 stoptimes-Request, 15s-Cache) + Sprung zur Abfahrten-View.
+        // ==========================================
+        const STOPS_MIN_ZOOM = 15;
+        let stopMarkerMap = new Map(); // stopId -> marker
+
+        async function updateMapStops() {
+            if (!liveMap) return;
+
+            // Bei niedrigem Zoom oder im Fokus-Modus: Punkte ausblenden
+            const zoom = liveMap.getZoom ? liveMap.getZoom() : 12;
+            if (zoom < STOPS_MIN_ZOOM || focusedVehicleTripId) {
+                clearMapStops();
+                return;
+            }
+
+            const b = liveMap.getBounds();
+            let stops;
+            try {
+                stops = await transitousMapStops({
+                    north: b.getNorth(), south: b.getSouth(),
+                    west: b.getWest(), east: b.getEast()
+                });
+            } catch (e) {
+                return; // Punkte sind nice-to-have - Fehler still schlucken
+            }
+
+            const seen = new Set();
+            for (const stop of stops) {
+                seen.add(stop.id);
+                if (stopMarkerMap.has(stop.id)) continue;
+
+                const marker = L.circleMarker([stop.lat, stop.lon], {
+                    radius: 6,
+                    color: '#FFED00',
+                    weight: 2,
+                    fillColor: '#111',
+                    fillOpacity: 0.9
+                });
+                marker.bindPopup(stopPopupHTML(stop, null), { minWidth: 220 });
+                marker.on('popupopen', () => loadStopPopupDepartures(stop, marker));
+                marker.addTo(liveMap);
+                stopMarkerMap.set(stop.id, marker);
+            }
+
+            // Punkte außerhalb des Ausschnitts entfernen
+            for (const [id, marker] of stopMarkerMap) {
+                if (!seen.has(id)) {
+                    marker.remove();
+                    stopMarkerMap.delete(id);
+                }
+            }
+        }
+
+        function clearMapStops() {
+            for (const [, marker] of stopMarkerMap) marker.remove();
+            stopMarkerMap.clear();
+        }
+
+        function stopPopupHTML(stop, departures) {
+            let depsHTML = '<div class="stop-popup-loading">⏳ Lade Abfahrten…</div>';
+            if (departures) {
+                depsHTML = departures.length === 0
+                    ? '<div class="stop-popup-loading">Keine Abfahrten in Kürze</div>'
+                    : departures.map(dep => {
+                        const mins = Math.max(0, Math.round((new Date(dep.when) - Date.now()) / 60000));
+                        const color = dep.line?.color || getBVGLineColor(dep.line?.name || '');
+                        return `
+                            <div class="stop-popup-dep">
+                                <span class="stop-popup-line" style="background:${color};color:${bestTextColor(color)}">${escapeHtml(dep.line?.name || '?')}</span>
+                                <span class="stop-popup-dir">${escapeHtml(dep.direction || '')}</span>
+                                <span class="stop-popup-min">${mins === 0 ? 'Jetzt' : mins + ' min'}</span>
+                            </div>`;
+                    }).join('');
+            }
+            return `
+                <div class="stop-popup">
+                    <div class="stop-popup-name">🚏 ${escapeHtml(stop.name)}</div>
+                    ${depsHTML}
+                    <button class="map-stop-open" data-id="${escapeHtml(stop.id)}" data-name="${escapeHtml(stop.name)}"
+                            data-lat="${stop.lat}" data-lon="${stop.lon}">
+                        Alle Abfahrten →
+                    </button>
+                </div>`;
+        }
+
+        async function loadStopPopupDepartures(stop, marker) {
+            try {
+                const data = await transitousDepartures(
+                    { id: stop.id, name: stop.name, lat: stop.lat, lon: stop.lon }, 3
+                );
+                marker.setPopupContent(stopPopupHTML(stop, (data.departures || []).slice(0, 3)));
+            } catch (e) {
+                marker.setPopupContent(stopPopupHTML(stop, []));
+            }
+        }
+
+        // "Alle Abfahrten" im Stations-Popup -> Abfahrten-View
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.map-stop-open');
+            if (!btn) return;
+            switchView('departures');
+            selectStation(
+                btn.dataset.id, btn.dataset.name,
+                btn.dataset.lat ? parseFloat(btn.dataset.lat) : null,
+                btn.dataset.lon ? parseFloat(btn.dataset.lon) : null
+            );
+        });
 
         // ==========================================
         // STRECKEN-ANZEIGE BEIM FAHRZEUG-KLICK
@@ -265,8 +424,9 @@
                 }).addTo(liveMap);
             }
 
-            // Fokus-Modus aktivieren: andere Fahrzeuge ausblenden
+            // Fokus-Modus aktivieren: andere Fahrzeuge + Stations-Punkte ausblenden
             renderVehiclesFromSegments();
+            clearMapStops();
 
             // 2) ...dann die KOMPLETTE Route nachladen (map/trips liefert nur
             // das Segment im Ausschnitt; die ganze Strecke steckt in /trip).
@@ -295,6 +455,7 @@
             if (focusedVehicleTripId) {
                 focusedVehicleTripId = null;
                 renderVehiclesFromSegments(); // alle Fahrzeuge wieder zeigen
+                updateMapStops();             // Stations-Punkte wiederherstellen
             }
         }
 

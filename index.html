@@ -132,13 +132,14 @@
                         <p>Fahrzeuge in Echtzeit verfolgen</p>
                     </div>
                 </div>
-                <div class="home-info-card">
+                <button class="home-info-card home-info-card-btn" id="homeDevCard"
+                        aria-label="Entwickler-Bereich mit Changelog öffnen">
                     <div class="home-info-icon">👨‍💻</div>
                     <div class="home-info-text">
                         <strong>Für Entwickler</strong>
                         <p>Changelog &amp; Infos – <span id="homeDevVersion"></span></p>
                     </div>
-                </div>
+                </button>
             </div>
 
 
@@ -205,6 +206,10 @@
     <!-- View: Routenplaner -->
     <div class="view-container" id="view-journey">
         <div class="container">
+            <!-- Gespeicherte Routen: 1-Tap-Suche für Pendler -->
+            <div class="departure-favorites" id="journeyFavorites" style="display: none;"
+                 role="group" aria-label="Gespeicherte Routen"></div>
+
             <div class="controls">
                 <div class="journey-inputs">
                     <div class="journey-input-group">
@@ -300,6 +305,9 @@
                     <span id="vehicleCount" aria-live="polite">🚇 Lade Fahrzeuge...</span>
                 </div>
                 <div class="livemap-filters">
+                    <button class="filter-btn locate-btn" id="locateBtn"
+                            aria-label="Karte auf meinen Standort zentrieren"
+                            title="Auf meinen Standort zentrieren">📍</button>
                     <button class="filter-btn active" data-type="all">🌐 Alle</button>
                     <button class="filter-btn" data-type="subway">🚇 U-Bahn</button>
                     <button class="filter-btn" data-type="suburban">🚆 S-Bahn</button>
