@@ -419,11 +419,21 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('devRelease', APP_RELEASE_DATE);
     setText('devCacheName', 'vbb-status-v' + APP_VERSION);
 
-    // Entwickler-Karte auf der Startseite -> Entwickler-View
-    const devCard = document.getElementById('homeDevCard');
-    if (devCard) {
-        devCard.addEventListener('click', () => switchView('developer'));
-    }
+    // Alle Home-Kacheln navigieren per data-view (einheitlich, Delegation)
+    document.addEventListener('click', (e) => {
+        const tile = e.target.closest('.home-info-card-btn[data-view]');
+        if (tile) {
+            if (navigator.vibrate) navigator.vibrate(10);
+            switchView(tile.dataset.view);
+        }
+    });
+
+    // API-Budget-Anzeige im Entwickler-Tab (aktualisiert nur bei offener View)
+    setInterval(() => {
+        if (currentView !== 'developer') return;
+        const el = document.getElementById('devApiBudget');
+        if (el) el.textContent = `${apiBudgetLeft()}/${API_SOFT_LIMIT} Requests frei (letzte 60s)`;
+    }, 2000);
 
     // Alte Cache-Einträge aufräumen + letzte Position wiederherstellen
     cleanupStorage();

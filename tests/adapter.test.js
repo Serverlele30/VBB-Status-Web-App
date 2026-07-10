@@ -19,6 +19,7 @@ const fixtures = {
         agencyName: 'BVG', cancelled: false, tripCancelled: false
     }], place: {}, previousPageCursor: '', nextPageCursor: '' },
     plan: { previousPageCursor: 'CURSOR_PREV', nextPageCursor: 'CURSOR_NEXT', itineraries: [{
+        fareTransfers: [{ effectiveFareLegProducts: [[ { product: { name: 'Einzelfahrt AB', amount: 3.80, currency: 'EUR' } } ]] }],
         duration: 1200, startTime: '2026-07-06T10:00:00+02:00', endTime: '2026-07-06T10:20:00+02:00', transfers: 0, id: 'it1',
         legs: [
             { mode: 'WALK', from: { name: 'Start', lat: 0, lon: 0 }, to: { name: 'S Südkreuz', lat: 0, lon: 0 },
@@ -211,6 +212,35 @@ const A = global.__a;
     requestedUrls.length = 0;
     await A.transitousLocations('teststr2');
     t('Bias nutzt letzte GPS-Position', requestedUrls[0].includes('place=52.401,13.052'));
+
+    // 14) Routing-Optionen + Via + Preis
+    A.apiCache.clear();
+    requestedUrls.length = 0;
+    const jOpt = await A.transitousJourneys(
+        { id: 'x', name: 'Start', lat: 52.47, lon: 13.36 },
+        { id: 'y', name: 'Ziel', lat: 52.52, lon: 13.41 },
+        { wheelchair: true, bike: true, via: { id: 'transitous:VIA_STOP_1', name: 'Via' } }
+    );
+    const optUrl = requestedUrls.find(u => u.includes('/plan'));
+    t('Barrierefrei in URL', optUrl.includes('pedestrianProfile=WHEELCHAIR'));
+    t('Fahrrad in URL', optUrl.includes('requireBikeTransport=true'));
+    t('Via-Stop-ID in URL (ohne Präfix)', optUrl.includes('via=VIA_STOP_1'));
+    t('withFares immer an', optUrl.includes('withFares=true'));
+    t('Preis defensiv extrahiert (3,80 EUR)',
+      jOpt.journeys[0].fare && jOpt.journeys[0].fare.amount === 3.8 && jOpt.journeys[0].fare.currency === 'EUR');
+
+    // 15) Fehlende Fare-Daten -> fare ist null (keine UI-Anzeige)
+    A.apiCache.clear();
+    const noFare = JSON.parse(JSON.stringify(fixtures.plan));
+    delete noFare.itineraries[0].fareTransfers;
+    const origPlan = fixtures.plan;
+    fixtures.plan = noFare;
+    const jNoFare = await A.transitousJourneys(
+        { id: 'x2', name: 'S2', lat: 52.4, lon: 13.3 },
+        { id: 'y2', name: 'Z2', lat: 52.5, lon: 13.4 }, {}
+    );
+    fixtures.plan = origPlan;
+    t('Ohne Fare-Daten: fare === null', jNoFare.journeys[0].fare === null);
 
     console.log(fails === 0 ? '\n🎉 TRANSITOUS-ADAPTER-TESTS BESTANDEN' : `\n❌ ${fails} fehlgeschlagen`);
     process.exit(fails ? 1 : 0);

@@ -7,7 +7,7 @@
         // ZENTRALE VERSIONSNUMMER - einzige Stelle, die bei Releases
         // angepasst wird. Alle Anzeigen (Startseite, Entwickler-Tab)
         // lesen von hier; package.json + SW-Cache-Name manuell mitziehen.
-        const APP_VERSION = '37.4.0';
+        const APP_VERSION = '37.5.0';
         const APP_RELEASE_DATE = '07.07.2026';
 
         // Seit v35: Transitous (api.transitous.org) ist die einzige

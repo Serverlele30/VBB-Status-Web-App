@@ -111,28 +111,31 @@
 
             <!-- Quick Info Cards -->
             <div class="home-quick-info">
-                <div class="home-info-card">
+                <button class="home-info-card home-info-card-btn" data-view="departures"
+                        aria-label="Live-Abfahrten öffnen">
                     <div class="home-info-icon">🚇</div>
                     <div class="home-info-text">
                         <strong>Live-Abfahrten</strong>
                         <p>Echtzeit für alle VBB-Stationen</p>
                     </div>
-                </div>
-                <div class="home-info-card">
+                </button>
+                <button class="home-info-card home-info-card-btn" data-view="journey"
+                        aria-label="Routenplaner öffnen">
                     <div class="home-info-icon">🗺️</div>
                     <div class="home-info-text">
                         <strong>Routenplaner</strong>
                         <p>Schnellste Verbindungen finden</p>
                     </div>
-                </div>
-                <div class="home-info-card">
+                </button>
+                <button class="home-info-card home-info-card-btn" data-view="livemap"
+                        aria-label="Live-Map öffnen">
                     <div class="home-info-icon">🌍</div>
                     <div class="home-info-text">
                         <strong>Live-Map</strong>
                         <p>Fahrzeuge in Echtzeit verfolgen</p>
                     </div>
-                </div>
-                <button class="home-info-card home-info-card-btn" id="homeDevCard"
+                </button>
+                <button class="home-info-card home-info-card-btn" data-view="developer"
                         aria-label="Entwickler-Bereich mit Changelog öffnen">
                     <div class="home-info-icon">👨‍💻</div>
                     <div class="home-info-text">
@@ -256,6 +259,29 @@
                     </div>
                 </div>
 
+                <!-- Via-Station (optional) -->
+                <div class="journey-via-row">
+                    <label class="journey-label" for="journeyVia">📌 Über (optional)</label>
+                    <div class="search-container">
+                        <input type="text" id="journeyVia" class="search-input"
+                               placeholder="Zwischenstation..." aria-label="Zwischenstation (optional)"
+                               autocomplete="off">
+                        <button class="clear-btn" id="clearViaBtn" aria-label="Zwischenstation löschen">×</button>
+                        <div class="suggestions" id="suggestionsVia"></div>
+                    </div>
+                </div>
+
+                <!-- Routing-Optionen -->
+                <div class="journey-options-row">
+                    <label class="journey-label">⚙️ Optionen</label>
+                    <div class="filter-chips">
+                        <button class="filter-btn journey-option-chip" data-option="wheelchair"
+                                aria-pressed="false" title="Nur barrierefreie Verbindungen">♿ Barrierefrei</button>
+                        <button class="filter-btn journey-option-chip" data-option="bike"
+                                aria-pressed="false" title="Nur Verbindungen mit Fahrrad-Mitnahme">🚲 Fahrrad dabei</button>
+                    </div>
+                </div>
+
                 <!-- Zeitwahl: Abfahrt/Ankunft -->
                 <div class="journey-time-row">
                     <label class="journey-label" for="journeyTimeMode">🕐 Zeit</label>
@@ -349,6 +375,7 @@
                         <table class="dev-info-table">
                             <tr><td>Version:</td><td><strong id="devVersion"></strong></td></tr>
                             <tr><td>Release:</td><td id="devRelease"></td></tr>
+                            <tr><td>API-Budget:</td><td id="devApiBudget">–</td></tr>
                             <tr><td>Lizenz:</td><td>MIT</td></tr>
                             <tr><td>Status:</td><td><span class="status-badge-dev">✅ Stabil</span></td></tr>
                         </table>

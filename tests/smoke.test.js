@@ -271,6 +271,12 @@ setTimeout(() => {
         else if (!lastJourneyUrl) errors.push('Routen-Chip startet keine Suche');
         else console.log('✅ Routen-Chip: 1 Tap füllt Felder und sucht sofort');
 
+        // 15) Home-Kacheln navigieren per Klick
+        doc.querySelector('.home-info-card-btn[data-view="livemap"]').click();
+        await new Promise(r => setTimeout(r, 150));
+        if (!doc.getElementById('view-livemap').classList.contains('active')) errors.push('Kachel-Navigation kaputt');
+        else console.log('✅ Home-Kacheln navigieren (Live-Map-Kachel geklickt)');
+
         console.log('✅ Struktur-Checks abgeschlossen');
 
         if (errors.length === 0) {

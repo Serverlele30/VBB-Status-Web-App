@@ -1097,6 +1097,8 @@
         // Journey Planner State
         let journeyFromStation = null;
         let journeyToStation = null;
+        let journeyViaStation = null;   // optionale Zwischenstation
+        const journeyOptions = { wheelchair: false, bike: false };
 
         // Journey Autocomplete
         let journeyFromTimeout = null;
@@ -1172,6 +1174,38 @@
         setupJourneyAutocomplete(journeyTo, suggestionsTo, (id, name, lat, lon) => {
             journeyToStation = { id, name, lat, lon };
             checkJourneySearchReady();
+        });
+
+        // Via-Station (optional - beeinflusst den Such-Button nicht)
+        const journeyVia = document.getElementById('journeyVia');
+        const suggestionsVia = document.getElementById('suggestionsVia');
+        const clearViaBtn = document.getElementById('clearViaBtn');
+        if (journeyVia && suggestionsVia) {
+            setupJourneyAutocomplete(journeyVia, suggestionsVia, (id, name, lat, lon) => {
+                journeyViaStation = { id, name, lat, lon };
+            });
+            journeyVia.addEventListener('input', () => {
+                // Freitext ohne Auswahl gilt nicht als Via
+                if (journeyVia.value === '') journeyViaStation = null;
+            });
+            if (clearViaBtn) {
+                clearViaBtn.addEventListener('click', () => {
+                    journeyVia.value = '';
+                    journeyViaStation = null;
+                    suggestionsVia.classList.remove('active');
+                });
+            }
+        }
+
+        // Options-Chips (Barrierefrei / Fahrrad) togglen
+        document.addEventListener('click', (e) => {
+            const chip = e.target.closest('.journey-option-chip');
+            if (!chip) return;
+            const opt = chip.dataset.option;
+            journeyOptions[opt] = !journeyOptions[opt];
+            chip.classList.toggle('active', journeyOptions[opt]);
+            chip.setAttribute('aria-pressed', String(journeyOptions[opt]));
+            if (navigator.vibrate) navigator.vibrate(5);
         });
 
         // Clear buttons
@@ -1279,6 +1313,56 @@
         // Cursor der letzten Suche (für "Früher"/"Später"-Blättern)
         let journeyPageCursors = { prev: null, next: null };
 
+        // Losgeh-Erinnerung: Notification 10 min vor Abfahrt.
+        // EHRLICHE EINSCHRÄNKUNG: funktioniert nur, solange die App/der Tab
+        // offen ist (echte Push-Benachrichtigungen bräuchten einen Server).
+        const REMINDER_LEAD_MIN = 10;
+
+        async function scheduleReminder(btn) {
+            const depTime = new Date(btn.dataset.dep);
+            const fireAt = depTime.getTime() - REMINDER_LEAD_MIN * 60000;
+            const delay = fireAt - Date.now();
+
+            if (delay <= 0) {
+                btn.textContent = '⏰ zu knapp';
+                setTimeout(() => { btn.textContent = '🔔'; }, 2500);
+                return;
+            }
+
+            if (!('Notification' in window)) {
+                btn.textContent = '🚫';
+                btn.title = 'Benachrichtigungen werden von diesem Browser nicht unterstützt';
+                return;
+            }
+
+            let permission = Notification.permission;
+            if (permission === 'default') {
+                permission = await Notification.requestPermission();
+            }
+            if (permission !== 'granted') {
+                btn.textContent = '🚫';
+                btn.title = 'Benachrichtigungen sind blockiert (Browser-Einstellungen)';
+                return;
+            }
+
+            const label = btn.dataset.label;
+            setTimeout(() => {
+                try {
+                    new Notification('🚇 Zeit loszugehen!', {
+                        body: `${label} – Abfahrt in ${REMINDER_LEAD_MIN} Minuten`,
+                        tag: 'vbb-reminder-' + btn.dataset.dep
+                    });
+                    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                } catch (e) { /* Tab evtl. eingefroren */ }
+            }, delay);
+
+            const fireTime = new Date(fireAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            btn.textContent = `🔔 ${fireTime} ✓`;
+            btn.classList.add('active');
+            btn.title = `Erinnerung um ${fireTime} gesetzt (solange die App offen bleibt)`;
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+
         async function runJourneySearch(pageCursor = null) {
             journeyContainer.innerHTML = '<div class="loading">⏳ Suche Verbindungen...</div>';
 
@@ -1290,6 +1374,9 @@
                     timeISO: (tIn && tIn.value) ? new Date(tIn.value).toISOString() : null,
                     arriveBy: tMode ? tMode.value === 'arrival' : false,
                     products: activeTransportModes,
+                    via: journeyViaStation,
+                    wheelchair: journeyOptions.wheelchair,
+                    bike: journeyOptions.bike,
                     pageCursor
                 });
 
@@ -1330,6 +1417,13 @@
                 saveBtn.classList.toggle('active', nowFav);
                 saveBtn.setAttribute('aria-pressed', String(nowFav));
                 if (navigator.vibrate) navigator.vibrate(10);
+                return;
+            }
+
+            const remBtn = e.target.closest('.reminder-btn');
+            if (remBtn) {
+                e.stopPropagation(); // Karte darunter nicht öffnen
+                scheduleReminder(remBtn);
                 return;
             }
 
@@ -1531,7 +1625,14 @@
                                 → 
                                 ${arrival.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                             </div>
-                            <div class="journey-duration">${durationText}</div>
+                            <div class="journey-duration">
+                                ${journey.fare ? `<span class="journey-fare">🎫 ${journey.fare.amount.toFixed(2).replace('.', ',')} ${journey.fare.currency === 'EUR' ? '€' : escapeHtml(journey.fare.currency)}</span>` : ''}
+                                ${durationText}
+                                <button class="reminder-btn" data-dep="${departure.toISOString()}"
+                                        data-label="${escapeHtml((journey.legs.find(l => l.line)?.line?.name || 'Verbindung') + ' um ' + departure.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }))}"
+                                        aria-label="10 Minuten vor Abfahrt erinnern"
+                                        title="Erinnerung 10 min vor Abfahrt (nur solange die App offen ist)">🔔</button>
+                            </div>
                         </div>
                         <div class="journey-legs">
                             ${legsHtml}

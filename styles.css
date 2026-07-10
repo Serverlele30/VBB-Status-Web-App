@@ -4210,3 +4210,51 @@ select:focus-visible {
 .locate-btn {
     font-size: 15px;
 }
+
+/* v37.5: Preis-Badge, Erinnerung, Via/Optionen */
+.journey-fare {
+    background: rgba(76, 175, 80, 0.15);
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    color: #7ED321;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-right: 8px;
+}
+
+.reminder-btn {
+    background: none;
+    border: 1px solid rgba(255, 237, 0, 0.35);
+    border-radius: 6px;
+    color: #FFED00;
+    padding: 3px 8px;
+    margin-left: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font-stack);
+}
+
+.reminder-btn:hover,
+.reminder-btn:focus-visible {
+    background: rgba(255, 237, 0, 0.12);
+    outline: none;
+}
+
+.reminder-btn.active {
+    background: rgba(255, 237, 0, 0.2);
+    border-style: solid;
+    font-weight: bold;
+}
+
+.journey-via-row,
+.journey-options-row {
+    margin: 12px 0;
+}
+
+.journey-option-chip[aria-pressed="true"],
+.journey-option-chip.active {
+    background-color: #FFED00;
+    color: #000;
+    border-color: #FFED00;
+    font-weight: bold;
+}

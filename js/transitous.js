@@ -184,6 +184,16 @@ async function transitousDepartures(station, n = 20) {
 // ROUTENSUCHE  (plan -> HAFAS-journeys-Form)
 // ==========================================
 
+// Name -> Stop-ID auflösen (z.B. für via, das keine Koordinaten erlaubt)
+async function transitousResolveStopId(name) {
+    if (!name) return null;
+    const matches = await transitousFetch(
+        `/v1/geocode?text=${encodeURIComponent(name)}&type=STOP&place=${geocodeBias()}&numResults=1`,
+        6 * 60 * 60 * 1000
+    );
+    return (matches && matches[0]) ? matches[0].id : null;
+}
+
 // fromPlace/toPlace: MOTIS akzeptiert "lat,lon" ODER Stop-ID
 async function transitousPlace(station) {
     if (station.id && station.id.startsWith(TRANSITOUS_ID_PREFIX)) {
@@ -200,22 +210,40 @@ async function transitousPlace(station) {
     return matches[0].id;
 }
 
-async function transitousJourneys(fromStation, toStation, { timeISO = null, arriveBy = false, products = null, pageCursor = null } = {}) {
+async function transitousJourneys(fromStation, toStation, {
+    timeISO = null, arriveBy = false, products = null, pageCursor = null,
+    via = null, wheelchair = false, bike = false
+} = {}) {
     const fromPlace = await transitousPlace(fromStation);
     const toPlace = await transitousPlace(toStation);
 
     let url = `/v6/plan?fromPlace=${encodeURIComponent(fromPlace)}` +
               `&toPlace=${encodeURIComponent(toPlace)}` +
-              `&maxTransfers=3&minTransferTime=5`;
+              `&maxTransfers=3&minTransferTime=5` +
+              `&withFares=true`; // Experimentell: Preise, falls der Feed sie liefert
     if (timeISO) url += `&time=${encodeURIComponent(timeISO)}&arriveBy=${arriveBy}`;
     if (products) url += `&transitModes=${productsToMotisModes(products)}`;
     // Blättern: Cursor aus der vorherigen Antwort ("Früher"/"Später")
     if (pageCursor) url += `&pageCursor=${encodeURIComponent(pageCursor)}`;
 
+    // Via-Station: API akzeptiert NUR Stop-IDs (keine Koordinaten)
+    if (via) {
+        const viaId = via.id && via.id.startsWith(TRANSITOUS_ID_PREFIX)
+            ? via.id.slice(TRANSITOUS_ID_PREFIX.length)
+            : await transitousResolveStopId(via.name);
+        if (viaId) url += `&via=${encodeURIComponent(viaId)}`;
+    }
+
+    // Barrierefrei: Rollstuhl-Profil für Fußwege/Umstiege
+    if (wheelchair) url += `&pedestrianProfile=WHEELCHAIR`;
+    // Fahrrad-Mitnahme in allen genutzten Fahrten erforderlich
+    if (bike) url += `&requireBikeTransport=true`;
+
     // 30s Cache: identische Suche direkt hintereinander = 1 Request
     const data = await transitousFetch(url, 30000);
 
     const journeys = (data.itineraries || []).map(it => ({
+        fare: extractFare(it), // null, wenn der Feed keine Preisdaten liefert
         legs: (it.legs || []).map(leg => {
             const isWalk = leg.mode === 'WALK' || leg.mode === 'BIKE';
             return {
@@ -250,6 +278,30 @@ async function transitousJourneys(fromStation, toStation, { timeISO = null, arri
         previousPageCursor: data.previousPageCursor || null,
         nextPageCursor: data.nextPageCursor || null
     };
+}
+
+// Preis aus der experimentellen Fare-Struktur ziehen - bewusst defensiv:
+// liefert null bei fehlenden/unerwarteten Daten, dann zeigt die UI nichts.
+function extractFare(itinerary) {
+    try {
+        let total = 0, currency = null, found = false;
+        for (const ft of (itinerary.fareTransfers || [])) {
+            // Erste Produkt-Alternative pro Transfer nehmen
+            const alternative = (ft.effectiveFareLegProducts || [])[0];
+            if (!alternative) continue;
+            for (const item of alternative) {
+                const product = item && (item.product || item);
+                if (product && typeof product.amount === 'number' && product.amount > 0) {
+                    total += product.amount;
+                    currency = product.currency || currency;
+                    found = true;
+                }
+            }
+        }
+        return found ? { amount: total, currency: currency || 'EUR' } : null;
+    } catch (e) {
+        return null;
+    }
 }
 
 

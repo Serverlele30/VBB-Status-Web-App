@@ -5,6 +5,21 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [37.5.0] - 2026-07-08
+
+### Klickbare Kacheln + die restlichen Feature-Ideen
+
+#### Added - Routenplaner
+- **Via-Station**: Optionales Feld "Über" mit Autocomplete - Verbindungen laufen dann über diese Zwischenstation (API akzeptiert nur Stop-IDs, der Adapter löst Namen automatisch auf).
+- **Barrierefrei-Modus** (♿): nutzt das Rollstuhl-Profil für Fußwege und Umstiege.
+- **Fahrrad-Mitnahme** (🚲): nur Verbindungen, in denen alle Fahrten Radmitnahme erlauben.
+- **Ticketpreise (experimentell)**: withFares ist aktiviert; liefert der Feed Preisdaten, erscheint ein grünes Preis-Badge an der Verbindung. Defensiv gebaut - ohne Daten erscheint schlicht nichts. (Die MOTIS-Spec markiert das Feature selbst als experimentell.)
+- **Losgeh-Erinnerung** (🔔): Button an jeder Verbindung, Notification 10 min vor Abfahrt. Ehrliche Einschränkung: funktioniert nur, solange die App/der Tab offen ist - echte Push-Benachrichtigungen bräuchten einen Server.
+
+#### Changed
+- **Alle vier Home-Kacheln sind jetzt klickbar** und öffnen ihre View (vorher nur die Entwickler-Kachel); einheitlich über data-view gelöst, der Spezial-Handler der Dev-Kachel ist raus.
+- **API-Budget-Anzeige im Entwickler-Tab**: zeigt live "X/90 Requests frei (letzte 60s)".
+
 ## [37.4.0] - 2026-07-08
 
 ### Favoriten-Routen, Standort auf der Karte, smarterer Geocode
